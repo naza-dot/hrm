@@ -138,9 +138,7 @@ def microsoft_auth_callback(request):
             user.save()
         
         # Log in the user with explicit backend
-        from microsoft_auth.backends import MicrosoftAuthenticationBackend
-        backend = MicrosoftAuthenticationBackend()
-        login(request, user, backend=backend)
+        login(request, user, backend='microsoft_auth.backends.MicrosoftAuthenticationBackend')
         
         # Clean up session
         if 'microsoft_auth_state' in request.session:
