@@ -26,10 +26,17 @@ def microsoft_auth_login(request):
     )
     
     # OAuth parameters
+    # Use HTTPS scheme for redirect URI (can be overridden with env var for development)
+    scheme = 'https'  # Default to HTTPS for production
+    if settings.DEBUG:
+        # In debug mode, allow HTTP scheme override
+        scheme = getattr(settings, 'MICROSOFT_AUTH_SCHEME', 'https')
+    
+    redirect_uri = request.build_absolute_uri('/login-microsoft/callback/').replace('http://', f'{scheme}://')
     params = {
         'client_id': settings.MICROSOFT_AUTH_CLIENT_ID,
         'response_type': 'code',
-        'redirect_uri': request.build_absolute_uri('/login-microsoft/callback/'),
+        'redirect_uri': redirect_uri,
         'response_mode': 'query',
         'scope': 'openid profile email',
         'state': request.session.session_key or 'microsoft_auth_state'
@@ -65,11 +72,18 @@ def microsoft_auth_callback(request):
         # Exchange authorization code for access token
         token_url = f"https://login.microsoftonline.com/{settings.MICROSOFT_AUTH_TENANT_ID}/oauth2/v2.0/token"
         
+        # Use HTTPS scheme for redirect URI (can be overridden with env var for development)
+        scheme = 'https'  # Default to HTTPS for production
+        if settings.DEBUG:
+            # In debug mode, allow HTTP scheme override
+            scheme = getattr(settings, 'MICROSOFT_AUTH_SCHEME', 'https')
+        
+        redirect_uri = request.build_absolute_uri('/login-microsoft/callback/').replace('http://', f'{scheme}://')
         token_data = {
             'client_id': settings.MICROSOFT_AUTH_CLIENT_ID,
             'client_secret': settings.MICROSOFT_AUTH_CLIENT_SECRET,
             'code': code,
-            'redirect_uri': request.build_absolute_uri('/login-microsoft/callback/'),
+            'redirect_uri': redirect_uri,
             'grant_type': 'authorization_code'
         }
         

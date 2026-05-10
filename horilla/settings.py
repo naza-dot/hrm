@@ -263,6 +263,10 @@ MICROSOFT_AUTH_LOGIN_URL = "/login-microsoft/"
 MICROSOFT_AUTH_CALLBACK_URL = "/login-microsoft/callback/"
 MICROSOFT_AUTH_COMPLETE_URL = "/login-microsoft/complete/"
 
+# Optional: Override redirect URI scheme for development (default: https)
+# Set to 'http' in .env file for local development if needed
+MICROSOFT_AUTH_SCHEME = env("MICROSOFT_AUTH_SCHEME", default="https")
+
 # Authentication backends
 AUTHENTICATION_BACKENDS = [
     "microsoft_auth.backends.MicrosoftAuthenticationBackend",
