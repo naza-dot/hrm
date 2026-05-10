@@ -42,6 +42,7 @@ from django.views.decorators.http import require_http_methods
 from accessibility.accessibility import ACCESSBILITY_FEATURE
 from accessibility.models import DefaultAccessibility
 from base.backends import ConfiguredEmailBackend
+from base.microsoft_auth_views import microsoft_auth_login, microsoft_auth_callback
 from base.decorators import (
     shift_request_change_permission,
     work_type_request_change_permission,

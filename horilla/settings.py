@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     "notifications",
     "mathfilters",
     "corsheaders",
@@ -69,6 +70,8 @@ INSTALLED_APPS = [
     "payroll",
     "widget_tweaks",
     "django_apscheduler",
+    "microsoft_auth",
+    "outlook_auth",
 ]
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 
@@ -246,6 +249,25 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+# Django Sites Framework
+SITE_ID = 1
+
+# Microsoft OAuth Configuration
+MICROSOFT_AUTH_CLIENT_ID = env("MICROSOFT_AUTH_CLIENT_ID", default="")
+MICROSOFT_AUTH_CLIENT_SECRET = env("MICROSOFT_AUTH_CLIENT_SECRET", default="")
+MICROSOFT_AUTH_TENANT_ID = env("MICROSOFT_AUTH_TENANT_ID", default="common")
+
+# Microsoft OAuth URLs
+MICROSOFT_AUTH_LOGIN_URL = "/login-microsoft/"
+MICROSOFT_AUTH_CALLBACK_URL = "/login-microsoft/callback/"
+MICROSOFT_AUTH_COMPLETE_URL = "/login-microsoft/complete/"
+
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    "microsoft_auth.backends.MicrosoftAuthenticationBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 # Production settings
 if not DEBUG:

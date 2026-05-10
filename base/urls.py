@@ -80,6 +80,8 @@ urlpatterns = [
     ),
     path("404", views.custom404, name="404"),
     path("login/", views.login_user, name="login"),
+    path("login-microsoft/", views.microsoft_auth_login, name="microsoft_auth_login"),
+    path("login-microsoft/callback/", views.microsoft_auth_callback, name="microsoft_auth_callback"),
     path(
         "forgot-password",
         views.HorillaPasswordResetView.as_view(),
