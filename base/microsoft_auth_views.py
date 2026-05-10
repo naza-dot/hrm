@@ -115,6 +115,23 @@ def microsoft_auth_callback(request):
         try:
             # Try to find existing user by email
             user = User.objects.get(email=email)
+            
+            # For existing users, ensure Employee record exists
+            try:
+                employee = Employee.objects.get(employee_user_id=user)
+            except Employee.DoesNotExist:
+                # Create Employee record for existing user
+                display_name = user_info.get('displayName', email.split('@')[0])
+                employee = Employee.objects.create(
+                    employee_user_id=user,
+                    employee_first_name=user.first_name or display_name.split()[0] if display_name else email.split('@')[0],
+                    employee_last_name=user.last_name or ' '.join(display_name.split()[1:]) if display_name and len(display_name.split()) > 1 else '',
+                    email=email,
+                    phone='0000000000',  # Required field - placeholder value
+                    is_active=True
+                )
+                employee.save()
+                
         except User.DoesNotExist:
             # Create new user if not found
             display_name = user_info.get('displayName', email.split('@')[0])
@@ -145,7 +162,7 @@ def microsoft_auth_callback(request):
                     employee_first_name=user.first_name or email.split('@')[0],
                     employee_last_name=user.last_name or '',
                     email=email,
-                    phone='',  # Empty phone - can be filled later
+                    phone='0000000000',  # Required field - placeholder value
                     is_active=True
                 )
                 employee.save()
@@ -153,6 +170,13 @@ def microsoft_auth_callback(request):
                 # If employee creation fails, delete the user and show error
                 user.delete()
                 raise Exception(f"Failed to create employee record: {str(e)}")
+        
+        # Verify Employee record exists before logging in
+        try:
+            employee = Employee.objects.get(employee_user_id=user)
+        except Employee.DoesNotExist:
+            messages.error(request, _("Failed to create employee record for user."))
+            return redirect('login')
         
         # Log in the user with explicit backend
         login(request, user, backend='microsoft_auth.backends.MicrosoftAuthenticationBackend')
