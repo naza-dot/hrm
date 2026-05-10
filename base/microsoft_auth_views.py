@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from urllib.parse import urlencode
 import requests
+from employee.models import Employee
 
 
 def microsoft_auth_login(request):
@@ -136,6 +137,22 @@ def microsoft_auth_callback(request):
             # Set a random password (user will use Microsoft to login)
             user.set_unusable_password()
             user.save()
+            
+            # Create Employee record for the new user
+            try:
+                employee = Employee.objects.create(
+                    employee_user_id=user,
+                    employee_first_name=user.first_name or email.split('@')[0],
+                    employee_last_name=user.last_name or '',
+                    email=email,
+                    phone='',  # Empty phone - can be filled later
+                    is_active=True
+                )
+                employee.save()
+            except Exception as e:
+                # If employee creation fails, delete the user and show error
+                user.delete()
+                raise Exception(f"Failed to create employee record: {str(e)}")
         
         # Log in the user with explicit backend
         login(request, user, backend='microsoft_auth.backends.MicrosoftAuthenticationBackend')
