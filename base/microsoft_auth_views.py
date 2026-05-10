@@ -137,8 +137,10 @@ def microsoft_auth_callback(request):
             user.set_unusable_password()
             user.save()
         
-        # Log in the user
-        login(request, user)
+        # Log in the user with explicit backend
+        from microsoft_auth.backends import MicrosoftAuthenticationBackend
+        backend = MicrosoftAuthenticationBackend()
+        login(request, user, backend=backend)
         
         # Clean up session
         if 'microsoft_auth_state' in request.session:
