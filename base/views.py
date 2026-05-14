@@ -43,6 +43,7 @@ from accessibility.accessibility import ACCESSBILITY_FEATURE
 from accessibility.models import DefaultAccessibility
 from base.backends import ConfiguredEmailBackend
 from base.microsoft_auth_views import microsoft_auth_login, microsoft_auth_callback
+from base.microsoft_sso import MicrosoftGraphAPI, MicrosoftSSOSettings
 from base.decorators import (
     shift_request_change_permission,
     work_type_request_change_permission,
@@ -179,6 +180,12 @@ from horilla.horilla_settings import (
     FILE_STORAGE,
     NO_PERMISSION_MODALS,
 )
+import requests
+from django.conf import settings
+from django.http import JsonResponse
+from django.contrib.auth import get_user_model
+from base.models import Employee
+from base.methods import generate_colors
 from horilla.http.response import HorillaRedirect
 from horilla.methods import get_horilla_model_class, remove_dynamic_url
 from horilla_audit.forms import HistoryTrackingFieldsForm
@@ -7547,3 +7554,352 @@ def protected_media(request, path):
             return redirect("login")
 
     return FileResponse(open(media_path, "rb"))
+
+
+@login_required
+@permission_required("auth.add_user")
+def sync_microsoft_users(request):
+    """
+    Synchronize users from Microsoft Entra ID with the local Horilla HRM database.
+    
+    This view:
+    1. Reads Microsoft SSO settings from django settings
+    2. Calls Microsoft Graph API to fetch users from Entra ID
+    3. Maps user data to Employee and EmployeeWorkInformation models
+    4. Creates or updates User, Employee, and EmployeeWorkInformation records locally
+    
+    Field Mapping:
+    - userPrincipalName -> User.username (before @)
+    - givenName -> Employee.employee_first_name, User.first_name
+    - surname -> Employee.employee_last_name, User.last_name
+    - mail -> Employee.email, User.email, EmployeeWorkInformation.email
+    - mobilePhone -> Employee.phone, EmployeeWorkInformation.mobile
+    - jobTitle -> EmployeeWorkInformation.additional_info.job_title
+    - department -> Matched to Department model (if exists)
+    - officeLocation -> EmployeeWorkInformation.location
+    - accountEnabled -> User.is_active, Employee.is_active
+    
+    Args:
+        request (HttpRequest): The HTTP request object
+    
+    Returns:
+        JsonResponse: Status of the synchronization operation
+    """
+    try:
+        # Initialize Microsoft Graph API handler
+        ms_graph = MicrosoftGraphAPI()
+        ms_settings = MicrosoftSSOSettings()
+        
+        # Check if Microsoft SSO is configured
+        if not ms_settings.is_configured():
+            return JsonResponse(
+                {
+                    'status': 'error',
+                    'message': 'Microsoft SSO is not configured. Please check settings.',
+                    'data': None
+                },
+                status=400
+            )
+        
+        # Fetch users from Entra ID
+        success, entra_users, message = ms_graph.get_user_sync_data()
+        
+        if not success:
+            return JsonResponse(
+                {
+                    'status': 'error',
+                    'message': message,
+                    'data': None
+                },
+                status=500
+            )
+        
+        # Process sync result
+        sync_stats = {
+            'created_users': 0,
+            'updated_users': 0,
+            'created_employees': 0,
+            'updated_employees': 0,
+            'created_work_info': 0,
+            'updated_work_info': 0,
+            'skipped_users': 0,
+            'errors': []
+        }
+        
+        # Get default company if exists (for EmployeeWorkInformation)
+        default_company = Company.objects.first()
+        
+        # Sync each user from Entra ID
+        for entra_user in entra_users:
+            try:
+                user_principal_name = entra_user.get('userPrincipalName', '')
+                display_name = entra_user.get('displayName', '')
+                mail = entra_user.get('mail', user_principal_name)
+                given_name = entra_user.get('givenName', '')
+                surname = entra_user.get('surname', '')
+                job_title = entra_user.get('jobTitle', '')
+                department_name = entra_user.get('department', '')
+                office_location = entra_user.get('officeLocation', '')
+                mobile_phone = entra_user.get('mobilePhone', '0000000000')
+                account_enabled = entra_user.get('accountEnabled', True)
+                
+                # Skip if no email or UPN is available
+                if not mail and not user_principal_name:
+                    sync_stats['skipped_users'] += 1
+                    continue
+                
+                # Use email as identifier, fallback to UPN
+                email_identifier = mail or user_principal_name
+                username = email_identifier.split('@')[0]
+                
+                # Ensure unique username
+                base_username = username
+                counter = 1
+                while User.objects.filter(username=username).exclude(email=email_identifier).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+                
+                # Check if user already exists
+                user, user_created = User.objects.get_or_create(
+                    email=email_identifier,
+                    defaults={
+                        'username': username,
+                        'first_name': given_name,
+                        'last_name': surname,
+                        'is_active': account_enabled
+                    }
+                )
+                
+                # Update existing user
+                if not user_created:
+                    user.first_name = given_name
+                    user.last_name = surname
+                    user.is_active = account_enabled
+                    user.save()
+                    sync_stats['updated_users'] += 1
+                else:
+                    # Set unusable password for SSO users
+                    user.set_unusable_password()
+                    user.save()
+                    sync_stats['created_users'] += 1
+                
+                # Prepare Employee data mapping
+                employee_data = {
+                    'employee_first_name': given_name or email_identifier.split('@')[0],
+                    'employee_last_name': surname or '',
+                    'email': email_identifier,
+                    'phone': mobile_phone or '0000000000',
+                    'is_active': account_enabled
+                }
+                
+                # Check if Employee record exists
+                employee, employee_created = Employee.objects.get_or_create(
+                    employee_user_id=user,
+                    defaults=employee_data
+                )
+                
+                # Update existing employee record with new data
+                if not employee_created:
+                    for field, value in employee_data.items():
+                        setattr(employee, field, value)
+                    employee.save()
+                    sync_stats['updated_employees'] += 1
+                else:
+                    sync_stats['created_employees'] += 1
+                
+                # Create or update EmployeeWorkInformation
+                work_info_data = {
+                    'location': office_location or None,
+                    'email': email_identifier,
+                    'mobile': mobile_phone or None,
+                    'company_id': default_company,
+                    'is_active': account_enabled
+                }
+                
+                # Try to match department
+                if department_name:
+                    try:
+                        department = Department.objects.filter(
+                            department_name__iexact=department_name
+                        ).first()
+                        if department:
+                            work_info_data['department_id'] = department
+                    except Exception as dept_error:
+                        sync_stats['errors'].append(
+                            f"Could not map department '{department_name}' for user {email_identifier}: {str(dept_error)}"
+                        )
+                
+                # Store additional information from Entra ID
+                additional_info = {
+                    'entra_id': entra_user.get('id', ''),
+                    'user_principal_name': user_principal_name,
+                    'job_title': job_title,
+                    'department_entra': department_name,
+                    'sync_timestamp': datetime.now().isoformat(),
+                    'sync_source': 'microsoft_entra_id'
+                }
+                
+                # Get or create EmployeeWorkInformation
+                try:
+                    work_info, work_info_created = EmployeeWorkInformation.objects.get_or_create(
+                        employee_id=employee,
+                        defaults=work_info_data
+                    )
+                    
+                    # Update existing work info with new data
+                    if not work_info_created:
+                        for field, value in work_info_data.items():
+                            if value is not None:  # Only update non-null values
+                                setattr(work_info, field, value)
+                        
+                        # Merge additional info
+                        existing_info = work_info.additional_info or {}
+                        existing_info.update(additional_info)
+                        work_info.additional_info = existing_info
+                        
+                        work_info.save()
+                        sync_stats['updated_work_info'] += 1
+                    else:
+                        work_info.additional_info = additional_info
+                        work_info.save()
+                        sync_stats['created_work_info'] += 1
+                        
+                except EmployeeWorkInformation.DoesNotExist:
+                    # Create new work info if it doesn't exist
+                    work_info_data['additional_info'] = additional_info
+                    try:
+                        EmployeeWorkInformation.objects.create(
+                            employee_id=employee,
+                            **work_info_data
+                        )
+                        sync_stats['created_work_info'] += 1
+                    except Exception as work_info_error:
+                        sync_stats['errors'].append(
+                            f"Could not create EmployeeWorkInformation for {email_identifier}: {str(work_info_error)}"
+                        )
+                        
+            except Exception as e:
+                error_msg = f"Error syncing user {entra_user.get('userPrincipalName', 'Unknown')}: {str(e)}"
+                sync_stats['errors'].append(error_msg)
+        
+        # Prepare response message
+        response_parts = [
+            f"Synchronization completed.",
+            f"Created: {sync_stats['created_users']} users, {sync_stats['created_employees']} employees, {sync_stats['created_work_info']} work info records.",
+            f"Updated: {sync_stats['updated_users']} users, {sync_stats['updated_employees']} employees, {sync_stats['updated_work_info']} work info records.",
+            f"Skipped: {sync_stats['skipped_users']} users."
+        ]
+        
+        if sync_stats['errors']:
+            response_parts.append(f"Errors: {len(sync_stats['errors'])}")
+        
+        response_message = " ".join(response_parts)
+        messages.success(request, response_message)
+        
+        return JsonResponse(
+            {
+                'status': 'success',
+                'message': response_message,
+                'data': {
+                    'total_entra_users': len(entra_users),
+                    'statistics': sync_stats
+                }
+            },
+            status=200
+        )
+        
+    except Exception as e:
+        error_message = f"Unexpected error during user synchronization: {str(e)}"
+        messages.error(request, error_message)
+        
+        return JsonResponse(
+            {
+                'status': 'error',
+                'message': error_message,
+                'data': None
+            },
+            status=500
+        )
+
+
+@login_required
+@permission_required("auth.add_user")
+def get_microsoft_users_preview(request):
+    """
+    Preview users from Microsoft Entra ID without syncing them.
+    
+    This view fetches and displays users that would be synced without making changes.
+    
+    Args:
+        request (HttpRequest): The HTTP request object
+    
+    Returns:
+        JsonResponse: List of users from Entra ID
+    """
+    try:
+        ms_graph = MicrosoftGraphAPI()
+        ms_settings = MicrosoftSSOSettings()
+        
+        if not ms_settings.is_configured():
+            return JsonResponse(
+                {
+                    'status': 'error',
+                    'message': 'Microsoft SSO is not configured.',
+                    'data': None
+                },
+                status=400
+            )
+        
+        # Fetch users from Entra ID
+        success, users, message = ms_graph.get_user_sync_data()
+        
+        if not success:
+            return JsonResponse(
+                {
+                    'status': 'error',
+                    'message': message,
+                    'data': None
+                },
+                status=500
+            )
+        
+        # Format user data for preview
+        formatted_users = []
+        for user in users:
+            formatted_users.append({
+                'id': user.get('id'),
+                'userPrincipalName': user.get('userPrincipalName'),
+                'displayName': user.get('displayName'),
+                'mail': user.get('mail'),
+                'givenName': user.get('givenName'),
+                'surname': user.get('surname'),
+                'jobTitle': user.get('jobTitle'),
+                'department': user.get('department'),
+                'officeLocation': user.get('officeLocation'),
+                'mobilePhone': user.get('mobilePhone'),
+                'accountEnabled': user.get('accountEnabled')
+            })
+        
+        return JsonResponse(
+            {
+                'status': 'success',
+                'message': f"Found {len(formatted_users)} users in Entra ID",
+                'data': {
+                    'users': formatted_users,
+                    'total_count': len(formatted_users)
+                }
+            },
+            status=200
+        )
+        
+    except Exception as e:
+        error_message = f"Error fetching users preview: {str(e)}"
+        
+        return JsonResponse(
+            {
+                'status': 'error',
+                'message': error_message,
+                'data': None
+            },
+            status=500
+        )
