@@ -1,0 +1,15 @@
+{% extends "base/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Microsoft SSO Sync" %}{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>{% trans "Microsoft SSO Synchronization" %}</h2>
+        <p>{% trans "Use the button below to synchronize users from Microsoft Entra ID into the local database." %}</p>
+        <form method="post" action="{% url 'microsoft-sso-sync' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans "Sync Now" %}</button>
+        </form>
+    </div>
+{% endblock %}

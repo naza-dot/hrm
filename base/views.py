@@ -181,10 +181,7 @@ from horilla.horilla_settings import (
     NO_PERMISSION_MODALS,
 )
 import requests
-from django.conf import settings
-from django.http import JsonResponse
 from django.contrib.auth import get_user_model
-from base.models import Employee
 from base.methods import generate_colors
 from horilla.http.response import HorillaRedirect
 from horilla.methods import get_horilla_model_class, remove_dynamic_url
@@ -7558,7 +7555,7 @@ def protected_media(request, path):
 
 @login_required
 @permission_required("auth.add_user")
-def sync_microsoft_users(request):
+def microsoft_sso_sync(request):
     """
     Synchronize users from Microsoft Entra ID with the local Horilla HRM database.
     

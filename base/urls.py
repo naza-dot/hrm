@@ -198,6 +198,12 @@ urlpatterns = [
     ),
     path("settings/company-create/", views.company_create, name="company-create"),
     path("settings/company-view/", views.company_view, name="company-view"),
+    # Microsoft SSO sync view
+    path(
+        "settings/microsoft-sso-sync/",
+        views.microsoft_sso_sync,
+        name="microsoft-sso-sync",
+    ),
     path(
         "settings/company-update/<int:id>/",
         views.company_update,
