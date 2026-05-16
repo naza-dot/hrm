@@ -741,6 +741,7 @@ urlpatterns = [
     path("settings/general-settings/", views.general_settings, name="general-settings"),
     path("settings/date-settings/", views.date_settings, name="date-settings"),
     path("settings/microsoft-sso-settings/", views.microsoft_sso_settings, name="microsoft-sso-settings"),
+    path("settings/microsoft-sync-users/", views.microsoft_sync_users, name="microsoft-sync-users"),
     path("settings/save-date/", views.save_date_format, name="save_date_format"),
     path("settings/get-date-format/", views.get_date_format, name="get-date-format"),
     path("settings/save-time/", views.save_time_format, name="save_time_format"),

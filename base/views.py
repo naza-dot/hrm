@@ -5248,6 +5248,51 @@ def microsoft_sso_settings(request):
     """
     return render(request, "base/microsoft_sso_settings.html")
 
+def microsoft_sync_users(request):
+    """Endpoint to trigger fetching all users from the tenant.
+
+    This view is intended to be called via an AJAX request from the
+    Microsoft SSO settings page. It uses the Microsoft Graph API to list
+    users in the tenant that owns the app registration. The client id,
+    client secret and tenant id are expected to be available in the
+    Django settings (populated from environment variables).
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "unauthenticated"}, status=401)
+
+    # Import here to avoid circular imports at module load time
+    import requests
+    from django.conf import settings
+    from django.http import JsonResponse
+
+    tenant_id = settings.MICROSOFT_AUTH_TENANT_ID
+    client_id = settings.MICROSOFT_AUTH_CLIENT_ID
+    client_secret = settings.MICROSOFT_AUTH_CLIENT_SECRET
+
+    # Acquire token using client credentials flow
+    token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+    token_data = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "scope": "https://graph.microsoft.com/.default",
+        "grant_type": "client_credentials",
+    }
+    token_resp = requests.post(token_url, data=token_data)
+    if token_resp.status_code != 200:
+        return JsonResponse({"error": "token_fetch_failed"}, status=token_resp.status_code)
+    access_token = token_resp.json().get("access_token")
+    if not access_token:
+        return JsonResponse({"error": "no_access_token"}, status=500)
+
+    # Call Graph API to list users
+    graph_url = "https://graph.microsoft.com/v1.0/users"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    users_resp = requests.get(graph_url, headers=headers)
+    if users_resp.status_code != 200:
+        return JsonResponse({"error": "graph_fetch_failed"}, status=users_resp.status_code)
+    users = users_resp.json().get("value", [])
+    return JsonResponse({"users": users})
+
 
 @permission_required("base.change_company")
 @csrf_exempt  # Use this decorator if CSRF protection is enabled
