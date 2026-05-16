@@ -5241,6 +5241,14 @@ def date_settings(request):
     return render(request, "base/company/date.html")
 
 
+@login_required
+def microsoft_sso_settings(request):
+    """
+    This method is used to render Microsoft SSO settings template
+    """
+    return render(request, "base/microsoft_sso_settings.html")
+
+
 @permission_required("base.change_company")
 @csrf_exempt  # Use this decorator if CSRF protection is enabled
 def save_date_format(request):
