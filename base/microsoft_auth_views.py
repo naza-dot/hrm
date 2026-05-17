@@ -4,22 +4,69 @@ Microsoft OAuth authentication views for Horilla HRM
 
 from django.contrib.auth import login
 from django.contrib.auth.models import User
-from django.shortcuts import redirect
+from django.shortcuts import render
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from urllib.parse import urlencode
 import requests
 from employee.models import Employee
+from .models import Company, MicrosoftSSOConfig
 
 
 def microsoft_auth_login(request):
+    """Handle Microsoft SSO settings form and redirect to Microsoft OAuth.
+
+    The view now accepts a POST request from the settings form.  When a
+    POST is received the client credentials are stored in the
+    :class:`MicrosoftSSOConfig` model.  On a GET request the user is
+    redirected to the Microsoft OAuth flow.
     """
-    Redirect user to Microsoft OAuth login page
-    """
-    if not settings.MICROSOFT_AUTH_CLIENT_ID:
-        messages.error(request, _("Microsoft authentication is not configured."))
-        return redirect('login')
+    # Calculate redirect_uri for use in context
+    scheme = 'https'
+    if settings.DEBUG:
+        scheme = getattr(settings, 'MICROSOFT_AUTH_SCHEME', 'https')
+    site_url = getattr(settings, "SITE_URL", None)
+    if site_url:
+        redirect_uri = f"{site_url.rstrip('/')}/login-microsoft/callback/"
+    else:
+        redirect_uri = request.build_absolute_uri('/login-microsoft/callback/').replace('http://', f'{scheme}://')
+
+    if request.method == "POST":
+        # Store credentials in the database
+        client_id = request.POST.get("client_id")
+        client_secret = request.POST.get("client_secret")
+        tenant_id = request.POST.get("tenant_id")
+        # Assume a single company for now – use the first company
+        company = Company.objects.first()
+        if not company:
+            # Create a default company if none exists to avoid errors during
+            # SSO configuration.  This mirrors the behaviour of the
+            # original project where a company is expected to exist.
+            company, _ = Company.objects.get_or_create(
+                company="Default", address="", country="", state="", city="", zip=""
+            )
+        config, _ = MicrosoftSSOConfig.objects.update_or_create(
+            company_id=company,
+            defaults={
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "tenant_id": tenant_id,
+                "is_active": True,
+            },
+        )
+        # Update settings for the current request
+        settings.MICROSOFT_AUTH_CLIENT_ID = config.client_id
+        settings.MICROSOFT_AUTH_CLIENT_SECRET = config.client_secret
+        settings.MICROSOFT_AUTH_TENANT_ID = config.tenant_id
+        messages.success(request, "Microsoft SSO settings updated.")
+        # Do not redirect; simply return a success response
+        from django.http import HttpResponse
+        # After saving, re-render the settings page with a success message
+        return render(request, 'base/microsoft_sso_settings.html', {
+            'settings': settings,
+            'redirect_uri': redirect_uri,
+        })
     
     # Microsoft OAuth authorization URL
     auth_url = "https://login.microsoftonline.com/{}/oauth2/v2.0/authorize".format(
@@ -33,7 +80,12 @@ def microsoft_auth_login(request):
         # In debug mode, allow HTTP scheme override
         scheme = getattr(settings, 'MICROSOFT_AUTH_SCHEME', 'https')
     
-    redirect_uri = request.build_absolute_uri('/login-microsoft/callback/').replace('http://', f'{scheme}://')
+    # Use the configured site URL if available, otherwise fallback to request
+    site_url = getattr(settings, "SITE_URL", None)
+    if site_url:
+        redirect_uri = f"{site_url.rstrip('/')}/login-microsoft/callback/"
+    else:
+        redirect_uri = request.build_absolute_uri('/login-microsoft/callback/').replace('http://', f'{scheme}://')
     params = {
         'client_id': settings.MICROSOFT_AUTH_CLIENT_ID,
         'response_type': 'code',
@@ -47,7 +99,11 @@ def microsoft_auth_login(request):
     request.session['microsoft_auth_state'] = params['state']
     
     # Redirect to Microsoft OAuth
-    return redirect(f"{auth_url}?{urlencode(params)}")
+    # Render the settings page for GET requests
+    return render(request, 'base/microsoft_sso_settings.html', {
+        'settings': settings,
+        'redirect_uri': redirect_uri,
+    })
 
 
 def microsoft_auth_callback(request):

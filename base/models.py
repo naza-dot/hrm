@@ -15,6 +15,7 @@ from django.contrib.auth.models import AbstractUser, User
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.db import migrations
 
 from base.horilla_company_manager import HorillaCompanyManager
 from horilla import horilla_middlewares
@@ -1179,6 +1180,42 @@ class HorillaMailTemplate(HorillaModel):
 
     def __str__(self) -> str:
         return f"{self.title}"
+
+
+class MicrosoftSSOConfig(HorillaModel):
+    """Store Microsoft Azure AD SSO credentials.
+
+    The application uses these secrets to perform OAuth2 authentication
+    against Microsoft Graph.  Only one instance should exist per company
+    and the values are stored encrypted in the database.
+    """
+
+    company_id = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="microsoft_sso_config",
+        verbose_name=_("Company"),
+    )
+    client_id = models.CharField(max_length=255, verbose_name=_("Client ID"))
+    client_secret = models.CharField(
+        max_length=255, verbose_name=_("Client Secret"), help_text=_("Keep secret")
+    )
+    tenant_id = models.CharField(max_length=255, verbose_name=_("Tenant ID"))
+    redirect_uri = models.URLField(
+        max_length=500, verbose_name=_("Redirect URI"), blank=True, null=True
+    )
+    is_active = models.BooleanField(default=True, verbose_name=_("Active"))
+    created_at = models.DateTimeField(auto_now_add=True, null=True, verbose_name=_("Created at"))
+
+    objects = HorillaCompanyManager(related_company_field="company_id")
+
+    class Meta:
+        verbose_name = _("Microsoft SSO Config")
+        verbose_name_plural = _("Microsoft SSO Configs")
+        unique_together = ("company_id",)
+
+    def __str__(self) -> str:
+        return f"{self.company_id} SSO"
 
 
 class DynamicEmailConfiguration(HorillaModel):
