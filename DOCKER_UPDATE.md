@@ -106,11 +106,9 @@ The latest update includes Microsoft Entra ID user synchronization. After updati
 ### Environment Variables (.env)
 ```bash
 # Add these to your .env file
-MICROSOFT_AUTH_CLIENT_ID=your_client_id
-MICROSOFT_AUTH_CLIENT_SECRET=your_client_secret
-MICROSOFT_AUTH_TENANT_ID=your_tenant_id
-```
-
+MICROSOFT_AUTH_CLIENT_ID= myclient_id
+MICROSOFT_AUTH_CLIENT_SECRET= myclient_secret
+MICROSOFT_AUTH_TENANT_ID= mytenant_id
 ### Update docker-compose.yaml
 Ensure these environment variables are set in docker-compose.yaml:
 
