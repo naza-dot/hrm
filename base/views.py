@@ -5316,49 +5316,229 @@ def microsoft_sso_settings(request):
     })
 
 def microsoft_sync_users(request):
-    """Endpoint to trigger fetching all users from the tenant.
+    """Endpoint to trigger fetching and syncing all users from the tenant.
 
     This view is intended to be called via an AJAX request from the
     Microsoft SSO settings page. It uses the Microsoft Graph API to list
-    users in the tenant that owns the app registration. The client id,
-    client secret and tenant id are expected to be available in the
-    Django settings (populated from environment variables).
+    users in the tenant that owns the app registration and syncs them
+    to the HRM database as Employee records. The client id, client secret
+    and tenant id are expected to be available in the Django settings
+    (populated from environment variables or database).
     """
     if not request.user.is_authenticated:
         return JsonResponse({"error": "unauthenticated"}, status=401)
+
+    if not request.user.is_superuser:
+        return JsonResponse({"error": "permission_denied"}, status=403)
 
     # Import here to avoid circular imports at module load time
     import requests
     from django.conf import settings
     from django.http import JsonResponse
+    from employee.models import Employee, EmployeeWorkInformation
 
     tenant_id = settings.MICROSOFT_AUTH_TENANT_ID
     client_id = settings.MICROSOFT_AUTH_CLIENT_ID
     client_secret = settings.MICROSOFT_AUTH_CLIENT_SECRET
 
-    # Acquire token using client credentials flow
-    token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
-    token_data = {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "scope": "https://graph.microsoft.com/.default",
-        "grant_type": "client_credentials",
-    }
-    token_resp = requests.post(token_url, data=token_data)
-    if token_resp.status_code != 200:
-        return JsonResponse({"error": "token_fetch_failed"}, status=token_resp.status_code)
-    access_token = token_resp.json().get("access_token")
-    if not access_token:
-        return JsonResponse({"error": "no_access_token"}, status=500)
+    if not all([tenant_id, client_id, client_secret]):
+        return JsonResponse({
+            "error": "Microsoft SSO not configured",
+            "message": "Please configure Microsoft SSO credentials first"
+        }, status=400)
 
-    # Call Graph API to list users
-    graph_url = "https://graph.microsoft.com/v1.0/users"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    users_resp = requests.get(graph_url, headers=headers)
-    if users_resp.status_code != 200:
-        return JsonResponse({"error": "graph_fetch_failed"}, status=users_resp.status_code)
-    users = users_resp.json().get("value", [])
-    return JsonResponse({"users": users})
+    try:
+        # Acquire token using client credentials flow
+        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+        token_data = {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "scope": "https://graph.microsoft.com/.default",
+            "grant_type": "client_credentials",
+        }
+        token_resp = requests.post(token_url, data=token_data, timeout=10)
+        if token_resp.status_code != 200:
+            return JsonResponse({
+                "error": "token_fetch_failed",
+                "message": f"Failed to get access token: {token_resp.text}"
+            }, status=token_resp.status_code)
+        
+        access_token = token_resp.json().get("access_token")
+        if not access_token:
+            return JsonResponse({
+                "error": "no_access_token",
+                "message": "No access token in response"
+            }, status=500)
+
+        # Fetch all users from Microsoft Graph API with pagination
+        all_users = []
+        graph_url = "https://graph.microsoft.com/v1.0/users"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Query parameters to get necessary fields
+        params = {
+            "$select": "id,displayName,givenName,surname,mail,userPrincipalName,jobTitle,officeLocation,mobilePhone,businessPhones",
+            "$top": 999  # Get max 999 users per request
+        }
+
+        try:
+            while graph_url:
+                response = requests.get(graph_url, headers=headers, params=params, timeout=10)
+                if response.status_code != 200:
+                    return JsonResponse({
+                        "error": "graph_fetch_failed",
+                        "message": f"Failed to fetch users from Graph API: {response.text}"
+                    }, status=response.status_code)
+                
+                data = response.json()
+                users = data.get("value", [])
+                all_users.extend(users)
+                
+                # Check for next page
+                graph_url = data.get("@odata.nextLink")
+                params = {}  # Clear params for next iteration since URL contains them
+        
+        except requests.exceptions.Timeout:
+            return JsonResponse({
+                "error": "graph_timeout",
+                "message": "Request to Microsoft Graph API timed out"
+            }, status=500)
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({
+                "error": "graph_request_failed",
+                "message": f"Request to Microsoft Graph API failed: {str(e)}"
+            }, status=500)
+
+        # Get the company for this sync
+        company = Company.objects.first()
+        if not company:
+            company, _ = Company.objects.get_or_create(
+                company="Default", address="", country="", state="", city="", zip=""
+            )
+
+        # Sync users to database
+        synced_count = 0
+        errors = []
+
+        for user_data in all_users:
+            try:
+                email = user_data.get('mail') or user_data.get('userPrincipalName')
+                if not email:
+                    continue
+
+                display_name = user_data.get('displayName', '')
+                first_name = user_data.get('givenName', '')
+                last_name = user_data.get('surname', '')
+                job_title = user_data.get('jobTitle', '')
+                phone = user_data.get('mobilePhone') or (
+                    user_data.get('businessPhones', [None])[0] if user_data.get('businessPhones') else None
+                ) or '0000000000'
+
+                # Ensure we have first and last names
+                if not first_name or not last_name:
+                    if display_name:
+                        name_parts = display_name.split()
+                        if not first_name:
+                            first_name = name_parts[0] if name_parts else email.split('@')[0]
+                        if not last_name and len(name_parts) > 1:
+                            last_name = ' '.join(name_parts[1:])
+                    else:
+                        first_name = email.split('@')[0]
+                        last_name = ''
+
+                # Find or create Django User
+                django_user, user_created = User.objects.get_or_create(
+                    email=email,
+                    defaults={
+                        'username': email.split('@')[0],
+                        'first_name': first_name[:30],  # Django limit
+                        'last_name': last_name[:150],
+                    }
+                )
+
+                # Ensure username is unique if email domain changed
+                if user_created:
+                    base_username = email.split('@')[0]
+                    username = base_username
+                    counter = 1
+                    while User.objects.filter(username=username).exclude(id=django_user.id).exists():
+                        username = f"{base_username}{counter}"
+                        counter += 1
+                    django_user.username = username
+                    django_user.save()
+
+                # Set unusable password for Microsoft SSO users
+                if not django_user.has_usable_password():
+                    django_user.set_unusable_password()
+                    django_user.save()
+
+                # Find or create Employee record
+                try:
+                    employee = Employee.objects.get(employee_user_id=django_user)
+                    # Update existing employee
+                    employee.employee_first_name = first_name[:100]
+                    employee.employee_last_name = last_name[:100]
+                    employee.email = email
+                    employee.phone = phone
+                    if job_title:
+                        # Try to set designation if the field exists
+                        if hasattr(employee, 'designation'):
+                            employee.designation = job_title
+                    if not employee.is_active:
+                        employee.is_active = True
+                    employee.save()
+                except Employee.DoesNotExist:
+                    # Create new employee
+                    employee = Employee(
+                        employee_user_id=django_user,
+                        employee_first_name=first_name[:100],
+                        employee_last_name=last_name[:100],
+                        email=email,
+                        phone=phone,
+                        is_active=True
+                    )
+                    employee.save()
+
+                    # Optionally assign to company (if EmployeeWorkInformation exists)
+                    try:
+                        if hasattr(EmployeeWorkInformation, 'objects'):
+                            EmployeeWorkInformation.objects.get_or_create(
+                                employee_id=employee,
+                                defaults={
+                                    'company_id': company,
+                                    'department_id': None,
+                                }
+                            )
+                    except Exception as e:
+                        # If this fails, it's not critical
+                        pass
+
+                synced_count += 1
+
+            except Exception as e:
+                error_msg = f"Error syncing user {user_data.get('mail', 'unknown')}: {str(e)}"
+                errors.append(error_msg)
+                continue
+
+        return JsonResponse({
+            "success": True,
+            "synced_count": synced_count,
+            "total_users": len(all_users),
+            "message": f"Successfully synced {synced_count} users from Microsoft Entra ID",
+            "users": all_users,
+            "errors": errors if errors else None
+        })
+
+    except Exception as e:
+        import traceback
+        return JsonResponse({
+            "error": "sync_failed",
+            "message": f"Failed to sync users: {str(e)}",
+            "details": traceback.format_exc()
+        }, status=500)
 
 
 @permission_required("base.change_company")

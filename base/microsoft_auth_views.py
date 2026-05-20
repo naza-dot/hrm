@@ -4,7 +4,7 @@ Microsoft OAuth authentication views for Horilla HRM
 
 from django.contrib.auth import login
 from django.contrib.auth.models import User
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
@@ -99,11 +99,11 @@ def microsoft_auth_login(request):
     request.session['microsoft_auth_state'] = params['state']
     
     # Redirect to Microsoft OAuth
-    # Render the settings page for GET requests
-    return render(request, 'base/microsoft_sso_settings.html', {
-        'settings': settings,
-        'redirect_uri': redirect_uri,
-    })
+    auth_url = "https://login.microsoftonline.com/{}/oauth2/v2.0/authorize?{}".format(
+        settings.MICROSOFT_AUTH_TENANT_ID,
+        urlencode(params)
+    )
+    return redirect(auth_url)
 
 
 def microsoft_auth_callback(request):
