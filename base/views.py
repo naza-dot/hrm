@@ -26,6 +26,7 @@ from django.contrib.auth.views import PasswordResetConfirmView, PasswordResetVie
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.core.management import call_command
+from django.db import OperationalError, ProgrammingError
 from django.db.models import ProtectedError, Q
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -128,6 +129,7 @@ from base.models import (
     BaserequestFile,
     BiometricAttendance,
     Company,
+    MicrosoftSSOConfig,
     CompanyLeaves,
     DashboardEmployeeCharts,
     Department,
@@ -5246,7 +5248,72 @@ def microsoft_sso_settings(request):
     """
     This method is used to render Microsoft SSO settings template
     """
-    return render(request, "base/microsoft_sso_settings.html")
+    scheme = 'https'
+    if settings.DEBUG:
+        scheme = getattr(settings, 'MICROSOFT_AUTH_SCHEME', 'https')
+
+    site_url = getattr(settings, 'SITE_URL', None)
+    if site_url:
+        redirect_uri = f"{site_url.rstrip('/')}/login-microsoft/callback/"
+    else:
+        redirect_uri = request.build_absolute_uri('/login-microsoft/callback/').replace('http://', f'{scheme}://')
+
+    company = Company.objects.first()
+    if not company:
+        company, _ = Company.objects.get_or_create(
+            company="Default", address="", country="", state="", city="", zip=""
+        )
+
+    if request.method == "POST":
+        client_id = request.POST.get("client_id", "").strip()
+        client_secret = request.POST.get("client_secret", "").strip()
+        tenant_id = request.POST.get("tenant_id", "").strip()
+
+        if client_id and client_secret and tenant_id:
+            try:
+                config, _ = MicrosoftSSOConfig.objects.update_or_create(
+                    company_id=company,
+                    defaults={
+                        "client_id": client_id,
+                        "client_secret": client_secret,
+                        "tenant_id": tenant_id,
+                        "redirect_uri": redirect_uri,
+                        "is_active": True,
+                    },
+                )
+                settings.MICROSOFT_AUTH_CLIENT_ID = config.client_id
+                settings.MICROSOFT_AUTH_CLIENT_SECRET = config.client_secret
+                settings.MICROSOFT_AUTH_TENANT_ID = config.tenant_id
+                messages.success(request, _("Microsoft SSO settings updated."))
+            except (OperationalError, ProgrammingError):
+                config = None
+                messages.error(
+                    request,
+                    _(
+                        "Microsoft SSO database table is not available yet. Please run migrations or check the database."
+                    ),
+                )
+        else:
+            messages.error(
+                request,
+                _("Please provide Client ID, Client Secret, and Tenant ID."),
+            )
+
+    config = None
+    try:
+        config = MicrosoftSSOConfig.objects.filter(company_id=company).first()
+        if config:
+            settings.MICROSOFT_AUTH_CLIENT_ID = config.client_id
+            settings.MICROSOFT_AUTH_CLIENT_SECRET = config.client_secret
+            settings.MICROSOFT_AUTH_TENANT_ID = config.tenant_id
+    except (OperationalError, ProgrammingError):
+        config = None
+
+    return render(request, "base/microsoft_sso_settings.html", {
+        "settings": settings,
+        "redirect_uri": redirect_uri,
+        "config": config,
+    })
 
 def microsoft_sync_users(request):
     """Endpoint to trigger fetching all users from the tenant.
