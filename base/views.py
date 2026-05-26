@@ -5321,9 +5321,15 @@ def microsoft_sync_users(request):
     This view is intended to be called via an AJAX request from the
     Microsoft SSO settings page. It uses the Microsoft Graph API to list
     users in the tenant that owns the app registration and syncs them
-    to the HRM database as Employee records. The client id, client secret
-    and tenant id are expected to be available in the Django settings
-    (populated from environment variables or database).
+    to the HRM database as Employee records with full profile mapping.
+    
+    Synced fields:
+    - Email, first/last name, phone (personal & work)
+    - Job title → Job Position
+    - Department
+    - Reporting Manager (via manager lookup)
+    - Office Location
+    - Company (creates HQ company from tenant if needed)
     """
     if not request.user.is_authenticated:
         return JsonResponse({"error": "unauthenticated"}, status=401)
@@ -5336,6 +5342,7 @@ def microsoft_sync_users(request):
     from django.conf import settings
     from django.http import JsonResponse
     from employee.models import Employee, EmployeeWorkInformation
+    from base.models import Department, JobPosition
 
     tenant_id = settings.MICROSOFT_AUTH_TENANT_ID
     client_id = settings.MICROSOFT_AUTH_CLIENT_ID
@@ -5378,9 +5385,9 @@ def microsoft_sync_users(request):
             "Content-Type": "application/json"
         }
         
-        # Query parameters to get necessary fields
+        # Query parameters to get necessary fields (including department and companyName)
         params = {
-            "$select": "id,displayName,givenName,surname,mail,userPrincipalName,jobTitle,officeLocation,mobilePhone,businessPhones",
+            "$select": "id,displayName,givenName,surname,mail,userPrincipalName,jobTitle,department,companyName,officeLocation,mobilePhone,businessPhones",
             "$top": 999  # Get max 999 users per request
         }
 
@@ -5412,12 +5419,23 @@ def microsoft_sync_users(request):
                 "message": f"Request to Microsoft Graph API failed: {str(e)}"
             }, status=500)
 
-        # Get the company for this sync
-        company = Company.objects.first()
-        if not company:
-            company, _ = Company.objects.get_or_create(
-                company="Default", address="", country="", state="", city="", zip=""
+        # Create or get HQ company based on tenant
+        hq_company = Company.objects.filter(hq=True).first()
+        if not hq_company:
+            hq_company, _ = Company.objects.get_or_create(
+                company=f"HQ ({tenant_id[:8]}...)",
+                defaults={
+                    "address": "",
+                    "country": "",
+                    "state": "",
+                    "city": "",
+                    "zip": "",
+                    "hq": True
+                }
             )
+
+        # Build map of user emails to enhance manager lookups later
+        email_to_user_id = {}
 
         # Sync users to database
         synced_count = 0
@@ -5433,6 +5451,10 @@ def microsoft_sync_users(request):
                 first_name = user_data.get('givenName', '')
                 last_name = user_data.get('surname', '')
                 job_title = user_data.get('jobTitle', '')
+                department_name = user_data.get('department', '')
+                office_location = user_data.get('officeLocation', '')
+                
+                # Phone handling: prefer mobile, fallback to first business phone
                 phone = user_data.get('mobilePhone') or (
                     user_data.get('businessPhones', [None])[0] if user_data.get('businessPhones') else None
                 ) or '0000000000'
@@ -5483,10 +5505,6 @@ def microsoft_sync_users(request):
                     employee.employee_last_name = last_name[:100]
                     employee.email = email
                     employee.phone = phone
-                    if job_title:
-                        # Try to set designation if the field exists
-                        if hasattr(employee, 'designation'):
-                            employee.designation = job_title
                     if not employee.is_active:
                         employee.is_active = True
                     employee.save()
@@ -5502,33 +5520,120 @@ def microsoft_sync_users(request):
                     )
                     employee.save()
 
-                    # Optionally assign to company (if EmployeeWorkInformation exists)
-                    try:
-                        if hasattr(EmployeeWorkInformation, 'objects'):
-                            EmployeeWorkInformation.objects.get_or_create(
-                                employee_id=employee,
-                                defaults={
-                                    'company_id': company,
-                                    'department_id': None,
-                                }
-                            )
-                    except Exception as e:
-                        # If this fails, it's not critical
-                        pass
+                # Get or create EmployeeWorkInformation
+                work_info, work_created = EmployeeWorkInformation.objects.get_or_create(
+                    employee_id=employee,
+                    defaults={
+                        'company_id': hq_company,
+                    }
+                )
+
+                # Map Job Title to Job Position
+                job_position = None
+                if job_title:
+                    job_position, _ = JobPosition.objects.get_or_create(
+                        job_position=job_title,
+                        defaults={'company_id': hq_company}
+                    )
+                
+                work_info.job_position_id = job_position
+
+                # Map Department
+                department = None
+                if department_name:
+                    department, _ = Department.objects.get_or_create(
+                        department=department_name,
+                        defaults={'company_id': hq_company}
+                    )
+                
+                work_info.department_id = department
+
+                # Map Office Location to Work Location
+                if office_location:
+                    work_info.location = office_location[:50]
+
+                # Map Work Phone (businessPhones)
+                work_phone = user_data.get('businessPhones', [None])[0] if user_data.get('businessPhones') else None
+                if work_phone:
+                    work_info.mobile = work_phone[:254]
+
+                # Map Work Email
+                if not work_info.email:
+                    work_info.email = email
+
+                work_info.company_id = hq_company
+                work_info.save()
+
+                # Store for manager mapping in second pass
+                email_to_user_id[email.lower()] = user_data.get('id')
 
                 synced_count += 1
 
             except Exception as e:
                 error_msg = f"Error syncing user {user_data.get('mail', 'unknown')}: {str(e)}"
                 errors.append(error_msg)
+                import traceback
+                errors.append(traceback.format_exc())
                 continue
+
+        # Second pass: Map reporting managers
+        # This requires fetching manager info from Graph API for each user
+        manager_errors = []
+        for user_data in all_users:
+            try:
+                email = user_data.get('mail') or user_data.get('userPrincipalName')
+                if not email:
+                    continue
+
+                # Fetch manager for this user
+                user_id = user_data.get('id')
+                if not user_id:
+                    continue
+
+                manager_url = f"https://graph.microsoft.com/v1.0/users/{user_id}/manager"
+                manager_resp = requests.get(
+                    manager_url,
+                    headers=headers,
+                    timeout=10
+                )
+
+                if manager_resp.status_code == 200:
+                    manager_data = manager_resp.json()
+                    manager_email = manager_data.get('mail') or manager_data.get('userPrincipalName')
+                    
+                    if manager_email:
+                        try:
+                            # Find the employee and their work info
+                            employee = Employee.objects.get(email=email)
+                            work_info = employee.employee_work_info
+                            
+                            # Find the manager employee
+                            manager_employee = Employee.objects.get(email=manager_email)
+                            work_info.reporting_manager_id = manager_employee
+                            work_info.save()
+                        except Employee.DoesNotExist:
+                            pass  # Manager or employee not found, skip
+                elif manager_resp.status_code == 404:
+                    # User has no manager assigned
+                    pass
+                else:
+                    manager_errors.append(
+                        f"Error fetching manager for {email}: {manager_resp.status_code}"
+                    )
+
+            except Exception as e:
+                manager_errors.append(f"Error mapping manager for {email}: {str(e)}")
+                continue
+
+        if manager_errors:
+            errors.extend(manager_errors[:5])  # Limit to first 5 manager errors
 
         return JsonResponse({
             "success": True,
             "synced_count": synced_count,
             "total_users": len(all_users),
             "message": f"Successfully synced {synced_count} users from Microsoft Entra ID",
-            "users": all_users,
+            "hq_company": hq_company.company,
             "errors": errors if errors else None
         })
 

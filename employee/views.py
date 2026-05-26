@@ -3417,49 +3417,58 @@ def redeem_points(request, emp_id):
 @login_required
 def organisation_chart(request):
     """
-    This method is used to view oganisation chart
+    This method is used to view organisation chart with reporting manager hierarchy
     """
+    from employee.models import EmployeeWorkInformation
+
     selected_company = request.session.get("selected_company")
+    
+    # Get all employees with assigned reporting managers (excludes those without a manager)
     if (
         request.GET.get("employee_work_info__company_id") == None
         and selected_company != "all"
     ):
         reporting_managers = Employee.objects.filter(
             is_active=True,
-            reporting_manager__isnull=False,
+            employee_work_info__reporting_manager_id__isnull=False,
             employee_work_info__company_id=selected_company,
-        ).distinct()
+        ).values_list("employee_work_info__reporting_manager_id", flat=True).distinct()
     else:
         reporting_managers = Employee.objects.filter(
             is_active=True,
-            reporting_manager__isnull=False,
-        ).distinct()
+            employee_work_info__reporting_manager_id__isnull=False,
+        ).values_list("employee_work_info__reporting_manager_id", flat=True).distinct()
 
+    # Get manager employees from the IDs
+    reporting_manager_employees = Employee.objects.filter(id__in=reporting_managers, is_active=True)
+    
     # Iterate through the queryset and add reporting manager id and name to the dictionary
-    result_dict = {item.id: item.get_full_name() for item in reporting_managers}
+    result_dict = {item.id: item.get_full_name() for item in reporting_manager_employees}
 
     entered_req_managers = []
 
     # Helper function to recursively create the hierarchy structure
     def create_hierarchy(manager):
         """
-        Hierarchy generator method
+        Hierarchy generator method - builds tree of subordinates
         """
         nodes = []
         # check the manager is a reporting manager if yes, store it into entered_req_managers
         if manager.id in result_dict.keys():
             entered_req_managers.append(manager)
-        # filter the subordinates
+        
+        # filter the subordinates - employees whose reporting_manager_id is this manager
         subordinates = Employee.objects.filter(
-            is_active=True, employee_work_info__reporting_manager_id=manager
+            is_active=True, 
+            employee_work_info__reporting_manager_id=manager
         ).exclude(id=manager.id)
 
-        # itrating through subordinates
+        # iterating through subordinates
         for employee in subordinates:
             if employee in entered_req_managers:
                 continue
-            # check the employee is a reporting manager if yes,remove className store
-            # it into entered_req_managers
+            
+            # check if the employee is also a reporting manager
             if employee.id in result_dict.keys():
                 nodes.append(
                     {
@@ -3471,7 +3480,6 @@ def organisation_chart(request):
                     }
                 )
                 entered_req_managers.append(employee)
-
             else:
                 nodes.append(
                     {
@@ -3485,38 +3493,33 @@ def organisation_chart(request):
                 )
         return nodes
 
-    selected_company = request.session.get("selected_company")
-    if (
-        request.GET.get("employee_work_info__company_id") == None
-        and selected_company != "all"
-    ):
-        reporting_managers = Employee.objects.filter(
-            is_active=True,
-            reporting_manager__isnull=False,
-            employee_work_info__company_id=selected_company,
-        ).distinct()
+    # Build dictionary of available managers for dropdown
+    if len(reporting_manager_employees) == 0:
+        new_dict = {}
     else:
-        reporting_managers = Employee.objects.filter(
-            is_active=True, reporting_manager__isnull=False
-        ).distinct()
+        # Add "My view" option if user is a manager
+        if request.user.employee_get and request.user.employee_get.id in result_dict:
+            new_dict = {request.user.employee_get.id: _("My view"), **result_dict}
+        else:
+            new_dict = {reporting_manager_employees[0].id: _("My view"), **result_dict}
 
     manager = request.user.employee_get
 
-    if len(reporting_managers) == 0:
-        new_dict = {}
-    else:
-        new_dict = {reporting_managers[0].id: _("My view"), **result_dict}
-    # POST method is used to change the reporting manager
+    # POST method is used to change the reporting manager view
     if request.method == "POST":
         if request.POST.get("manager_id"):
             manager_id = int(request.POST.get("manager_id"))
-            manager = Employee.objects.get(id=manager_id)
+            try:
+                manager = Employee.objects.get(id=manager_id)
+            except Employee.DoesNotExist:
+                manager = request.user.employee_get
+        
         node = {
             "name": manager.get_full_name(),
             "title": getattr(manager.get_job_position(), "job_position", _("Not set")),
             "children": create_hierarchy(manager),
         }
-        context = {"act_datasource": node}
+        context = {"act_datasource": json.dumps(node)}
         return render(request, "organisation_chart/chart.html", context=context)
 
     node = {
@@ -3526,7 +3529,7 @@ def organisation_chart(request):
     }
 
     context = {
-        "act_datasource": node,
+        "act_datasource": json.dumps(node),
         "reporting_manager_dict": new_dict,
         "act_manager_id": manager.id,
     }

@@ -2,7 +2,9 @@
 </div >
 
 <script>
-    var datascource = {{ act_datasource| safe}}
+    // Parse the JSON datasource
+    var datascource = {{ act_datasource | safe }}
+    
     function loopChart($hierarchy) {
         var $siblings = $hierarchy.children('.nodes').children('.hierarchy');
         if ($siblings.length) {
@@ -13,12 +15,13 @@
             loopChart($(sibling));
         });
     }
+    
     function filterNodes(keyWord) {
         if (!keyWord.length) {
             return;
         } else {
             var $chart = $('.orgchart');
-            // disalbe the expand/collapse feture
+            // disable the expand/collapse feature
             $chart.addClass('noncollapsable');
             // distinguish the matched nodes and the unmatched nodes according to the given key word
             $chart.find('.node').filter(function (index, node) {
@@ -44,6 +47,7 @@
             loopChart($chart.find('.hierarchy:first'));
         }
     }
+    
     $('#chart-container').orgchart({
         'data': datascource,
         'visibleLevel': 2,
