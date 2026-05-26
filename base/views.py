@@ -5323,13 +5323,18 @@ def microsoft_sync_users(request):
     users in the tenant that owns the app registration and syncs them
     to the HRM database as Employee records with full profile mapping.
     
-    Synced fields:
-    - Email, first/last name, phone (personal & work)
-    - Job title → Job Position
-    - Department
-    - Reporting Manager (via manager lookup)
-    - Office Location
-    - Company (creates HQ company from tenant if needed)
+    Synced fields mapping:
+    - email → Employee email
+    - displayName/givenName/surname → Employee name
+    - jobTitle → Job Position
+    - department → Department
+    - companyName → Company
+    - officeLocation → Work Location
+    - mobilePhone/businessPhones → phone and work phone
+    - employeeId → Employee Badge ID
+    - employeeType → Employee Type
+    - employeeHireDate → Joining Date
+    - manager → Reporting Manager (via manager lookup)
     """
     if not request.user.is_authenticated:
         return JsonResponse({"error": "unauthenticated"}, status=401)
@@ -5342,7 +5347,7 @@ def microsoft_sync_users(request):
     from django.conf import settings
     from django.http import JsonResponse
     from employee.models import Employee, EmployeeWorkInformation
-    from base.models import Department, JobPosition
+    from base.models import Department, JobPosition, EmployeeType, Company
 
     tenant_id = settings.MICROSOFT_AUTH_TENANT_ID
     client_id = settings.MICROSOFT_AUTH_CLIENT_ID
@@ -5387,7 +5392,7 @@ def microsoft_sync_users(request):
         
         # Query parameters to get necessary fields (including department and companyName)
         params = {
-            "$select": "id,displayName,givenName,surname,mail,userPrincipalName,jobTitle,department,companyName,officeLocation,mobilePhone,businessPhones",
+            "$select": "id,displayName,givenName,surname,mail,userPrincipalName,jobTitle,department,companyName,officeLocation,mobilePhone,businessPhones,employeeId,employeeType,employeeHireDate",
             "$top": 999  # Get max 999 users per request
         }
 
@@ -5453,6 +5458,10 @@ def microsoft_sync_users(request):
                 job_title = user_data.get('jobTitle', '')
                 department_name = user_data.get('department', '')
                 office_location = user_data.get('officeLocation', '')
+                company_name = user_data.get('companyName', '')
+                employee_id_entra = user_data.get('employeeId', '')
+                employee_type_entra = user_data.get('employeeType', '')
+                employee_hire_date_entra = user_data.get('employeeHireDate', '')
                 
                 # Phone handling: prefer mobile, fallback to first business phone
                 phone = user_data.get('mobilePhone') or (
@@ -5561,7 +5570,50 @@ def microsoft_sync_users(request):
                 if not work_info.email:
                     work_info.email = email
 
-                work_info.company_id = hq_company
+                # Map Company Name to Company
+                company_for_user = hq_company
+                if company_name:
+                    company_for_user, _ = Company.objects.get_or_create(
+                        company=company_name,
+                        defaults={
+                            'address': '',
+                            'country': '',
+                            'state': '',
+                            'city': '',
+                            'zip': '',
+                            'hq': False
+                        }
+                    )
+                work_info.company_id = company_for_user
+
+                # Map Employee ID (Entra ID's employeeId) to badge_id
+                if employee_id_entra:
+                    employee.badge_id = employee_id_entra[:50]
+                    employee.save()
+
+                # Map Employee Type (employeeType from Entra)
+                employee_type = None
+                if employee_type_entra:
+                    employee_type, _ = EmployeeType.objects.get_or_create(
+                        employee_type=employee_type_entra
+                    )
+                    # Add company to the employee type if not already there
+                    if company_for_user not in employee_type.company_id.all():
+                        employee_type.company_id.add(company_for_user)
+                
+                work_info.employee_type_id = employee_type
+
+                # Map Employee Hire Date (employeeHireDate) to date_joining
+                if employee_hire_date_entra:
+                    try:
+                        from datetime import datetime
+                        # Parse ISO format date (YYYY-MM-DD)
+                        hire_date = datetime.strptime(employee_hire_date_entra, '%Y-%m-%d').date()
+                        work_info.date_joining = hire_date
+                    except (ValueError, TypeError):
+                        # If date parsing fails, skip setting the date
+                        pass
+
                 work_info.save()
 
                 # Store for manager mapping in second pass
