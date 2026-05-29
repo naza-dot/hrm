@@ -1503,7 +1503,7 @@ def mail_server_test_email(request):
     instance_id = request.GET.get("instance_id")
     white_labelling = getattr(horilla_apps, "WHITE_LABELLING", False)
     image_path = path.join(settings.STATIC_ROOT, "images/ui/horilla-logo.png")
-    company_name = "Horilla"
+    company_name = "Task Systems"
 
     if white_labelling:
         hq = Company.objects.filter(hq=True).last()
@@ -1525,7 +1525,7 @@ def mail_server_test_email(request):
         form = DynamicMailTestForm(request.POST)
         if form.is_valid():
             email_to = form.cleaned_data["to_email"]
-            subject = _("Test mail from Horilla")
+            subject = _("Test mail from Task Systems")
 
             # HTML content
             html_content = f"""
@@ -5323,6 +5323,10 @@ def microsoft_sync_users(request):
     users in the tenant that owns the app registration and syncs them
     to the HRM database as Employee records with full profile mapping.
     
+    The function also fetches organization details from the tenant and creates
+    a company record with the actual organization name instead of using a
+    generic HQ placeholder.
+    
     Synced fields mapping:
     - email → Employee email
     - displayName/givenName/surname → Employee name
@@ -5335,6 +5339,10 @@ def microsoft_sync_users(request):
     - employeeType → Employee Type
     - employeeHireDate → Joining Date
     - manager → Reporting Manager (via manager lookup)
+    
+    Organization details:
+    - displayName → Company name (HQ)
+    - countryLetterCode → Company country
     """
     if not request.user.is_authenticated:
         return JsonResponse({"error": "unauthenticated"}, status=401)
@@ -5424,14 +5432,42 @@ def microsoft_sync_users(request):
                 "message": f"Request to Microsoft Graph API failed: {str(e)}"
             }, status=500)
 
-        # Create or get HQ company based on tenant
+        # Fetch organization details from Microsoft Graph API
+        org_name = f"HQ ({tenant_id[:8]}...)"
+        org_country = ""
+        
+        try:
+            org_url = "https://graph.microsoft.com/v1.0/organization"
+            org_params = {
+                "$select": "displayName,verifiedDomains,countryLetterCode"
+            }
+            org_response = requests.get(org_url, headers=headers, params=org_params, timeout=10)
+            
+            if org_response.status_code == 200:
+                org_data = org_response.json()
+                orgs = org_data.get("value", [])
+                
+                if orgs:
+                    org = orgs[0]
+                    # Use display name if available
+                    if org.get('displayName'):
+                        org_name = org.get('displayName')
+                    
+                    # Get country code if available
+                    if org.get('countryLetterCode'):
+                        org_country = org.get('countryLetterCode')
+        except Exception as e:
+            # If organization fetch fails, continue with default name
+            pass
+
+        # Create or get HQ company based on tenant with fetched organization data
         hq_company = Company.objects.filter(hq=True).first()
         if not hq_company:
             hq_company, _ = Company.objects.get_or_create(
-                company=f"HQ ({tenant_id[:8]}...)",
+                company=org_name,
                 defaults={
                     "address": "",
-                    "country": "",
+                    "country": org_country,
                     "state": "",
                     "city": "",
                     "zip": "",
@@ -5489,6 +5525,11 @@ def microsoft_sync_users(request):
                         'last_name': last_name[:150],
                     }
                 )
+
+                # Update user fields on every sync (not just creation)
+                django_user.first_name = first_name[:30]
+                django_user.last_name = last_name[:150]
+                django_user.save()
 
                 # Ensure username is unique if email domain changed
                 if user_created:
@@ -5567,8 +5608,7 @@ def microsoft_sync_users(request):
                     work_info.mobile = work_phone[:254]
 
                 # Map Work Email
-                if not work_info.email:
-                    work_info.email = email
+                work_info.email = email
 
                 # Map Company Name to Company
                 company_for_user = hq_company

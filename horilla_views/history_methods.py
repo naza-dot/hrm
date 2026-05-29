@@ -17,7 +17,7 @@ class Bot:
         self.__str__()
 
     def __str__(self) -> str:
-        return "Horilla Bot"
+        return "Task Systems Bot"
 
     def get_avatar(self):
         """
