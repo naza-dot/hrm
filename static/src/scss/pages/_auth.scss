@@ -1,4 +1,39 @@
 
+.oh-auth-background{
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    background: url('/static/images/login-bg.jpg') no-repeat center center / cover;
+    &::before{
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 1;
+    }
+}
+.oh-auth-wrapper{
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 5%;
+}
+.oh-auth-logo{
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    z-index: 3;
+    img{
+        max-width: 100px;
+        height: auto;
+    }
+}
 .oh-auth{
     display: flex;
     flex-direction: column;
