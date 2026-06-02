@@ -9,7 +9,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from base.models import Company
 from employee.models import Employee
 from horilla.models import HorillaModel, upload_path
@@ -26,9 +25,8 @@ class AssetCategory(HorillaModel):
     asset_category_description = models.TextField(
         max_length=255, verbose_name=_("Description")
     )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
     objects = models.Manager()
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
-    objects = HorillaCompanyManager("company_id")
 
     class Meta:
         """
@@ -57,8 +55,8 @@ class AssetLot(HorillaModel):
     lot_description = models.TextField(
         null=True, blank=True, max_length=255, verbose_name=_("Description")
     )
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
-    objects = HorillaCompanyManager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         """
@@ -121,7 +119,8 @@ class Asset(HorillaModel):
     notify_before = models.IntegerField(
         default=1, null=True, verbose_name=_("Notify Before (days)")
     )
-    objects = HorillaCompanyManager("asset_category_id__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         ordering = ["-created_at"]
@@ -248,7 +247,8 @@ class AssetAssignment(HorillaModel):
         verbose_name=_("Return Status"),
     )
     return_request = models.BooleanField(default=False)
-    objects = HorillaCompanyManager("asset_id__asset_lot_number_id__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
     return_images = models.ManyToManyField(
         ReturnImages, blank=True, related_name="return_images"
     )
@@ -257,9 +257,6 @@ class AssetAssignment(HorillaModel):
         blank=True,
         related_name="assign_images",
         verbose_name=_("Assign Condition Images"),
-    )
-    objects = HorillaCompanyManager(
-        "assigned_to_employee_id__employee_work_info__company_id"
     )
 
     class Meta:
@@ -301,9 +298,8 @@ class AssetRequest(HorillaModel):
     asset_request_status = models.CharField(
         max_length=30, choices=STATUS, default="Requested", null=True, blank=True
     )
-    objects = HorillaCompanyManager(
-        "requested_employee_id__employee_work_info__company_id"
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         """Meta class for AssetRequest model"""

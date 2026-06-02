@@ -27,7 +27,6 @@ from attendance.methods.utils import (
     validate_time_format,
     validate_time_in_minutes,
 )
-from base.horilla_company_manager import HorillaCompanyManager
 from base.methods import is_company_leave, is_holiday
 from base.models import Company, EmployeeShift, EmployeeShiftDay, WorkType
 from employee.models import Employee
@@ -70,9 +69,8 @@ class AttendanceActivity(HorillaModel):
     clock_out_date = models.DateField(null=True, verbose_name=_("Out Date"))
     out_datetime = models.DateTimeField(null=True)
     clock_out = models.TimeField(null=True, verbose_name=_("Check Out"))
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         """
@@ -80,25 +78,6 @@ class AttendanceActivity(HorillaModel):
         """
 
         ordering = ["-attendance_date", "employee_id__employee_first_name", "clock_in"]
-
-    def duration(self):
-        """
-        Duration calc b/w in-out method
-        """
-
-        if not self.clock_out or not self.clock_out_date:
-            self.clock_out_date = datetime.today().date()
-            self.clock_out = datetime.now().time()
-
-        clock_in_datetime = datetime.combine(self.clock_in_date, self.clock_in)
-        clock_out_datetime = datetime.combine(self.clock_out_date, self.clock_out)
-
-        time_difference = clock_out_datetime - clock_in_datetime
-
-        return time_difference.total_seconds()
-
-    def __str__(self):
-        return f"{self.employee_id} - {self.attendance_date} - {self.clock_in} - {self.clock_out}"
 
 
 class BatchAttendance(HorillaModel):
@@ -226,9 +205,8 @@ class Attendance(HorillaModel):
         verbose_name=_("Approved By"),
         editable=False,
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
     history = HorillaAuditLog(
         related_name="history_set",
         bases=[
@@ -657,9 +635,8 @@ class AttendanceOverTime(HorillaModel):
         null=True,
         verbose_name=_("Overtime Seconds"),
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         """
@@ -784,9 +761,7 @@ class AttendanceLateComeEarlyOut(HorillaModel):
         editable=False,
     )
     type = models.CharField(max_length=20, choices=choices, verbose_name=_("Type"))
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    objects = models.Manager()
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def get_penalties_count(self):
@@ -833,7 +808,7 @@ class AttendanceValidationCondition(HorillaModel):
         default=False, verbose_name=_("Auto Approve OT")
     )
     company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
 
     def clean(self):
         """
@@ -867,9 +842,9 @@ class GraceTime(HorillaModel):
         verbose_name=_("Allowed Clock-Out"),
     )
     is_default = models.BooleanField(default=False)
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
 
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return str(f"{self.allowed_time} - Hours")
@@ -934,7 +909,7 @@ class AttendanceGeneralSetting(HorillaModel):
         ),
     )
     company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
 
 
 class WorkRecords(models.Model):
@@ -996,7 +971,8 @@ class WorkRecords(models.Model):
     )
     day_percentage = models.FloatField(default=0)
     last_update = models.DateTimeField(null=True, blank=True)
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def title_message(self):
         title_message = self.message

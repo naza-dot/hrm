@@ -7,7 +7,6 @@ from django.db.models.signals import post_delete, post_save
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from base.models import Company, Department, JobPosition, Tags
 from employee.models import Employee
 from horilla import horilla_middlewares
@@ -57,10 +56,8 @@ class DepartmentManager(HorillaModel):
         related_name="dept_manager",
         on_delete=models.CASCADE,
     )
-    company_id = models.ForeignKey(
-        Company, null=True, editable=False, on_delete=models.PROTECT
-    )
-    objects = HorillaCompanyManager("manager__employee_work_info__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         unique_together = ("department", "manager")
@@ -77,10 +74,8 @@ class TicketType(HorillaModel):
     title = models.CharField(max_length=100, unique=True, verbose_name=_("Title"))
     type = models.CharField(choices=TICKET_TYPES, max_length=50, verbose_name=_("Type"))
     prefix = models.CharField(max_length=3, unique=True, verbose_name=_("Prefix"))
-    company_id = models.ForeignKey(
-        Company, null=True, editable=False, on_delete=models.PROTECT
-    )
-    objects = HorillaCompanyManager(related_company_field="company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def __str__(self):
         return self.title
@@ -124,9 +119,8 @@ class Ticket(HorillaModel):
             HorillaAuditInfo,
         ],
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         ordering = ["-created_date"]
@@ -250,29 +244,19 @@ class FAQCategory(HorillaModel):
         blank=True, null=True, max_length=255, verbose_name=_("Description")
     )
     company_id = models.ForeignKey(
-        Company,
-        null=True,
-        blank=True,
-        editable=False,
-        verbose_name=_("Company"),
-        on_delete=models.CASCADE,
+    Company,
+    null=True,
+    blank=True,
+    editable=False,
+    verbose_name=_("Company"),
+    on_delete=models.CASCADE,
     )
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
 
     def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
-        request = getattr(horilla_middlewares._thread_locals, "request", None)
-        selected_company = request.session.get("selected_company")
-        if (
-            not self.id
-            and not self.company_id
-            and selected_company
-            and selected_company != "all"
-        ):
-            self.company_id = Company.find(selected_company)
-
         super().save()
 
     class Meta:
@@ -286,24 +270,14 @@ class FAQ(HorillaModel):
     tags = models.ManyToManyField(Tags, blank=True)
     category = models.ForeignKey(FAQCategory, on_delete=models.PROTECT)
     company_id = models.ForeignKey(
-        Company, null=True, editable=False, on_delete=models.PROTECT
+    Company, null=True, editable=False, on_delete=models.PROTECT
     )
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
 
     def __str__(self):
         return self.question
 
     def save(self, *args, **kwargs):
-        request = getattr(horilla_middlewares._thread_locals, "request", None)
-        selected_company = request.session.get("selected_company")
-        if (
-            not self.id
-            and not self.company_id
-            and selected_company
-            and selected_company != "all"
-        ):
-            self.company_id = Company.find(selected_company)
-
         super().save()
 
     class Meta:

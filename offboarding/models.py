@@ -8,7 +8,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from base.models import Company
 from employee.models import Employee
 from horilla import horilla_middlewares
@@ -31,13 +30,8 @@ class Offboarding(HorillaModel):
     description = models.TextField(max_length=255)
     managers = models.ManyToManyField(Employee)
     status = models.CharField(max_length=10, default="ongoing", choices=statuses)
-    company_id = models.ForeignKey(
-        Company,
-        on_delete=models.CASCADE,
-        null=True,
-        verbose_name="Company",
-    )
-    objects = HorillaCompanyManager("company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def __str__(self):
         return self.title
@@ -130,9 +124,8 @@ class OffboardingEmployee(HorillaModel):
     unit = models.CharField(max_length=10, choices=UNIT, default="month", null=True)
     notice_period_starts = models.DateField(null=True)
     notice_period_ends = models.DateField(null=True, blank=True)
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return self.employee_id.get_full_name()
@@ -158,9 +151,7 @@ class ResignationLetter(HorillaModel):
     offboarding_employee_id = models.ForeignKey(
         OffboardingEmployee, on_delete=models.CASCADE, editable=False, null=True
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    objects = models.Manager()
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -347,4 +338,6 @@ class OffboardingGeneralSetting(HorillaModel):
     """
 
     resignation_request = models.BooleanField(default=False)
+    pass
+
     company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)

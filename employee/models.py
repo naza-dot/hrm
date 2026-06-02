@@ -23,7 +23,6 @@ from django.utils.translation import gettext_lazy as trans
 from PIL import Image
 
 from accessibility.accessibility import ACCESSBILITY_FEATURE
-from base.horilla_company_manager import HorillaCompanyManager
 from base.models import (
     Company,
     Department,
@@ -112,9 +111,7 @@ class Employee(models.Model):
     is_directly_converted = models.BooleanField(
         default=False, null=True, blank=True, editable=False
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_work_info__company_id"
-    )
+    objects = models.Manager()
 
     def clean_fields(self, exclude=None):
         errors = {}
@@ -611,6 +608,14 @@ class EmployeeWorkInformation(models.Model):
         related_name="employee_work_info",
         verbose_name=_("Employee"),
     )
+    company_id = models.ForeignKey(
+        Company,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        verbose_name=_("Company"),
+        related_name="employee_work_info",
+    )
     department_id = models.ForeignKey(
         Department,
         on_delete=models.PROTECT,
@@ -668,13 +673,6 @@ class EmployeeWorkInformation(models.Model):
     location = models.CharField(
         max_length=50, null=True, blank=True, verbose_name=_("Work Location")
     )
-    company_id = models.ForeignKey(
-        Company,
-        on_delete=models.PROTECT,
-        blank=True,
-        null=True,
-        verbose_name=_("Company"),
-    )
     email = models.EmailField(
         max_length=254, blank=True, null=True, verbose_name=_("Work Email")
     )
@@ -702,7 +700,7 @@ class EmployeeWorkInformation(models.Model):
             HorillaAuditInfo,
         ],
     )
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return f"{self.employee_id} - {self.job_position_id}"
@@ -773,9 +771,7 @@ class EmployeeBankDetails(HorillaModel):
         max_length=50, null=True, blank=True, verbose_name="Bank Code #2"
     )
     additional_info = models.JSONField(null=True, blank=True)
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    objects = models.Manager()
 
     class Meta:
         verbose_name = _("Employee Bank Details")
@@ -820,9 +816,7 @@ class EmployeeNote(HorillaModel):
     description = models.TextField(verbose_name=_("Description"), null=True)  # 905
     note_files = models.ManyToManyField(NoteFiles, blank=True)
     updated_by = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return f"{self.description}"
@@ -843,14 +837,15 @@ class Policy(HorillaModel):
 
     title = models.CharField(max_length=50, verbose_name=trans("Title"))
     body = models.TextField(verbose_name=trans("Body"))
+    company_id = models.ManyToManyField(
+        Company, blank=True, verbose_name=_("Company")
+    )
     is_visible_to_all = models.BooleanField(
         default=True, verbose_name=trans("Is visible to all")
     )
     specific_employees = models.ManyToManyField(Employee, blank=True, editable=False)
     attachments = models.ManyToManyField(PolicyMultipleFile, blank=True)
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
-
-    objects = HorillaCompanyManager("company_id")
+    objects = models.Manager()
 
     class Meta:
         verbose_name = _("Policy")
@@ -894,9 +889,7 @@ class BonusPoint(HorillaModel):
             HorillaAuditInfo,
         ],
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.employee_id} - {self.points} Points"
@@ -970,7 +963,7 @@ class DisciplinaryAction(HorillaModel):
     )
     start_date = models.DateField(null=True)
     attachment = models.FileField(upload_to=upload_path, null=True, blank=True)
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return f"{self.action}"
@@ -985,8 +978,10 @@ class EmployeeGeneralSetting(HorillaModel):
     """
 
     badge_id_prefix = models.CharField(max_length=5, default="PEP")
-    company_id = models.ForeignKey(Company, null=True, on_delete=models.CASCADE)
-    objects = HorillaCompanyManager("company_id")
+    company_id = models.ForeignKey(
+        Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company")
+    )
+    objects = models.Manager()
 
 
 class ProfileEditFeature(HorillaModel):

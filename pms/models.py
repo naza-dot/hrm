@@ -7,7 +7,6 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from base.models import Company, Department, JobPosition
 from employee.models import BonusPoint, Employee
 from horilla import horilla_middlewares
@@ -25,8 +24,8 @@ class Period(HorillaModel):
     period_name = models.CharField(max_length=150, unique=True)
     start_date = models.DateField()
     end_date = models.DateField()
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
-    objects = HorillaCompanyManager("company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def __str__(self):
         return self.period_name
@@ -52,7 +51,6 @@ class KeyResult(HorillaModel):
     target_value = models.IntegerField(null=True, blank=True, default=100)
     duration = models.IntegerField(null=True, blank=True)
     archive = models.BooleanField(default=False)
-    history = HorillaAuditLog(bases=[HorillaAuditInfo])
     company_id = models.ForeignKey(
         Company,
         null=True,
@@ -60,7 +58,8 @@ class KeyResult(HorillaModel):
         verbose_name=_("Company"),
         on_delete=models.CASCADE,
     )
-    objects = HorillaCompanyManager()
+    history = HorillaAuditLog(bases=[HorillaAuditInfo])
+    objects = models.Manager()
 
     class Meta:
         """
@@ -116,15 +115,9 @@ class Objective(HorillaModel):
     add_assignees = models.BooleanField(default=False)
     archive = models.BooleanField(default=False)
     history = HorillaAuditLog(bases=[HorillaAuditInfo])
-    company_id = models.ForeignKey(
-        Company,
-        null=True,
-        blank=True,
-        verbose_name=_("Company"),
-        on_delete=models.CASCADE,
-    )
     self_employee_progress_update = models.BooleanField(default=True)
-    objects = HorillaCompanyManager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         """
@@ -139,16 +132,6 @@ class Objective(HorillaModel):
         return f"{self.title}"
 
     def save(self, *args, **kwargs):
-        request = getattr(horilla_middlewares._thread_locals, "request", None)
-        selected_company = request.session.get("selected_company")
-        if (
-            not self.id
-            and not self.company_id
-            and selected_company
-            and selected_company != "all"
-        ):
-            self.company_id = Company.find(selected_company)
-
         super().save()
 
 
@@ -211,7 +194,7 @@ class EmployeeObjective(HorillaModel):
 
     history = HorillaAuditLog(bases=[HorillaAuditInfo], related_name="history_set")
     archive = models.BooleanField(default=False)
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     class Meta:
         """
@@ -274,9 +257,7 @@ class Comment(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     history = HorillaAuditLog(excluded_fields=["comment"], bases=[HorillaAuditInfo])
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.employee_id.employee_first_name} - {self.comment} "
@@ -333,9 +314,7 @@ class EmployeeKeyResult(models.Model):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     history = HorillaAuditLog(bases=[HorillaAuditInfo])
-    objects = HorillaCompanyManager(
-        related_company_field="employee_objective_id__objective_id__company_id"
-    )
+    objects = models.Manager()
     progress_percentage = models.IntegerField(default=0)
 
     def __str__(self):
@@ -439,9 +418,8 @@ class QuestionTemplate(HorillaModel):
     question_template = models.CharField(
         max_length=100, null=False, blank=False, unique=True, verbose_name="Title"
     )
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
-
-    objects = HorillaCompanyManager("company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def __str__(self):
         return self.question_template
@@ -468,7 +446,7 @@ class Question(HorillaModel):
         null=True,
         blank=True,
     )
-    objects = HorillaCompanyManager("template_id__company_id")
+    objects = models.Manager()
 
     def __str__(self):
         return self.question
@@ -488,7 +466,7 @@ class QuestionOptions(HorillaModel):
     option_b = models.CharField(max_length=250, null=True, blank=True)
     option_c = models.CharField(max_length=250, null=True, blank=True)
     option_d = models.CharField(max_length=250, null=True, blank=True)
-    objects = HorillaCompanyManager("question_id__template_id__company_id")
+    objects = models.Manager()
 
 
 class Feedback(HorillaModel):
@@ -575,8 +553,9 @@ class Feedback(HorillaModel):
     )
     cyclic_next_start_date = models.DateField(null=True, blank=True)
     cyclic_next_end_date = models.DateField(null=True, blank=True)
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
 
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     class Meta:
         ordering = ["-id"]
@@ -730,7 +709,7 @@ class Answer(models.Model):
     feedback_id = models.ForeignKey(
         Feedback, on_delete=models.PROTECT, related_name="feedback_answer"
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.employee_id.employee_first_name} - {self.answer}"
@@ -755,7 +734,7 @@ class KeyResultFeedback(models.Model):
         blank=True,
         on_delete=models.DO_NOTHING,
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
 
 class Meetings(HorillaModel):
@@ -781,15 +760,8 @@ class Meetings(HorillaModel):
     )
     response = models.TextField(null=True, blank=True)
     show_response = models.BooleanField(default=False, editable=False)
-    company_id = models.ForeignKey(
-        Company,
-        null=True,
-        blank=True,
-        editable=False,
-        verbose_name=_("Company"),
-        on_delete=models.CASCADE,
-    )
-    objects = HorillaCompanyManager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         verbose_name = _("Meetings")
@@ -799,16 +771,6 @@ class Meetings(HorillaModel):
         return self.title
 
     def save(self, *args, **kwargs):
-        request = getattr(horilla_middlewares._thread_locals, "request", None)
-        selected_company = request.session.get("selected_company")
-        if (
-            not self.id
-            and not self.company_id
-            and selected_company
-            and selected_company != "all"
-        ):
-            self.company_id = Company.find(selected_company)
-
         super().save()
 
 
@@ -834,7 +796,7 @@ class MeetingsAnswer(models.Model):
     meeting_id = models.ForeignKey(
         Meetings, on_delete=models.PROTECT, related_name="meeting_answer"
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.employee_id.employee_first_name} - {self.answer}"
@@ -859,7 +821,7 @@ class EmployeeBonusPoint(HorillaModel):
         on_delete=models.CASCADE,
         related_name="employeebonuspoint_set",
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.employee_id.employee_first_name} - {self.bonus_point}"

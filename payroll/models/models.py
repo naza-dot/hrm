@@ -16,7 +16,6 @@ from django.http import QueryDict
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from base.methods import get_next_month_same_date
 from base.models import (
     Company,
@@ -106,7 +105,7 @@ class FilingStatus(HorillaModel):
     company_id = models.ForeignKey(
         Company, null=True, editable=False, on_delete=models.PROTECT
     )
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return str(self.filing_status)
@@ -269,8 +268,9 @@ class Contract(HorillaModel):
             HorillaAuditInfo,
         ],
     )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
 
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return f"{self.contract_name} -{self.contract_start_date} - {self.contract_end_date}"
@@ -425,7 +425,7 @@ class WorkRecord(models.Model):
     is_leave_record = models.BooleanField(default=False)
     day_percentage = models.FloatField(default=0)
     last_update = models.DateTimeField(null=True, blank=True)
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     def save(self, *args, **kwargs):
         self.last_update = timezone.now()
@@ -931,7 +931,7 @@ class Allowance(HorillaModel):
     )
     only_show_under_employee = models.BooleanField(default=False, editable=False)
     is_loan = models.BooleanField(default=False, editable=False)
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
     other_conditions = models.ManyToManyField(
         MultipleCondition, blank=True, editable=False
     )
@@ -1043,10 +1043,6 @@ class Allowance(HorillaModel):
         return str(self.title)
 
     def save(self):
-        request = getattr(horilla_middlewares._thread_locals, "request", None)
-        selected_company = request.session.get("selected_company")
-        if not self.id and selected_company and selected_company != "all":
-            self.company_id = Company.find(selected_company)
         super().save()
 
 
@@ -1124,7 +1120,6 @@ class Deduction(HorillaModel):
         to the specific employees when the condition satisfies with the employee's information"
         ),
     )
-    # If condition based then must fill field, value, and condition,
     field = models.CharField(
         max_length=255,
         choices=FIELD_CHOICE,
@@ -1162,7 +1157,6 @@ class Deduction(HorillaModel):
         default=True,
         help_text=_("To specify, the deduction is fixed or not"),
     )
-    # If fixed amount then fill amount
     amount = models.FloatField(
         null=True,
         blank=True,
@@ -1213,7 +1207,6 @@ class Deduction(HorillaModel):
         default="month_working_days",
         choices=[
             ("month_working_days", _("For working days on month")),
-            # ("monthly_working_days", "For working days on month"),
         ],
         help_text=_("The maximum amount for ?"),
     )
@@ -1242,7 +1235,7 @@ class Deduction(HorillaModel):
         Company, null=True, editable=False, on_delete=models.PROTECT
     )
     only_show_under_employee = models.BooleanField(default=False, editable=False)
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
 
     is_installment = models.BooleanField(default=False, editable=False)
     other_conditions = models.ManyToManyField(
@@ -1250,9 +1243,6 @@ class Deduction(HorillaModel):
     )
 
     def installment_payslip(self):
-        """
-        Method to retrieve the payslip associated with this installment.
-        """
         payslip = Payslip.objects.filter(installment_ids=self).first()
         return payslip
 
@@ -1317,9 +1307,6 @@ class Deduction(HorillaModel):
                     raise ValidationError({"amount": _("This field is required")})
 
     def clean_condition_based_on(self):
-        """
-        Clean the field, condition, and value attributes when not condition-based.
-        """
         if not self.is_condition_based:
             self.field = None
             self.condition = None
@@ -1327,13 +1314,6 @@ class Deduction(HorillaModel):
 
     def __str__(self) -> str:
         return str(self.title)
-
-    def save(self):
-        request = getattr(horilla_middlewares._thread_locals, "request", None)
-        selected_company = request.session.get("selected_company")
-        if not self.id and selected_company and selected_company != "all":
-            self.company_id = Company.find(selected_company)
-        super().save()
 
 
 class Payslip(HorillaModel):
@@ -1366,7 +1346,8 @@ class Payslip(HorillaModel):
         max_length=20, null=True, default="draft", choices=status_choices
     )
     sent_to_employee = models.BooleanField(null=True, default=False)
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
     installment_ids = models.ManyToManyField(Deduction, editable=False)
     history = HorillaAuditLog(
         related_name="history_set",
@@ -1502,7 +1483,8 @@ class LoanAccount(HorillaModel):
             null=True,
             editable=False,
         )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.title} - {self.employee_id}"
@@ -1644,7 +1626,8 @@ class Reimbursement(HorillaModel):
     allowance_id = models.ForeignKey(
         Allowance, on_delete=models.SET_NULL, null=True, editable=False
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         ordering = ["-id"]
@@ -1893,7 +1876,6 @@ class PayslipAutoGenerate(models.Model):
     )
 
     def clean(self):
-        # Unique condition checking for all company
         if (
             not self.company_id
             and PayslipAutoGenerate.objects.filter(company_id=None).exists()
@@ -1923,4 +1905,4 @@ class PayslipAutoGenerate(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"{self.generate_day} | {self.company_id} "
+        return f"{self.generate_day}"

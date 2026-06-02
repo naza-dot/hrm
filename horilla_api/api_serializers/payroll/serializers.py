@@ -102,7 +102,7 @@ class AllowanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Allowance
         fields = "__all__"
-        read_only_fields = ["id", "company_id", "only_show_under_employee", "is_loan"]
+        read_only_fields = ["id", "only_show_under_employee", "is_loan"]
 
     def create(self, validated_data):
         specific_employees = validated_data.pop("specific_employees", [])

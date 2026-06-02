@@ -17,7 +17,6 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from base.models import Company
 from employee.models import Employee
 from horilla import horilla_middlewares
@@ -78,10 +77,8 @@ class Project(HorillaModel):
         upload_to=upload_path, blank=True, null=True, verbose_name=_("Project File")
     )
     description = models.TextField(verbose_name=_("Description"))
-    company_id = models.ForeignKey(
-        Company, null=True, editable=False, on_delete=models.PROTECT
-    )
-    objects = HorillaCompanyManager("company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def get_description(self, length=50):
         """
@@ -229,11 +226,6 @@ class Project(HorillaModel):
                 self.status = "expired"
 
     def save(self, *args, **kwargs):
-        is_new, request = self.pk is None, getattr(
-            horilla_middlewares._thread_locals, "request", None
-        )
-        if is_new and (cid := request.session.get("selected_company")) and cid != "all":
-            self.company_id = Company.find(cid)
         super().save(*args, **kwargs)
         if is_new:
             ProjectStage.objects.create(
@@ -268,7 +260,7 @@ class ProjectStage(HorillaModel):
     )
     sequence = models.IntegerField(null=True, blank=True, editable=False)
     is_end_stage = models.BooleanField(default=False, verbose_name=_("Is end stage"))
-    objects = HorillaCompanyManager("project__company_id")
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return f"{self.title}"
@@ -359,7 +351,8 @@ class Task(HorillaModel):
     )
     description = models.TextField(verbose_name=_("Description"))
     sequence = models.IntegerField(default=0)
-    objects = HorillaCompanyManager("project__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def clean(self) -> None:
         if self.end_date is not None and self.project.end_date is not None:
@@ -561,7 +554,8 @@ class TimeSheet(HorillaModel):
         verbose_name=_("Status"),
     )
     description = models.TextField(blank=True, null=True, verbose_name=_("Description"))
-    objects = HorillaCompanyManager("project_id__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         ordering = ("-id",)

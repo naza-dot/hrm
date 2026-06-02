@@ -8,7 +8,6 @@ from django.dispatch import receiver
 from django.forms import ValidationError
 from django.utils.translation import gettext as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from employee.models import Employee
 from horilla.models import HorillaModel, upload_path
 
@@ -51,9 +50,7 @@ class DocumentRequest(HorillaModel):
     description = models.TextField(
         blank=True, null=True, max_length=255, verbose_name=_("Description")
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    objects = models.Manager()
 
     class Meta:
         """
@@ -101,9 +98,7 @@ class Document(HorillaModel):
     is_digital_asset = models.BooleanField(
         default=False, verbose_name=_("Is Digital Asset")
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    objects = models.Manager()
 
     class Meta:
         """

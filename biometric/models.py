@@ -12,7 +12,6 @@ from django.core.validators import MaxValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from base.models import Company
 from employee.models import Employee
 from horilla.models import HorillaModel
@@ -108,15 +107,8 @@ class BiometricDevices(HorillaModel):
         default="system",
         verbose_name=_("Device Direction"),
     )
-    company_id = models.ForeignKey(
-        Company,
-        null=True,
-        editable=True,
-        on_delete=models.PROTECT,
-        verbose_name=_("Company"),
-    )
-
-    objects = HorillaCompanyManager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.name} - {self.machine_type}"

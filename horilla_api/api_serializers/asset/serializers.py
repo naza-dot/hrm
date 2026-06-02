@@ -8,7 +8,7 @@ class AssetCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AssetCategory
-        exclude = ["created_at", "created_by", "company_id", "is_active"]
+        exclude = ["created_at", "created_by", "is_active"]
 
     def get_asset_count(self, obj):
         return obj.asset_set.all().count()

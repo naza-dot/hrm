@@ -12,7 +12,7 @@ from django.http import HttpResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
 
-from base.models import Company, TrackLateComeEarlyOut
+from base.models import TrackLateComeEarlyOut
 from base.urls import urlpatterns
 from employee.models import (
     Employee,
@@ -26,153 +26,18 @@ from horilla.http.response import HorillaRedirect
 from horilla.methods import get_horilla_model_class
 
 
-class AllCompany:
-    """
-    Dummy class
-    """
-
-    class Urls:
-        url = "https://ui-avatars.com/api/?name=All+Company&background=random"
-
-    company = "All Company"
-    icon = Urls()
-    text = "All companies"
-    id = None
-
-
 def get_last_section(path):
-    # Remove any trailing slash and split the path
     segments = path.strip("/").split("/")
-
-    # Get the last section (the ID)
     last_section = segments[-1] if segments else None
     return last_section
-
-
-def get_companies(request):
-    """
-    This method will return the history additional field form
-    """
-    companies = list(
-        [company.id, company.company, company.icon.url, False]
-        for company in Company.objects.all()
-    )
-    companies = [
-        [
-            "all",
-            "All Company",
-            "https://ui-avatars.com/api/?name=All+Company&background=random",
-            False,
-        ],
-    ] + companies
-    selected_company = request.session.get("selected_company")
-    company_selected = False
-    if selected_company and selected_company == "all":
-        companies[0][3] = True
-        company_selected = True
-    else:
-        for company in companies:
-            if str(company[0]) == selected_company:
-                company[3] = True
-                company_selected = True
-    return {"all_companies": companies, "company_selected": company_selected}
-
-
-@login_required
-@hx_request_required
-@permission_required("base.change_company")
-def update_selected_company(request):
-    """
-    This method is used to update the selected company on the session
-    """
-    company_id = request.GET.get("company_id")
-    user = request.user.employee_get
-    user_company = getattr(
-        getattr(user, "employee_work_info", None), "company_id", None
-    )
-    request.session["selected_company"] = company_id
-    company = (
-        AllCompany()
-        if company_id == "all"
-        else (
-            Company.objects.filter(id=company_id).first()
-            if Company.objects.filter(id=company_id).first()
-            else AllCompany()
-        )
-    )
-    previous_path = request.GET.get("next", "/")
-    # Define the regex pattern for the path
-    pattern = r"^/employee/employee-view/\d+/$"
-    # Check if the previous path matches the pattern
-    if company_id != "all":
-        if re.match(pattern, previous_path):
-            employee_id = get_last_section(previous_path)
-            employee = Employee.objects.filter(id=employee_id).first()
-            emp_company = getattr(
-                getattr(employee, "employee_work_info", None), "company_id", None
-            )
-            if emp_company != company:
-                text = "Other Company"
-                if company_id == user_company:
-                    text = "My Company"
-                company = {
-                    "company": company.company,
-                    "icon": company.icon.url,
-                    "text": text,
-                    "id": company.id,
-                }
-                messages.error(
-                    request, _("Employee is not working in the selected company.")
-                )
-                request.session["selected_company_instance"] = company
-                return HttpResponse(
-                    f"""
-                    <script>window.location.href = `{reverse("employee-view")}`</script>
-                """
-                )
-
-    if company_id == "all":
-        text = "All companies"
-    elif company_id == user_company:
-        text = "My Company"
-    else:
-        text = "Other Company"
-
-    company = {
-        "company": company.company,
-        "icon": company.icon.url,
-        "text": text,
-        "id": company.id,
-    }
-    request.session["selected_company_instance"] = company
-    return HorillaRedirect(request)
-
-
-urlpatterns.append(
-    path(
-        "update-selected-company",
-        update_selected_company,
-        name="update-selected-company",
-    )
-)
 
 
 def white_labelling_company(request):
     white_labelling = getattr(horilla_apps, "WHITE_LABELLING", False)
     if white_labelling:
-        hq = Company.objects.filter(hq=True).last()
-        try:
-            company = (
-                request.user.employee_get.get_company()
-                if request.user.employee_get.get_company()
-                else hq
-            )
-        except:
-            company = hq
-
         return {
-            "white_label_company_name": company.company if company else "Task Systems",
-            "white_label_company": company,
+            "white_label_company_name": "Task Systems",
+            "white_label_company": None,
         }
     else:
         return {

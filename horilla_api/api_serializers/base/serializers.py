@@ -45,12 +45,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
         model = Department
         fields = "__all__"
 
-    def create(self, validated_data):
-        comapny_id = validated_data.pop("company_id", [])
-        obj = Department(**validated_data)
-        obj.save()
-        obj.company_id.set(comapny_id)
-        return obj
 
 
 class WorkTypeSerializer(serializers.ModelSerializer):

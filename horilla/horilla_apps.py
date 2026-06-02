@@ -7,22 +7,6 @@ This module is used to register horilla addons
 from horilla import settings
 from horilla.settings import INSTALLED_APPS
 
-INSTALLED_APPS.append("accessibility")
-INSTALLED_APPS.append("horilla_audit")
-INSTALLED_APPS.append("horilla_widgets")
-INSTALLED_APPS.append("horilla_crumbs")
-INSTALLED_APPS.append("horilla_documents")
-INSTALLED_APPS.append("horilla_views")
-INSTALLED_APPS.append("horilla_automations")
-INSTALLED_APPS.append("auditlog")
-INSTALLED_APPS.append("biometric")
-INSTALLED_APPS.append("helpdesk")
-INSTALLED_APPS.append("offboarding")
-INSTALLED_APPS.append("horilla_backup")
-INSTALLED_APPS.append("project")
-if settings.env("AWS_ACCESS_KEY_ID", default=None) and "storages" not in INSTALLED_APPS:
-    INSTALLED_APPS.append("storages")
-
 
 AUDITLOG_INCLUDE_ALL_MODELS = True
 

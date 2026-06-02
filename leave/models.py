@@ -14,7 +14,6 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from base.models import (
     Company,
     CompanyLeaves,
@@ -239,10 +238,8 @@ class LeaveType(HorillaModel):
         max_length=30, choices=CHOICES, default="no", verbose_name=_("Exclude Holidays")
     )
     is_compensatory_leave = models.BooleanField(default=False)
-    company_id = models.ForeignKey(
-        Company, null=True, blank=True, on_delete=models.PROTECT
-    )
-    objects = HorillaCompanyManager(related_company_field="company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         ordering = ["-id"]
@@ -327,16 +324,6 @@ class LeaveType(HorillaModel):
                 )
 
     def save(self, *args, **kwargs):
-        request = getattr(horilla_middlewares._thread_locals, "request", None)
-        selected_company = request.session.get("selected_company")
-        if (
-            not self.id
-            and not self.company_id
-            and selected_company
-            and selected_company != "all"
-        ):
-            self.company_id = Company.find(selected_company)
-
         if (
             self.carryforward_type != "no carryforward"
             and self.carryforward_max is None
@@ -367,9 +354,9 @@ class Holiday(HorillaModel):
     end_date = models.DateField(null=True, blank=True, verbose_name=_("End Date"))
     recurring = models.BooleanField(default=False, verbose_name=_("Recurring"))
     company_id = models.ForeignKey(
-        Company, null=True, editable=False, on_delete=models.PROTECT
+    Company, null=True, editable=False, on_delete=models.PROTECT
     )
-    objects = HorillaCompanyManager(related_company_field="company_id")
+    objects = models.Manager()
 
     def __str__(self):
         return self.name
@@ -381,9 +368,9 @@ class CompanyLeave(HorillaModel):
     )
     based_on_week_day = models.CharField(max_length=100, choices=WEEK_DAYS)
     company_id = models.ForeignKey(
-        Company, null=True, editable=False, on_delete=models.PROTECT
+    Company, null=True, editable=False, on_delete=models.PROTECT
     )
-    objects = HorillaCompanyManager(related_company_field="company_id")
+    objects = models.Manager()
 
     class Meta:
         unique_together = ("based_on_week", "based_on_week_day")
@@ -421,9 +408,8 @@ class AvailableLeave(HorillaModel):
     expired_date = models.DateField(
         blank=True, null=True, verbose_name=_("CarryForward Expired Date")
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
     history = HorillaAuditLog(
         related_name="history_set",
         bases=[
@@ -705,9 +691,8 @@ class LeaveRequest(HorillaModel):
         related_name="leave_request_created",
         verbose_name=_("Created By"),
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         ordering = ["-id"]
@@ -1260,9 +1245,8 @@ class LeaveAllocationRequest(HorillaModel):
             HorillaAuditInfo,
         ],
     )
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     class Meta:
         ordering = ["-id"]
@@ -1358,14 +1342,8 @@ class RestrictLeave(HorillaModel):
     description = models.TextField(
         null=True, verbose_name=_("Description"), max_length=255
     )
-    company_id = models.ForeignKey(
-        Company,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        verbose_name=_("Company"),
-    )
-    objects = HorillaCompanyManager(related_company_field="company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return f"{self.title}"
@@ -1397,9 +1375,8 @@ if apps.is_installed("attendance"):
                 HorillaAuditInfo,
             ],
         )
-        objects = HorillaCompanyManager(
-            related_company_field="employee_id__employee_work_info__company_id"
-        )
+        company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+        objects = models.Manager()
 
         class Meta:
             ordering = ["-id"]
@@ -1448,8 +1425,8 @@ class LeaveGeneralSetting(HorillaModel):
     """
 
     compensatory_leave = models.BooleanField(default=True)
-    objects = models.Manager()
     company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    objects = models.Manager()
 
 
 if apps.is_installed("attendance"):

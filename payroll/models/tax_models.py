@@ -11,7 +11,6 @@ from django.db import models
 from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from base.models import Company
 from horilla.models import HorillaModel
 from payroll.models.models import FilingStatus
@@ -31,9 +30,9 @@ class PayrollSettings(HorillaModel):
     position = models.CharField(
         max_length=15, null=True, choices=choices, default="postfix"
     )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
 
-    company_id = models.ForeignKey(Company, null=True, on_delete=models.PROTECT)
-    objects = HorillaCompanyManager("company_id")
+    objects = models.Manager()
 
     class Meta:
         verbose_name = _("Payroll Settings")

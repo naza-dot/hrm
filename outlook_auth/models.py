@@ -40,7 +40,7 @@ class AzureApi(models.Model):
         default="https://graph.microsoft.com/v1.0",
         verbose_name="Microsoft Graph API endpoint",
     )
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
     is_primary = models.BooleanField(default=False)
     token = models.JSONField(editable=False, default=dict)
     oauth_state = models.CharField(editable=False, max_length=100, null=True)

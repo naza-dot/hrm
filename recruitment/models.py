@@ -21,7 +21,6 @@ from django.templatetags.static import static
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
-from base.horilla_company_manager import HorillaCompanyManager
 from base.models import Company, JobPosition
 from employee.models import Employee
 from horilla.models import HorillaModel, upload_path
@@ -79,14 +78,7 @@ class SurveyTemplate(HorillaModel):
     title = models.CharField(max_length=50, unique=True)
     description = models.TextField(null=True, blank=True)
     is_general_template = models.BooleanField(default=False, editable=False)
-    company_id = models.ForeignKey(
-        Company,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        verbose_name=_("Company"),
-    )
-    objects = HorillaCompanyManager("company_id")
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return self.title
@@ -161,13 +153,6 @@ class Recruitment(HorillaModel):
     survey_templates = models.ManyToManyField(
         SurveyTemplate, blank=True, verbose_name=_("Survey Templates")
     )
-    company_id = models.ForeignKey(
-        Company,
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        verbose_name=_("Company"),
-    )
     start_date = models.DateField(
         default=django.utils.timezone.now, verbose_name=_("Start Date")
     )
@@ -189,8 +174,8 @@ class Recruitment(HorillaModel):
         ),
         verbose_name=_("Post on LinkedIn"),
     )
-    objects = HorillaCompanyManager()
-    default = models.manager.Manager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
     optional_profile_image = models.BooleanField(
         default=False,
         help_text=_("Profile image not mandatory for candidate creation"),
@@ -212,7 +197,6 @@ class Recruitment(HorillaModel):
                 "job_position_id",
                 "start_date",
             ),
-            ("job_position_id", "start_date", "company_id"),
         ]
         permissions = (("archive_recruitment", "Archive Recruitment"),)
         verbose_name = _("Recruitment")
@@ -311,7 +295,8 @@ class Stage(HorillaModel):
         verbose_name=_("Stage Type"),
     )
     sequence = models.IntegerField(null=True, default=0)
-    objects = HorillaCompanyManager(related_company_field="recruitment_id__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.stage}"
@@ -479,7 +464,8 @@ class Candidate(HorillaModel):
         editable=False,
         verbose_name=_("Offer Letter Status"),
     )
-    objects = HorillaCompanyManager(related_company_field="recruitment_id__company_id")
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
     last_updated = models.DateField(null=True, auto_now=True)
 
     converted_employee_id.exclude_from_automation = True
@@ -655,14 +641,7 @@ class RejectReason(HorillaModel):
         max_length=50,
     )
     description = models.TextField(null=True, blank=True, max_length=255)
-    company_id = models.ForeignKey(
-        Company,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        verbose_name=_("Company"),
-    )
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return self.title
@@ -687,9 +666,7 @@ class RejectedCandidate(HorillaModel):
         RejectReason, verbose_name="Reject reason", blank=True
     )
     description = models.TextField(max_length=255)
-    objects = HorillaCompanyManager(
-        related_company_field="candidate_id__recruitment_id__company_id"
-    )
+    objects = models.Manager()
     history = HorillaAuditLog(
         related_name="history_set",
         bases=[
@@ -726,9 +703,8 @@ class StageNote(HorillaModel):
         Employee, on_delete=models.CASCADE, null=True, blank=True
     )
     candidate_can_view = models.BooleanField(default=False)
-    objects = HorillaCompanyManager(
-        related_company_field="candidate_id__recruitment_id__company_id"
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return f"{self.description}"
@@ -778,7 +754,7 @@ class RecruitmentSurvey(HorillaModel):
     options = models.TextField(
         null=True, default="", help_text=_("Separate choices by ',  '"), max_length=255
     )
-    objects = HorillaCompanyManager(related_company_field="recruitment_ids__company_id")
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return str(self.question)
@@ -813,7 +789,7 @@ class QuestionOrdering(HorillaModel):
     question_id = models.ForeignKey(RecruitmentSurvey, on_delete=models.CASCADE)
     recruitment_id = models.ForeignKey(Recruitment, on_delete=models.CASCADE)
     sequence = models.IntegerField(default=0)
-    objects = HorillaCompanyManager(related_company_field="recruitment_ids__company_id")
+    objects = models.Manager()
 
 
 class RecruitmentSurveyAnswer(HorillaModel):
@@ -836,7 +812,7 @@ class RecruitmentSurveyAnswer(HorillaModel):
     )
     answer_json = models.JSONField()
     attachment = models.FileField(upload_to=upload_path, null=True, blank=True)
-    objects = HorillaCompanyManager(related_company_field="recruitment_id__company_id")
+    objects = models.Manager()
 
     @property
     def answer(self):
@@ -860,14 +836,7 @@ class SkillZone(HorillaModel):
 
     title = models.CharField(max_length=50, verbose_name="Skill Zone")
     description = models.TextField(verbose_name=_("Description"), max_length=255)
-    company_id = models.ForeignKey(
-        Company,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        verbose_name=_("Company"),
-    )
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
 
     class Meta:
         verbose_name = _("Skill Zone")
@@ -909,9 +878,7 @@ class SkillZoneCandidate(HorillaModel):
 
     reason = models.CharField(max_length=200, verbose_name=_("Reason"))
     added_on = models.DateField(auto_now_add=True)
-    objects = HorillaCompanyManager(
-        related_company_field="candidate_id__recruitment_id__company_id"
-    )
+    objects = models.Manager()
 
     def clean(self):
         # Check for duplicate entries in the database
@@ -961,7 +928,8 @@ class RecruitmentGeneralSetting(HorillaModel):
 
     candidate_self_tracking = models.BooleanField(default=False)
     show_overall_rating = models.BooleanField(default=False)
-    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company"))
+    objects = models.Manager()
 
 
 class InterviewSchedule(HorillaModel):
@@ -985,7 +953,7 @@ class InterviewSchedule(HorillaModel):
     completed = models.BooleanField(
         default=False, verbose_name=_("Is Interview Completed")
     )
-    objects = HorillaCompanyManager("candidate_id__recruitment_id__company_id")
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return f"{self.candidate_id} -Interview."
@@ -1035,9 +1003,7 @@ class CandidateDocumentRequest(HorillaModel):
     format = models.CharField(choices=FORMATS, max_length=10)
     max_size = models.IntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    objects = HorillaCompanyManager(
-        related_company_field="employee_id__employee_work_info__company_id"
-    )
+    objects = models.Manager()
 
     def __str__(self):
         return self.title
@@ -1091,7 +1057,6 @@ class LinkedInAccount(HorillaModel):
     company_id = models.ForeignKey(
         Company, on_delete=models.CASCADE, null=True, verbose_name=_("Company")
     )
-
     class Meta:
         verbose_name = _("LinkedIn Account")
         verbose_name_plural = _("LinkedIn Accounts")

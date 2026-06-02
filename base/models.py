@@ -17,7 +17,6 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.db import migrations
 
-from base.horilla_company_manager import HorillaCompanyManager
 from horilla import horilla_middlewares
 from horilla.horilla_middlewares import _thread_locals
 from horilla.models import HorillaModel, upload_path
@@ -67,10 +66,6 @@ def clear_messages(request):
 
 
 class Company(HorillaModel):
-    """
-    Company model
-    """
-
     company = models.CharField(max_length=50, verbose_name=_("Name"))
     hq = models.BooleanField(default=False)
     address = models.TextField(max_length=255)
@@ -87,10 +82,6 @@ class Company(HorillaModel):
     time_format = models.CharField(max_length=20, blank=True, null=True)
 
     class Meta:
-        """
-        Meta class to add additional options
-        """
-
         verbose_name = _("Company")
         verbose_name_plural = _("Companies")
         unique_together = ["company", "address"]
@@ -108,34 +99,13 @@ class Department(HorillaModel):
     department = models.CharField(
         max_length=50, blank=False, verbose_name=_("Department")
     )
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
+    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
     class Meta:
         verbose_name = _("Department")
         verbose_name_plural = _("Departments")
-
-    def clean(self, *args, **kwargs):
-        super().clean(*args, **kwargs)
-        request = getattr(_thread_locals, "request", None)
-        if request and request.POST:
-            company = request.POST.getlist("company_id", None)
-            department = request.POST.get("department", None)
-            if (
-                Department.objects.filter(
-                    company_id__id__in=company, department=department
-                )
-                .exclude(id=self.id)
-                .exists()
-            ):
-                raise ValidationError("This department already exists in this company")
-        return
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.clean(*args, **kwargs)
-        return self
 
     def __str__(self):
         return str(self.department)
@@ -155,9 +125,9 @@ class JobPosition(HorillaModel):
         related_name="job_position",
         verbose_name=_("Department"),
     )
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
-    objects = HorillaCompanyManager("department_id__company_id")
+    objects = models.Manager()
+    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
     class Meta:
         """
@@ -180,9 +150,9 @@ class JobRole(HorillaModel):
     job_role = models.CharField(
         max_length=50, blank=False, null=True, verbose_name=_("Job Role")
     )
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
-    objects = HorillaCompanyManager("job_position_id__department_id__company_id")
+    objects = models.Manager()
+    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
     class Meta:
         """
@@ -203,9 +173,9 @@ class WorkType(HorillaModel):
     """
 
     work_type = models.CharField(max_length=50, verbose_name=_("Work Type"))
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
+    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
     class Meta:
         """
@@ -217,25 +187,6 @@ class WorkType(HorillaModel):
 
     def __str__(self) -> str:
         return str(self.work_type)
-
-    def clean(self, *args, **kwargs):
-        super().clean(*args, **kwargs)
-        request = getattr(_thread_locals, "request", None)
-        if request and request.POST:
-            company = request.POST.getlist("company_id", None)
-            work_type = request.POST.get("work_type", None)
-            if (
-                WorkType.objects.filter(company_id__id__in=company, work_type=work_type)
-                .exclude(id=self.id)
-                .exists()
-            ):
-                raise ValidationError("This work type already exists in this company")
-        return
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.clean(*args, **kwargs)
-        return self
 
 
 class RotatingWorkType(HorillaModel):
@@ -266,7 +217,7 @@ class RotatingWorkType(HorillaModel):
         blank=True,
         null=True,
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     class Meta:
         """
@@ -407,7 +358,7 @@ class RotatingWorkTypeAssign(HorillaModel):
             HorillaAuditInfo,
         ],
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     class Meta:
         """
@@ -436,9 +387,9 @@ class EmployeeType(HorillaModel):
     """
 
     employee_type = models.CharField(max_length=50)
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
+    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
     class Meta:
         """
@@ -451,29 +402,6 @@ class EmployeeType(HorillaModel):
     def __str__(self) -> str:
         return str(self.employee_type)
 
-    def clean(self, *args, **kwargs):
-        super().clean(*args, **kwargs)
-        request = getattr(_thread_locals, "request", None)
-        if request and request.POST:
-            company = request.POST.getlist("company_id", None)
-            employee_type = request.POST.get("employee_type", None)
-            if (
-                EmployeeType.objects.filter(
-                    company_id__id__in=company, employee_type=employee_type
-                )
-                .exclude(id=self.id)
-                .exists()
-            ):
-                raise ValidationError(
-                    "This employee type already exists in this company"
-                )
-        return
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.clean(*args, **kwargs)
-        return self
-
 
 class EmployeeShiftDay(models.Model):
     """
@@ -481,9 +409,9 @@ class EmployeeShiftDay(models.Model):
     """
 
     day = models.CharField(max_length=20, choices=DAY)
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
+    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
     class Meta:
         """
@@ -518,7 +446,6 @@ class EmployeeShift(HorillaModel):
     full_time = models.CharField(
         max_length=6, default="200:00", validators=[validate_time_format]
     )
-    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
     if apps.is_installed("attendance"):
         grace_time_id = models.ForeignKey(
             "attendance.GraceTime",
@@ -529,7 +456,8 @@ class EmployeeShift(HorillaModel):
             verbose_name=_("Grace Time"),
         )
 
-    objects = HorillaCompanyManager("employee_shift__company_id")
+    objects = models.Manager()
+    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
     class Meta:
         """
@@ -544,21 +472,6 @@ class EmployeeShift(HorillaModel):
 
     def clean(self, *args, **kwargs):
         super().clean(*args, **kwargs)
-        request = getattr(_thread_locals, "request", None)
-        if request and request.POST:
-            company = request.POST.getlist("company_id", None)
-            employee_shift = request.POST.get("employee_shift", None)
-            if (
-                EmployeeShift.objects.filter(
-                    company_id__id__in=company, employee_shift=employee_shift
-                )
-                .exclude(id=self.id)
-                .exists()
-            ):
-                raise ValidationError(
-                    "This employee shift already exists in this company"
-                )
-        return
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -605,9 +518,8 @@ class EmployeeShiftSchedule(HorillaModel):
             "Time at which the horilla will automatically check out the employee attendance if they forget."
         ),
     )
+    objects = models.Manager()
     company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
-
-    objects = HorillaCompanyManager("shift_id__employee_shift__company_id")
 
     class Meta:
         """
@@ -669,7 +581,8 @@ class RotatingShift(HorillaModel):
         blank=True,
         null=True,
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
+    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
     class Meta:
         """
@@ -803,20 +716,15 @@ class RotatingShiftAssign(HorillaModel):
             HorillaAuditInfo,
         ],
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     class Meta:
-        """
-        Meta class to add additional options
-        """
-
         verbose_name = _("Rotating Shift Assign")
         verbose_name_plural = _("Rotating Shift Assigns")
         ordering = ["-next_change_date", "-employee_id__employee_first_name"]
 
     def clean(self):
         if self.is_active and self.employee_id_id is not None:
-            # Check if any other active record with the same parent already exists
             siblings = RotatingShiftAssign.objects.filter(
                 is_active=True, employee_id__id=self.employee_id_id
             )
@@ -876,13 +784,9 @@ class WorkTypeRequest(HorillaModel):
             HorillaAuditInfo,
         ],
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     class Meta:
-        """
-        Meta class to add additional options
-        """
-
         verbose_name = _("Work Type Request")
         verbose_name_plural = _("Work Type Requests")
         permissions = (
@@ -1042,13 +946,9 @@ class ShiftRequest(HorillaModel):
             HorillaAuditInfo,
         ],
     )
-    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+    objects = models.Manager()
 
     class Meta:
-        """
-        Meta class to add additional options
-        """
-
         verbose_name = _("Shift Request")
         verbose_name_plural = _("Shift Requests")
         permissions = (
@@ -1153,10 +1053,8 @@ class ShiftRequestComment(HorillaModel):
 class Tags(HorillaModel):
     title = models.CharField(max_length=30)
     color = models.CharField(max_length=30)
-    company_id = models.ForeignKey(
-        Company, null=True, editable=False, on_delete=models.PROTECT
-    )
-    objects = HorillaCompanyManager(related_company_field="company_id")
+    objects = models.Manager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Company"))
 
     class Meta:
         verbose_name = _("Tag")
@@ -1169,14 +1067,8 @@ class Tags(HorillaModel):
 class HorillaMailTemplate(HorillaModel):
     title = models.CharField(max_length=100, unique=True)
     body = models.TextField()
-    company_id = models.ForeignKey(
-        Company,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        verbose_name=_("Company"),
-    )
-    objects = HorillaCompanyManager(related_company_field="company_id")
+    objects = models.Manager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Company"))
 
     def __str__(self) -> str:
         return f"{self.title}"
@@ -1190,12 +1082,6 @@ class MicrosoftSSOConfig(HorillaModel):
     and the values are stored encrypted in the database.
     """
 
-    company_id = models.ForeignKey(
-        Company,
-        on_delete=models.CASCADE,
-        related_name="microsoft_sso_config",
-        verbose_name=_("Company"),
-    )
     client_id = models.CharField(max_length=255, verbose_name=_("Client ID"))
     client_secret = models.CharField(
         max_length=255, verbose_name=_("Client Secret"), help_text=_("Keep secret")
@@ -1207,7 +1093,8 @@ class MicrosoftSSOConfig(HorillaModel):
     is_active = models.BooleanField(default=True, verbose_name=_("Active"))
     created_at = models.DateTimeField(auto_now_add=True, null=True, verbose_name=_("Created at"))
 
-    objects = HorillaCompanyManager(related_company_field="company_id")
+    objects = models.Manager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name=_("Company"))
 
     class Meta:
         verbose_name = _("Microsoft SSO Config")
@@ -1268,10 +1155,7 @@ class DynamicEmailConfiguration(HorillaModel):
     timeout = models.SmallIntegerField(
         null=True, verbose_name=_("Email Send Timeout (seconds)")
     )
-    company_id = models.OneToOneField(
-        Company, on_delete=models.CASCADE, null=True, blank=True
-    )
-
+    company_id = models.OneToOneField(Company, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Company"))
     def clean(self):
         if self.use_ssl and self.use_tls:
             raise ValidationError(
@@ -1280,8 +1164,6 @@ class DynamicEmailConfiguration(HorillaModel):
                     "so only set one of those settings to True."
                 )
             )
-        if not self.company_id and not self.is_primary:
-            raise ValidationError({"company_id": _("This field is required")})
 
     def __str__(self):
         return self.username
@@ -1295,11 +1177,6 @@ class DynamicEmailConfiguration(HorillaModel):
             self.is_primary = True
 
         super().save(*args, **kwargs)
-        servers_same_company = DynamicEmailConfiguration.objects.filter(
-            company_id=self.company_id
-        ).exclude(id=self.id)
-        if servers_same_company.exists():
-            self.delete()
         return
 
     class Meta:
@@ -1350,13 +1227,7 @@ class MultipleApprovalCondition(HorillaModel):
         verbose_name=_("Ending Value"),
     )
     objects = models.Manager()
-    company_id = models.ForeignKey(
-        Company,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        verbose_name=_("Company"),
-    )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Company"))
 
     def __str__(self) -> str:
         return f"{self.condition_field} {self.condition_operator}"
@@ -1368,7 +1239,6 @@ class MultipleApprovalCondition(HorillaModel):
                 condition_field=self.condition_field,
                 condition_operator=self.condition_operator,
                 condition_value=self.condition_value,
-                company_id=self.company_id,
             ).exclude(id=self.pk)
             if instance:
                 raise ValidationError(
@@ -1560,9 +1430,6 @@ class Announcement(HorillaModel):
     job_position = models.ManyToManyField(
         JobPosition, blank=True, verbose_name=_("Job Position")
     )
-    company_id = models.ManyToManyField(
-        Company, blank=True, related_name="announcement", verbose_name=_("Company")
-    )
     disable_comments = models.BooleanField(
         default=False, verbose_name=_("Disable Comments")
     )
@@ -1575,7 +1442,8 @@ class Announcement(HorillaModel):
     filtered_employees = models.ManyToManyField(
         Employee, related_name="announcement_filtered_employees", editable=False
     )
-    objects = HorillaCompanyManager(related_company_field="company_id")
+    objects = models.Manager()
+    company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
 
     class Meta:
         verbose_name = _("Announcement")
@@ -1647,9 +1515,6 @@ class EmailLog(models.Model):
     status = models.CharField(max_length=6, choices=statuses)
     created_at = models.DateTimeField(auto_now_add=True)
     objects = models.Manager()
-    company_id = models.ForeignKey(
-        Company, on_delete=models.CASCADE, null=True, editable=False
-    )
 
 
 class DriverViewed(models.Model):
@@ -1690,13 +1555,6 @@ class DashboardEmployeeCharts(HorillaModel):
 
 class BiometricAttendance(models.Model):
     is_installed = models.BooleanField(default=False)
-    company_id = models.ForeignKey(
-        Company,
-        null=True,
-        editable=False,
-        on_delete=models.PROTECT,
-        related_name="biometric_enabled_company",
-    )
     objects = models.Manager()
 
     def __str__(self):
@@ -1765,13 +1623,8 @@ class Holidays(HorillaModel):
     start_date = models.DateField(verbose_name=_("Start Date"))
     end_date = models.DateField(null=True, blank=True, verbose_name=_("End Date"))
     recurring = models.BooleanField(default=False, verbose_name=_("Recurring"))
-    company_id = models.ForeignKey(
-        Company,
-        null=True,
-        on_delete=models.PROTECT,
-        verbose_name=_("Company"),
-    )
-    objects = HorillaCompanyManager(related_company_field="company_id")
+    objects = models.Manager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Company"))
 
     class Meta:
         verbose_name = _("Holiday")
@@ -1806,10 +1659,8 @@ class CompanyLeaves(HorillaModel):
     based_on_week_day = models.CharField(
         max_length=100, choices=WEEK_DAYS, verbose_name=_("Based On Week Day")
     )
-    company_id = models.ForeignKey(
-        Company, null=True, on_delete=models.PROTECT, verbose_name=_("Company")
-    )
-    objects = HorillaCompanyManager()
+    objects = models.Manager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Company"))
 
     class Meta:
         unique_together = ("based_on_week", "based_on_week_day")

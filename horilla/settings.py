@@ -46,7 +46,11 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
 # Application definition
 
-INSTALLED_APPS = [
+# ── django-tenants: must be first ──────────────────────────
+SHARED_APPS = [
+    "django_tenants",
+    "tenants",
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -54,11 +58,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    "notifications",
-    "mathfilters",
     "corsheaders",
-    "simple_history",
+    "widget_tweaks",
     "django_filters",
+    "simple_history",
+    "mathfilters",
+    "django_apscheduler",
+]
+
+TENANT_APPS = [
     "base",
     "employee",
     "recruitment",
@@ -68,17 +76,40 @@ INSTALLED_APPS = [
     "asset",
     "attendance",
     "payroll",
-    "widget_tweaks",
-    "django_apscheduler",
-    "microsoft_auth",
+    "notifications",
+    "horilla_audit",
+    "horilla_widgets",
+    "horilla_crumbs",
+    "horilla_documents",
+    "horilla_views",
+    "horilla_automations",
+    "auditlog",
+    "biometric",
+    "helpdesk",
+    "offboarding",
+    "project",
+    "accessibility",
+    "horilla_backup",
+    "dynamic_fields",
+    "facedetection",
+    "geofencing",
+    "report",
     "outlook_auth",
+    "microsoft_auth",
 ]
-APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 
+INSTALLED_APPS = SHARED_APPS + TENANT_APPS
+
+TENANT_MODEL = "tenants.Client"
+TENANT_DOMAIN_MODEL = "tenants.Domain"
+PUBLIC_SCHEMA_URLCONF = "horilla.urls_public"
+
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 APSCHEDULER_RUN_NOW_TIMEOUT = 25  # Seconds
 
 
 MIDDLEWARE = [
+    "django_tenants.middleware.main.TenantMainMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -91,6 +122,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "tenants.middleware.FeatureAccessMiddleware",
 ]
 
 ROOT_URLCONF = "horilla.urls"
@@ -126,31 +158,16 @@ if env("DATABASE_URL", default=None):
 else:
     DATABASES = {
         "default": {
-            "ENGINE": env("DB_ENGINE", default="django.db.backends.sqlite3"),
-            "NAME": env(
-                "DB_NAME",
-                default=os.path.join(
-                    BASE_DIR,
-                    "TestDB_Horilla.sqlite3",
-                ),
-            ),
-            "USER": env("DB_USER", default=""),
-            "PASSWORD": env("DB_PASSWORD", default=""),
-            "HOST": env("DB_HOST", default=""),
-            "PORT": env("DB_PORT", default=""),
+            "ENGINE": "django_tenants.postgresql_backend",
+            "NAME": env("DB_NAME", default="horilla_saas"),
+            "USER": env("DB_USER", default="postgres"),
+            "PASSWORD": env("DB_PASSWORD", default="postgres"),
+            "HOST": env("DB_HOST", default="db"),
+            "PORT": env("DB_PORT", default="5432"),
         }
     }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'horilla',       # database name
-#         'USER': 'postgres',          # postgres user
-#         'PASSWORD': 'cool',  # user password
-#         'HOST': 'localhost',       # or IP address
-#         'PORT': '5432',            # default postgres port
-#     }
-# }
+DATABASE_ROUTERS = ["django_tenants.routers.TenantSyncRouter"]
 
 
 # Password validation
