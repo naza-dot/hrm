@@ -158,7 +158,7 @@ if env("DATABASE_URL", default=None):
 else:
     DATABASES = {
         "default": {
-            "ENGINE": "django_tenants.postgresql_backend",
+            "ENGINE": "django_tenants.backends.postgresql",
             "NAME": env("DB_NAME", default="horilla_saas"),
             "USER": env("DB_USER", default="postgres"),
             "PASSWORD": env("DB_PASSWORD", default="postgres"),
