@@ -3,3 +3,8 @@
 *.md
 LICENSE
 docker-compose.yaml
+__pycache__/
+*.pyc
+*.pyo
+media/
+static/

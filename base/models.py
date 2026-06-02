@@ -1900,3 +1900,30 @@ class NotificationSound(models.Model):
 
 
 User.add_to_class("is_new_employee", models.BooleanField(default=False))
+
+
+class HMO(HorillaModel):
+    title = models.CharField(max_length=100, verbose_name=_("HMO"))
+    objects = HorillaCompanyManager()
+
+    class Meta:
+        verbose_name = _("HMO")
+        verbose_name_plural = _("HMOs")
+
+    def __str__(self):
+        return self.title
+
+
+class HMOPlan(HorillaModel):
+    hmo = models.ForeignKey(
+        HMO, on_delete=models.CASCADE, related_name="plans", verbose_name=_("HMO")
+    )
+    plan_name = models.CharField(max_length=100, verbose_name=_("Plan Name"))
+    objects = HorillaCompanyManager()
+
+    class Meta:
+        verbose_name = _("HMO Plan")
+        verbose_name_plural = _("HMO Plans")
+
+    def __str__(self):
+        return f"{self.hmo.title} - {self.plan_name}"

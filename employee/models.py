@@ -696,6 +696,13 @@ class EmployeeWorkInformation(models.Model):
     )
     additional_info = models.JSONField(null=True, blank=True)
     experience = models.FloatField(null=True, blank=True, default=0)
+    hmo_plan = models.ForeignKey(
+        "base.HMOPlan",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_("HMO Plan"),
+    )
     history = HorillaAuditLog(
         related_name="history_set",
         bases=[

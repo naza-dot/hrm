@@ -1074,6 +1074,13 @@ urlpatterns = [
         "company-leave-filter", views.company_leave_filter, name="company-leave-filter"
     ),
     path("view-penalties", views.view_penalties, name="view-penalties"),
+    path("hmo/", views.hmo_user_view, name="hmo-user-view"),
+    path("hmo/select-plan/", views.hmo_select_plan, name="hmo-select-plan"),
+]
+
+urlpatterns += [
+    path("settings/hmo/", views.hmo_settings_view, name="hmo-settings-view"),
+    path("settings/hmo-create/", views.hmo_settings_create, name="hmo-settings-create"),
 ]
 
 urlpatterns.append(

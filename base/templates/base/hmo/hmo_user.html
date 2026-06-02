@@ -1,0 +1,47 @@
+{% extends 'index.html' %} {% load static %} {% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__topbar">
+    <div class="oh-main__titlebar oh-main__titlebar--left">
+        <h1 class="oh-main__titlebar-title fw-bold">{% trans "HMO" %}</h1>
+    </div>
+</section>
+<div class="oh-wrapper">
+    <div class="oh-card">
+        <div class="row">
+            {% for hmo in hmos %}
+            <div class="col-12 col-sm-12 col-md-12 col-lg-6 mb-4">
+                <div class="oh-card oh-card--margin" style="border: 1px solid #e9ecef;">
+                    <div class="oh-card__header">
+                        <span class="oh-card__title oh-card__title--sm fw-bold me-2">{{hmo.title}}</span>
+                    </div>
+                    <div class="oh-card__body mt-4">
+                        <ul class="oh-profile__card-info-list">
+                            {% for plan in hmo.plans.all %}
+                            <li class="oh-profile__card-info-item d-flex justify-content-between align-items-center py-2">
+                                <span>{{plan.plan_name}}</span>
+                                <form method="post" action="{% url 'hmo-select-plan' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="plan_id" value="{{plan.id}}">
+                                    <button type="submit" class="oh-btn oh-btn--secondary oh-btn--small">
+                                        {% trans "Select" %}
+                                    </button>
+                                </form>
+                            </li>
+                            {% empty %}
+                            <li class="oh-profile__card-info-item">
+                                <span class="text-muted">{% trans "No plans available" %}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center" style="padding: 80px 0;">
+                <h3 class="oh-404__subtitle">{% trans "No HMO available" %}</h3>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

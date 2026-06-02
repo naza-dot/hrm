@@ -100,6 +100,8 @@ from base.forms import (
     ShiftAllocationForm,
     ShiftRequestColumnForm,
     ShiftRequestCommentForm,
+    HMOForm,
+    HMOPlanForm,
     ShiftRequestForm,
     TagsForm,
     UserGroupForm,
@@ -138,6 +140,8 @@ from base.models import (
     EmployeeShift,
     EmployeeShiftSchedule,
     EmployeeType,
+    HMO,
+    HMOPlan,
     Holidays,
     HorillaMailTemplate,
     JobPosition,
@@ -8044,3 +8048,47 @@ def protected_media(request, path):
             return redirect("login")
 
     return FileResponse(open(media_path, "rb"))
+
+
+@login_required
+def hmo_settings_view(request):
+    hmos = HMO.objects.prefetch_related("plans").all()
+    return render(request, "base/hmo/hmo_settings.html", {"hmos": hmos})
+
+
+@login_required
+@hx_request_required
+def hmo_settings_create(request):
+    form = HMOForm()
+    if request.method == "POST":
+        form = HMOForm(request.POST)
+        if form.is_valid():
+            hmo = form.save()
+            plan_names = request.POST.getlist("plan_names")
+            for name in plan_names:
+                if name.strip():
+                    HMOPlan.objects.create(hmo=hmo, plan_name=name.strip())
+            messages.success(request, _("HMO created successfully"))
+            return HorillaRedirect(request)
+    return render(request, "base/hmo/hmo_form.html", {"form": form})
+
+
+@login_required
+def hmo_user_view(request):
+    hmos = HMO.objects.prefetch_related("plans").all()
+    return render(request, "base/hmo/hmo_user.html", {"hmos": hmos})
+
+
+@login_required
+def hmo_select_plan(request):
+    if request.method == "POST":
+        plan_id = request.POST.get("plan_id")
+        employee = request.user.employee_get
+        work_info = employee.employee_work_info
+        if work_info:
+            work_info.hmo_plan_id = plan_id
+            work_info.save()
+            messages.success(request, _("HMO plan selected successfully"))
+        else:
+            messages.error(request, _("No work information found"))
+    return redirect("hmo-user-view")

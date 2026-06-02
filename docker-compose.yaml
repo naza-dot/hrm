@@ -13,8 +13,7 @@ services:
       MICROSOFT_AUTH_TENANT_ID: ${MICROSOFT_AUTH_TENANT_ID}
     command: sh ./entrypoint.sh
     volumes:
-      - ./horilla:/app/horilla
-      - ./media:/app/media
+      - .:/app
     depends_on:
       db:
         condition: service_healthy

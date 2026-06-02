@@ -1,0 +1,25 @@
+{% load i18n %}
+<div class="oh-sticky-table">
+    <div class="oh-sticky-table__table oh-table--sortable">
+        <div class="oh-sticky-table__thead">
+            <div class="oh-sticky-table__tr">
+                <div class="oh-sticky-table__th">{% trans "HMO" %}</div>
+                <div class="oh-sticky-table__th">{% trans "Plans" %}</div>
+            </div>
+        </div>
+        <div class="oh-sticky-table__tbody">
+            {% for hmo in hmos %}
+            <div class="oh-sticky-table__tr" draggable="true" id="hmoTr{{hmo.id}}">
+                <div class="oh-sticky-table__td">{{hmo.title}}</div>
+                <div class="oh-sticky-table__td">
+                    {% for plan in hmo.plans.all %}
+                    <span class="oh-sticky-table__td">{{plan.plan_name}}</span>{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                    <span class="text-muted">{% trans "No plans" %}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

@@ -21,6 +21,8 @@ from base.models import (
     EmployeeShiftDay,
     EmployeeShiftSchedule,
     EmployeeType,
+    HMO,
+    HMOPlan,
     Holidays,
     JobPosition,
     JobRole,
@@ -66,6 +68,8 @@ admin.site.register(Announcement)
 admin.site.register(Attachment)
 admin.site.register(EmailLog)
 admin.site.register(DashboardEmployeeCharts)
+admin.site.register(HMO)
+admin.site.register(HMOPlan)
 admin.site.register(Holidays)
 admin.site.register(CompanyLeaves)
 admin.site.register(PenaltyAccounts)

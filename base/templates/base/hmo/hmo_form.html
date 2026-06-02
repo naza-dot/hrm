@@ -1,0 +1,45 @@
+{% load i18n %}
+<div class="oh-modal__dialog-header pb-0">
+    <span class="oh-modal__dialog-title" id="createModalLabel">
+        {% trans "Create HMO" %}
+    </span>
+    <button class="oh-modal__close" aria-label="Close">
+        <ion-icon name="close-outline"></ion-icon>
+    </button>
+</div>
+<div class="oh-modal__dialog-body">
+    <form hx-post="{% url 'hmo-settings-create' %}" hx-target="#objectCreateModalTarget" class="oh-profile-section">
+        {% csrf_token %}
+        {{form.non_field_errors}}
+        <div class="oh-input-group mb-3">
+            <label class="oh-label">{% trans "HMO Name" %} *</label>
+            {{form.title}}
+            {{form.title.errors}}
+        </div>
+        <div class="oh-input-group mb-3">
+            <label class="oh-label">{% trans "Plans" %}</label>
+            <div id="planContainer">
+                <div class="d-flex mb-1">
+                    <input type="text" name="plan_names" class="oh-input w-100" placeholder="{% trans 'Plan name' %}">
+                </div>
+            </div>
+            <button type="button" class="oh-btn oh-btn--link p-0" onclick="addPlanField()">
+                + {% trans "Add Plan" %}
+            </button>
+        </div>
+        <div class="oh-modal__dialog-footer p-0 mt-3">
+            <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">
+                {% trans "Save" %}
+            </button>
+        </div>
+    </form>
+</div>
+<script>
+    function addPlanField() {
+        var container = document.getElementById('planContainer');
+        var div = document.createElement('div');
+        div.className = 'd-flex mb-1';
+        div.innerHTML = '<input type="text" name="plan_names" class="oh-input w-100" placeholder="{% trans 'Plan name' %}">';
+        container.appendChild(div);
+    }
+</script>

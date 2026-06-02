@@ -50,6 +50,8 @@ from base.models import (
     EmployeeShiftDay,
     EmployeeShiftSchedule,
     EmployeeType,
+    HMO,
+    HMOPlan,
     Holidays,
     HorillaMailTemplate,
     JobPosition,
@@ -2837,3 +2839,17 @@ class PenaltyAccountForm(ModelForm):
                 id__in=available_leaves.values_list("leave_type_id", flat=True)
             )
             self.fields["leave_type_id"].queryset = assigned_leave_types
+
+
+class HMOForm(ModelForm):
+    class Meta:
+        model = HMO
+        fields = "__all__"
+        exclude = ["is_active"]
+
+
+class HMOPlanForm(ModelForm):
+    class Meta:
+        model = HMOPlan
+        fields = "__all__"
+        exclude = ["is_active"]
