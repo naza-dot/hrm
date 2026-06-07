@@ -47,6 +47,21 @@ APP_URLS = [
     "employee.urls",
 ]
 
+HORILLA_FEATURES = [
+    "attendance",
+    "leave",
+    "payroll",
+    "recruitment",
+    "onboarding",
+    "offboarding",
+    "pms",
+    "asset",
+    "helpdesk",
+    "project",
+    "biometric",
+    "geofencing",
+]
+
 APPS = [
     "base",
     "employee",

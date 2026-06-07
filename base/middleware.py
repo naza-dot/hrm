@@ -13,7 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from base.backends import ConfiguredEmailBackend
 from base.context_processors import AllCompany
 from base.horilla_company_manager import HorillaCompanyManager
-from base.models import Company, ShiftRequest, WorkTypeRequest
+from base.models import Company, CompanyFeature, ShiftRequest, WorkTypeRequest
 from employee.models import (
     DisciplinaryAction,
     Employee,
@@ -21,7 +21,7 @@ from employee.models import (
     EmployeeWorkInformation,
 )
 from horilla.horilla_apps import TWO_FACTORS_AUTHENTICATION
-from horilla.horilla_settings import APPS
+from horilla.horilla_settings import APPS, HORILLA_FEATURES
 from horilla.methods import get_horilla_model_class
 from horilla_documents.models import DocumentRequest
 
@@ -182,7 +182,14 @@ class CompanyMiddleware:
 
     def __call__(self, request):
         if getattr(request, "user", False) and not request.user.is_anonymous:
-            company_id = self._get_company_id(request)
+            if request.user.is_saas_admin:
+                company_id = self._get_company_id(request)
+            else:
+                try:
+                    company = request.user.employee_get.employee_work_info.company_id
+                    company_id = company
+                except AttributeError:
+                    company_id = None
             self._set_company_session(request, company_id)
 
             app_models = [
@@ -246,4 +253,26 @@ class TwoFactorAuthMiddleware:
             except Exception as e:
                 return self.get_response(request)
 
+        return self.get_response(request)
+
+
+class FeatureGateMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if getattr(request, "user", False) and request.user.is_authenticated:
+            if not request.user.is_saas_admin:
+                try:
+                    company = request.user.employee_get.employee_work_info.company_id
+                    enabled = CompanyFeature.objects.filter(
+                        company=company, is_enabled=True
+                    ).values_list("feature", flat=True)
+                    request.enabled_features = list(enabled)
+                except AttributeError:
+                    request.enabled_features = []
+            else:
+                request.enabled_features = HORILLA_FEATURES
+        else:
+            request.enabled_features = []
         return self.get_response(request)

@@ -1,0 +1,21 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<div class="container">
+  <h2>{% trans "SaaS Admin Dashboard" %}</h2>
+  <table class="table">
+    <thead><tr><th>{% trans "Company" %}</th><th>{% trans "Actions" %}</th></tr></thead>
+    <tbody>
+      {% for company in companies %}
+      <tr>
+        <td>{{ company.company }}</td>
+        <td>
+          <a href="{% url 'saas-admin-company-features' company.id %}" class="btn btn-sm btn-info">
+            {% trans "Manage Features" %}
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

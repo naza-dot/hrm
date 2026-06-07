@@ -12,6 +12,7 @@ from django.shortcuts import render
 from horilla.settings import MIDDLEWARE
 
 MIDDLEWARE.append("base.middleware.CompanyMiddleware")
+MIDDLEWARE.append("base.middleware.FeatureGateMiddleware")
 MIDDLEWARE.append("horilla.horilla_middlewares.MethodNotAllowedMiddleware")
 MIDDLEWARE.append("horilla.horilla_middlewares.ThreadLocalMiddleware")
 MIDDLEWARE.append("horilla.horilla_middlewares.SVGSecurityMiddleware")

@@ -8044,3 +8044,32 @@ def protected_media(request, path):
             return redirect("login")
 
     return FileResponse(open(media_path, "rb"))
+
+
+@login_required
+def saas_admin_dashboard(request):
+    if not getattr(request.user, "is_saas_admin", False):
+        return render(request, "no_perm.html")
+    from base.models import Company
+    companies = Company.objects.all()
+    return render(request, "saas_admin_dashboard.html", {"companies": companies})
+
+
+@login_required
+def saas_admin_company_features(request, company_id):
+    if not getattr(request.user, "is_saas_admin", False):
+        return render(request, "no_perm.html")
+    from base.models import Company, CompanyFeature
+    company = get_object_or_404(Company, id=company_id)
+    features = CompanyFeature.objects.filter(company=company)
+    if request.method == "POST":
+        for feature in features:
+            key = f"feature_{feature.id}"
+            feature.is_enabled = key in request.POST
+            feature.save()
+        messages.success(request, _("Features updated successfully."))
+        return redirect("saas-admin-company-features", company_id=company.id)
+    return render(request, "saas_admin_company_features.html", {
+        "company": company,
+        "features": features,
+    })

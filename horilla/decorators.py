@@ -374,6 +374,18 @@ def meeting_manager_can_enter(function, perm, answerable=False):
     return _function
 
 
+@decorator_with_arguments
+def feature_required(function, feature_key):
+    def _function(request, *args, **kwargs):
+        if request.user.is_saas_admin:
+            return function(request, *args, **kwargs)
+        enabled = getattr(request, "enabled_features", [])
+        if feature_key in enabled:
+            return function(request, *args, **kwargs)
+        return handle_no_permission(request)
+    return _function
+
+
 DECORATOR_MAP = {
     "login_required": login_required,
     "permission_required": permission_required,
@@ -385,6 +397,7 @@ DECORATOR_MAP = {
     "owner_can_enter": owner_can_enter,
     "install_required": install_required,
     "meeting_manager_can_enter": meeting_manager_can_enter,
+    "feature_required": feature_required,
 }
 
 

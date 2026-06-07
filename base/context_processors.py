@@ -57,14 +57,16 @@ def get_companies(request):
         [company.id, company.company, company.icon.url, False]
         for company in Company.objects.all()
     )
-    companies = [
-        [
-            "all",
-            "All Company",
-            "https://ui-avatars.com/api/?name=All+Company&background=random",
-            False,
-        ],
-    ] + companies
+    is_saas_admin = getattr(request.user, "is_saas_admin", False) if request.user.is_authenticated else False
+    if is_saas_admin:
+        companies = [
+            [
+                "all",
+                "All Company",
+                "https://ui-avatars.com/api/?name=All+Company&background=random",
+                False,
+            ],
+        ] + companies
     selected_company = request.session.get("selected_company")
     company_selected = False
     if selected_company and selected_company == "all":
@@ -85,6 +87,9 @@ def update_selected_company(request):
     """
     This method is used to update the selected company on the session
     """
+    if not request.user.is_saas_admin:
+        messages.error(request, _("You don't have permission to switch companies."))
+        return HttpResponse(status=403)
     company_id = request.GET.get("company_id")
     user = request.user.employee_get
     user_company = getattr(
@@ -300,3 +305,7 @@ def enable_profile_edit(request):
             ACCESSBILITY_FEATURE.append(("profile_edit", _("Profile Edit Access")))
 
     return {"profile_edit_enabled": enable}
+
+
+def enabled_features(request):
+    return {"enabled_features": getattr(request, "enabled_features", [])}

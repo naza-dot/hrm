@@ -1,4 +1,10 @@
 from django.http import JsonResponse
+from rest_framework.permissions import BasePermission
+
+
+class IsSaaSAdmin(BasePermission):
+    def has_permission(self, request, view):
+        return request.user and getattr(request.user, "is_saas_admin", False)
 
 
 class RejectBasicAuthMiddleware:

@@ -14,12 +14,15 @@ from django.contrib import messages
 from django.contrib.auth.models import AbstractUser, User
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django.db import migrations
 
 from base.horilla_company_manager import HorillaCompanyManager
 from horilla import horilla_middlewares
 from horilla.horilla_middlewares import _thread_locals
+from horilla.horilla_settings import HORILLA_FEATURES
 from horilla.models import HorillaModel, upload_path
 from horilla_audit.models import HorillaAuditInfo, HorillaAuditLog
 
@@ -1900,3 +1903,27 @@ class NotificationSound(models.Model):
 
 
 User.add_to_class("is_new_employee", models.BooleanField(default=False))
+User.add_to_class("is_saas_admin", models.BooleanField(default=False))
+
+
+class CompanyFeature(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="enabled_features")
+    feature = models.CharField(max_length=100)
+    is_enabled = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("company", "feature")
+        verbose_name = _("Company Feature")
+        verbose_name_plural = _("Company Features")
+
+    def __str__(self):
+        return f"{self.company.company} - {self.feature}: {'Enabled' if self.is_enabled else 'Disabled'}"
+
+
+@receiver(post_save, sender=Company)
+def create_company_features(sender, instance, created, **kwargs):
+    if created:
+        for feature in HORILLA_FEATURES:
+            CompanyFeature.objects.create(company=instance, feature=feature, is_enabled=False)

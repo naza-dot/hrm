@@ -1,0 +1,22 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<div class="container">
+  <h2>{% trans "Features for" %} {{ company.company }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    <table class="table">
+      <thead><tr><th>{% trans "Feature" %}</th><th>{% trans "Enabled" %}</th></tr></thead>
+      <tbody>
+        {% for feature in features %}
+        <tr>
+          <td>{{ feature.feature|title }}</td>
+          <td><input type="checkbox" name="feature_{{ feature.id }}" {% if feature.is_enabled %}checked{% endif %}></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+    <a href="{% url 'saas-admin-dashboard' %}" class="btn btn-secondary">{% trans "Back" %}</a>
+  </form>
+</div>
+{% endblock %}

@@ -6,6 +6,7 @@ import logging
 from typing import Coroutine, Sequence
 
 from django.db import models
+from django.db.models import Q
 from django.db.models.query import QuerySet
 
 from horilla.horilla_middlewares import _thread_locals
@@ -50,17 +51,27 @@ class HorillaCompanyManager(models.Manager):
 
         queryset = super().get_queryset()
         request = getattr(_thread_locals, "request", None)
-        selected_company = None
-        if request is not None:
-            selected_company = request.session.get("selected_company")
-        try:
-            queryset = (
-                queryset.filter(self.model.company_filter)
-                if selected_company != "all" and selected_company
-                else queryset
-            )
-        except Exception as e:
-            logger.error(e)
+        if request is None:
+            return queryset
+
+        user = request.user
+        if user.is_authenticated and not user.is_saas_admin:
+            try:
+                user_company = user.employee_get.employee_work_info.company_id
+                if user_company:
+                    company_filter = getattr(self.model, "company_filter", None)
+                    if company_filter is not None:
+                        return queryset.filter(company_filter)
+                    return queryset.filter(company_id=user_company)
+            except AttributeError:
+                pass
+
+        selected_company = request.session.get("selected_company")
+        if selected_company is not None and selected_company != "all":
+            try:
+                queryset = queryset.filter(self.model.company_filter)
+            except Exception as e:
+                logger.error(e)
         try:
             has_duplicates = queryset.count() != queryset.distinct().count()
             if has_duplicates:

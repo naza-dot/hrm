@@ -1079,3 +1079,16 @@ urlpatterns = [
 urlpatterns.append(
     re_path(r"^media/(?P<path>.*)$", views.protected_media, name="protected_media"),
 )
+
+urlpatterns += [
+    path(
+        "saas-admin/dashboard",
+        views.saas_admin_dashboard,
+        name="saas-admin-dashboard",
+    ),
+    path(
+        "saas-admin/company/<int:company_id>/features",
+        views.saas_admin_company_features,
+        name="saas-admin-company-features",
+    ),
+]
