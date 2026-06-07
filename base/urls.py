@@ -1087,6 +1087,11 @@ urlpatterns += [
         name="saas-admin-dashboard",
     ),
     path(
+        "saas-admin/company/<int:company_id>/progress/",
+        views.tenant_progress,
+        name="tenant-progress",
+    ),
+    path(
         "saas-admin/company/<int:company_id>/features",
         views.saas_admin_company_features,
         name="saas-admin-company-features",

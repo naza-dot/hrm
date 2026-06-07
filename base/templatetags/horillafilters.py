@@ -334,3 +334,11 @@ def verbose_name(instance, field_name):
         return instance._meta.get_field(field_name).verbose_name
     except Exception:
         return field_name
+
+
+@register.filter
+def dict_key(d, key):
+    """Look up a key in a dictionary for template usage."""
+    if isinstance(d, dict):
+        return d.get(key)
+    return None

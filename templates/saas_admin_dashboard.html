@@ -1,4 +1,4 @@
-{% extends "index.html" %}{% load i18n %}
+{% extends "index.html" %}{% load i18n static %}
 {% block content %}
 <div class="container">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -20,24 +20,48 @@
         <tr>
           <th>{% trans "Company" %}</th>
           <th>{% trans "Country" %}</th>
+          <th>{% trans "Status" %}</th>
           <th>{% trans "Actions" %}</th>
         </tr>
       </thead>
       <tbody>
         {% for company in companies %}
-        <tr>
+        {% with client=clients|dict_key:company.id %}
+        <tr id="company-row-{{ company.id }}">
           <td>{{ company.company }}</td>
           <td>{{ company.country }}</td>
+          <td>
+            {% if client %}
+              {% if client.status == "active" %}
+                <span class="oh-btn oh-btn--success oh-btn--small oh-btn--disabled">{% trans "Active" %}</span>
+              {% elif client.status == "creating" or client.status == "pending" %}
+                <span class="oh-btn oh-btn--warning oh-btn--small oh-btn--disabled" id="status-{{ company.id }}">
+                  {% trans "Provisioning" %} ({{ client.progress }}%)
+                </span>
+                <div class="progress mt-1" style="height:6px;">
+                  <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                       style="width:{{ client.progress }}%;" id="progress-{{ company.id }}"></div>
+                </div>
+              {% elif client.status == "failed" %}
+                <span class="oh-btn oh-btn--danger oh-btn--small oh-btn--disabled">{% trans "Failed" %}</span>
+              {% endif %}
+            {% else %}
+              <span class="oh-btn oh-btn--warning oh-btn--small oh-btn--disabled">{% trans "Pending" %}</span>
+            {% endif %}
+          </td>
           <td class="d-flex gap-1">
             <a href="{% url 'saas-admin-company-features' company.id %}" class="oh-btn oh-btn--info oh-btn--small">
               {% trans "Manage Features" %}
             </a>
+            {% if client and client.status == "active" %}
             <button class="oh-btn oh-btn--success oh-btn--small" data-toggle="oh-modal-toggle" data-target="#objectCreateModal"
               hx-get="{% url 'saas-admin-generate-invite' company.id %}" hx-target="#objectCreateModalTarget">
               {% trans "Generate Invite" %}
             </button>
+            {% endif %}
           </td>
         </tr>
+        {% endwith %}
         {% endfor %}
       </tbody>
     </table>
@@ -48,4 +72,40 @@
   </div>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    {% for company in companies %}
+    {% with client=clients|dict_key:company.id %}
+    {% if client and client.status == "creating" or client.status == "pending" %}
+    (function(companyId) {
+      var interval = setInterval(function() {
+        fetch('/saas-admin/company/' + companyId + '/progress/')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var statusEl = document.getElementById('status-' + companyId);
+            var progressEl = document.getElementById('progress-' + companyId);
+            if (statusEl) {
+              statusEl.textContent = 'Provisioning (' + data.progress + '%)';
+            }
+            if (progressEl) {
+              progressEl.style.width = data.progress + '%';
+            }
+            if (data.status === 'active') {
+              clearInterval(interval);
+              location.reload();
+            } else if (data.status === 'failed') {
+              clearInterval(interval);
+              location.reload();
+            }
+          });
+      }, 2000);
+    })({{ company.id }});
+    {% endif %}
+    {% endwith %}
+    {% endfor %}
+  });
+</script>
 {% endblock %}

@@ -46,7 +46,7 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
 # Application definition
 
-INSTALLED_APPS = [
+SHARED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -60,6 +60,13 @@ INSTALLED_APPS = [
     "simple_history",
     "django_filters",
     "base",
+    "widget_tweaks",
+    "django_apscheduler",
+    "microsoft_auth",
+    "tenants",
+]
+
+TENANT_APPS = [
     "employee",
     "recruitment",
     "leave",
@@ -68,11 +75,10 @@ INSTALLED_APPS = [
     "asset",
     "attendance",
     "payroll",
-    "widget_tweaks",
-    "django_apscheduler",
-    "microsoft_auth",
     "outlook_auth",
 ]
+
+INSTALLED_APPS = list(dict.fromkeys(SHARED_APPS + TENANT_APPS))
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 
 APSCHEDULER_RUN_NOW_TIMEOUT = 25  # Seconds
@@ -89,6 +95,7 @@ MIDDLEWARE = [
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "tenants.middleware.TenantSchemaMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

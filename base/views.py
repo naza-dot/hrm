@@ -1777,7 +1777,15 @@ def company_view(request):
     """
     This method used to view created companies
     """
-    companies = Company.objects.all()
+    if request.user.is_saas_admin:
+        companies = Company.objects.all()
+    else:
+        try:
+            companies = Company.objects.filter(
+                id=request.user.employee_get.employee_work_info.company_id.id
+            )
+        except AttributeError:
+            companies = Company.objects.none()
     return render(
         request,
         "base/company/company.html",
@@ -8055,8 +8063,25 @@ def saas_admin_dashboard(request):
     if not getattr(request.user, "is_saas_admin", False):
         return render(request, "no_perm.html")
     from base.models import Company
+    from tenants.models import Client
     companies = Company.objects.all()
-    return render(request, "saas_admin_dashboard.html", {"companies": companies})
+    clients = {c.company_id: c for c in Client.objects.all()}
+    return render(request, "saas_admin_dashboard.html", {
+        "companies": companies,
+        "clients": clients,
+    })
+
+
+def tenant_progress(request, company_id):
+    from django.http import JsonResponse
+    from tenants.models import Client
+    client = Client.objects.filter(company_id=company_id).first()
+    if not client:
+        return JsonResponse({"status": "not_found", "progress": 0})
+    return JsonResponse({
+        "status": client.status,
+        "progress": client.progress,
+    })
 
 
 @login_required
@@ -8085,13 +8110,25 @@ def saas_admin_company_create(request):
         return render(request, "no_perm.html")
     from base.forms import SaasCompanyCreateForm
     from horilla.horilla_settings import HORILLA_FEATURES
+    from tenants.models import Client
+    from tenants.utils import provision_tenant_async
 
     form = SaasCompanyCreateForm()
     if request.method == "POST":
         form = SaasCompanyCreateForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            messages.success(request, _("Company created successfully with features."))
+            company = form.save()
+            tenant = Client.objects.create(
+                name=company.company,
+                schema_name=f"company_{company.id}",
+                company=company,
+                status="pending",
+            )
+            provision_tenant_async(tenant.id)
+            messages.success(
+                request,
+                _("Company created. Tenant provisioning has started."),
+            )
             response = HttpResponse()
             response["HX-Redirect"] = reverse("saas-admin-dashboard")
             return response
@@ -8158,6 +8195,9 @@ def register_company_admin(request, token):
             error = _("Email already in use.")
             messages.error(request, error)
         else:
+            from django.db import connection
+            from tenants.models import Client
+
             user = User.objects.create_user(
                 username=username,
                 email=email,
@@ -8165,6 +8205,12 @@ def register_company_admin(request, token):
                 is_superuser=True,
                 is_staff=True,
             )
+            client = Client.objects.filter(company=company, status="active").first()
+            if client:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        f'SET search_path TO "{client.schema_name}", public'
+                    )
             employee = Employee.objects.create(
                 employee_user_id=user,
                 email=email,
@@ -8177,6 +8223,9 @@ def register_company_admin(request, token):
             if not created:
                 work_info.company_id = company
                 work_info.save()
+            if client:
+                with connection.cursor() as cursor:
+                    cursor.execute("SET search_path TO public")
             invite.is_used = True
             invite.save()
             messages.success(
