@@ -24,6 +24,11 @@ class Command(BaseCommand):
         parser.add_argument("--password", type=str, help="Password for the new user")
         parser.add_argument("--email", type=str, help="Email of the new user")
         parser.add_argument("--phone", type=str, help="Phone number of the new user")
+        parser.add_argument(
+            "--saas-admin",
+            action="store_true",
+            help="Create the user as the initial SaaS super admin",
+        )
 
     def handle(self, *args, **options):
         if not options["first_name"]:
@@ -47,10 +52,18 @@ class Command(BaseCommand):
             )
             return
 
+        create_as_saas_admin = options.get("saas_admin", False) or not User.objects.exists()
+
         try:
             user = User.objects.create_superuser(
-                username=username, email=email, password=password
+                username=username,
+                email=email,
+                password=password,
             )
+            if create_as_saas_admin:
+                user.is_saas_admin = True
+                user.save(update_fields=["is_saas_admin"])
+
             employee = Employee()
             employee.employee_user_id = user
             employee.employee_first_name = first_name

@@ -605,6 +605,10 @@ def login_user(request):
 
         messages.success(request, _("Login successful."))
 
+        if not next_url or next_url == "/":
+            if getattr(user, "is_saas_admin", False):
+                next_url = reverse("saas-admin-dashboard")
+
         # Ensure `next_url` is a safe local URL
         if not url_has_allowed_host_and_scheme(
             next_url, allowed_hosts={request.get_host()}
