@@ -1,0 +1,90 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Register Company Admin" %} - {{ company.company }}</title>
+    <link rel="stylesheet" href="{% static 'build/css/style.min.css' %}">
+</head>
+<body>
+    <div class="oh-wrapper" style="max-width: 500px; margin: 60px auto;">
+        {% if messages %}
+        <div class="oh-alert-container">
+            {% for message in messages %}
+            <div class="oh-alert oh-alert--animated {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="oh-card" style="padding: 30px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+            <div class="oh-card__header text-center mb-4">
+                <h2 class="oh-card__title">{% trans "Set Up Company Admin" %}</h2>
+                <p class="oh-card__subtitle">{% trans "for" %} <strong>{{ company.company }}</strong></p>
+            </div>
+
+            {% if error %}
+            <div class="oh-alert oh-alert--danger mb-3" id="errorAlert">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="post" class="oh-profile-section" id="registerForm" onsubmit="return validateForm()">
+                {% csrf_token %}
+                <div class="oh-input-group mb-3">
+                    <label class="mb-1">{% trans "Username" %}</label>
+                    <input type="text" name="username" class="oh-input" required
+                        value="{{ request.POST.username|default:'' }}" placeholder="{% trans 'Choose a username' %}">
+                </div>
+                <div class="oh-input-group mb-3">
+                    <label class="mb-1">{% trans "Email" %}</label>
+                    <input type="email" name="email" class="oh-input" required
+                        value="{{ request.POST.email|default:'' }}" placeholder="{% trans 'Email address' %}">
+                </div>
+                <div class="oh-input-group mb-3">
+                    <label class="mb-1">{% trans "Password" %}</label>
+                    <input type="password" name="password" id="password" class="oh-input" required
+                        placeholder="{% trans 'Create a password' %}">
+                </div>
+                <div class="oh-input-group mb-4">
+                    <label class="mb-1">{% trans "Confirm Password" %}</label>
+                    <input type="password" name="password_confirm" id="password_confirm" class="oh-input" required
+                        placeholder="{% trans 'Confirm your password' %}"
+                        oninput="validatePasswordMatch()">
+                    <div id="passwordMatchError" class="oh-alert oh-alert--danger mt-1" style="display:none; padding: 4px 8px; font-size: 12px;">
+                        {% trans "Passwords do not match." %}
+                    </div>
+                </div>
+                <button type="submit" class="oh-btn oh-btn--secondary oh-btn--block w-100">
+                    {% trans "Create Admin Account" %}
+                </button>
+            </form>
+        </div>
+    </div>
+    <script>
+        function validatePasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('password_confirm').value;
+            const errorDiv = document.getElementById('passwordMatchError');
+            if (confirm && password !== confirm) {
+                errorDiv.style.display = 'block';
+                return false;
+            } else {
+                errorDiv.style.display = 'none';
+                return true;
+            }
+        }
+
+        function validateForm() {
+            return validatePasswordMatch();
+        }
+
+        document.getElementById('password').addEventListener('input', function() {
+            if (document.getElementById('password_confirm').value) {
+                validatePasswordMatch();
+            }
+        });
+    </script>
+</body>
+</html>

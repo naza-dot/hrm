@@ -8077,3 +8077,116 @@ def saas_admin_company_features(request, company_id):
         "company": company,
         "features": features,
     })
+
+
+@login_required
+def saas_admin_company_create(request):
+    if not getattr(request.user, "is_saas_admin", False):
+        return render(request, "no_perm.html")
+    from base.forms import SaasCompanyCreateForm
+    from horilla.horilla_settings import HORILLA_FEATURES
+
+    form = SaasCompanyCreateForm()
+    if request.method == "POST":
+        form = SaasCompanyCreateForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Company created successfully with features."))
+            response = HttpResponse()
+            response["HX-Redirect"] = reverse("saas-admin-dashboard")
+            return response
+    return render(request, "saas_admin_company_create.html", {
+        "form": form,
+        "features": HORILLA_FEATURES,
+    })
+
+
+@login_required
+def saas_admin_generate_invite(request, company_id):
+    if not getattr(request.user, "is_saas_admin", False):
+        return render(request, "no_perm.html")
+    from base.models import Company, CompanyInviteToken
+
+    company = get_object_or_404(Company, id=company_id)
+    expires_at = timezone.now() + timedelta(days=7)
+    invite = CompanyInviteToken.objects.create(
+        company=company, expires_at=expires_at
+    )
+    invite_url = request.build_absolute_uri(
+        reverse("register-company-admin", args=[invite.token])
+    )
+    return render(request, "saas_admin_invite_link.html", {
+        "company": company,
+        "invite_url": invite_url,
+        "invite": invite,
+    })
+
+
+def register_company_admin(request, token):
+    from base.models import Company, CompanyInviteToken
+    from employee.models import Employee, EmployeeWorkInformation
+
+    try:
+        invite = CompanyInviteToken.objects.get(token=token, is_used=False)
+    except CompanyInviteToken.DoesNotExist:
+        messages.error(request, _("Invalid or expired invite link."))
+        return render(request, "login.html")
+
+    if invite.expires_at < timezone.now():
+        messages.error(request, _("This invite link has expired."))
+        return render(request, "login.html")
+
+    company = invite.company
+    error = None
+
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password", "")
+        password_confirm = request.POST.get("password_confirm", "")
+
+        if not username or not email or not password:
+            error = _("All fields are required.")
+            messages.error(request, error)
+        elif password != password_confirm:
+            error = _("Passwords do not match.")
+            messages.error(request, error)
+        elif User.objects.filter(username=username).exists():
+            error = _("Username already taken.")
+            messages.error(request, error)
+        elif User.objects.filter(email=email).exists():
+            error = _("Email already in use.")
+            messages.error(request, error)
+        else:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                is_superuser=True,
+                is_staff=True,
+            )
+            employee = Employee.objects.create(
+                employee_user_id=user,
+                email=email,
+                employee_first_name=username,
+            )
+            work_info, created = EmployeeWorkInformation.objects.get_or_create(
+                employee_id=employee,
+                defaults={"company_id": company},
+            )
+            if not created:
+                work_info.company_id = company
+                work_info.save()
+            invite.is_used = True
+            invite.save()
+            messages.success(
+                request,
+                _("Company admin account created. You can now log in."),
+            )
+            return redirect("login")
+
+    return render(request, "register_company_admin.html", {
+        "company": company,
+        "invite": invite,
+        "error": error,
+    })

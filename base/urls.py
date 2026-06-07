@@ -1091,4 +1091,19 @@ urlpatterns += [
         views.saas_admin_company_features,
         name="saas-admin-company-features",
     ),
+    path(
+        "saas-admin/company-create/",
+        views.saas_admin_company_create,
+        name="saas-admin-company-create",
+    ),
+    path(
+        "saas-admin/company/<int:company_id>/generate-invite/",
+        views.saas_admin_generate_invite,
+        name="saas-admin-generate-invite",
+    ),
+    path(
+        "register-company-admin/<uuid:token>/",
+        views.register_company_admin,
+        name="register-company-admin",
+    ),
 ]

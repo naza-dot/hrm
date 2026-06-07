@@ -524,6 +524,44 @@ class CompanyForm(ModelForm):
         return icon
 
 
+class SaasCompanyCreateForm(CompanyForm):
+    """
+    Form for SAAS admin to create a company with feature toggles.
+    Extends CompanyForm and adds a checkbox for each HORILLA_FEATURE.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from horilla.horilla_settings import HORILLA_FEATURES
+
+        for feature in HORILLA_FEATURES:
+            self.fields[f"feature_{feature}"] = forms.BooleanField(
+                label=feature.replace("_", " ").title(),
+                required=False,
+                initial=False,
+                widget=forms.CheckboxInput(attrs={"class": "oh-switch__toggle"}),
+            )
+
+    def save(self, commit=True):
+        company = super().save(commit)
+        if commit:
+            self._save_feature_toggles(company)
+        return company
+
+    def _save_feature_toggles(self, company):
+        from horilla.horilla_settings import HORILLA_FEATURES
+        from base.models import CompanyFeature
+
+        for feature in HORILLA_FEATURES:
+            key = f"feature_{feature}"
+            is_enabled = self.cleaned_data.get(key, False)
+            CompanyFeature.objects.update_or_create(
+                company=company,
+                feature=feature,
+                defaults={"is_enabled": is_enabled},
+            )
+
+
 class DepartmentForm(ModelForm):
     """
     Department model's form

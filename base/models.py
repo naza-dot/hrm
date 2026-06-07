@@ -4,6 +4,7 @@ models.py
 This module is used to register django models
 """
 
+import uuid
 import ipaddress
 from datetime import date, datetime, timedelta
 from typing import Iterable
@@ -1926,4 +1927,26 @@ class CompanyFeature(models.Model):
 def create_company_features(sender, instance, created, **kwargs):
     if created:
         for feature in HORILLA_FEATURES:
-            CompanyFeature.objects.create(company=instance, feature=feature, is_enabled=False)
+            CompanyFeature.objects.get_or_create(
+                company=instance, feature=feature, defaults={"is_enabled": False}
+            )
+
+
+class CompanyInviteToken(models.Model):
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, related_name="invite_tokens"
+    )
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = _("Company Invite Token")
+        verbose_name_plural = _("Company Invite Tokens")
+
+    def __str__(self):
+        return f"Invite for {self.company.company}"
+
+    def is_valid(self):
+        return not self.is_used and self.expires_at > datetime.now()
