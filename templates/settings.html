@@ -225,6 +225,7 @@
 						</li>
 						<hr>
 						{% if "recruitment"|app_installed %}
+						{% if request.user.is_saas_admin or "recruitment" in enabled_features %}
 						<li class="oh-inner-sidebar__item">
 							<div class="oh-accordion ms-2">
 								<div class="oh-accordion-header" style="font-size:16px;">
@@ -281,6 +282,7 @@
 							</div>
 						</li>
 						<hr>
+						{% endif %}
 						{% endif %}
 
 						<li class="oh-inner-sidebar__item">
@@ -380,6 +382,7 @@
 						</li>
 						<hr>
 						{% if "attendance"|app_installed %}
+						{% if request.user.is_saas_admin or "attendance" in enabled_features %}
 						<li class="oh-inner-sidebar__item">
 							<div class="oh-accordion ms-2">
 								<div class="oh-accordion-header" style="font-size:16px;">
@@ -471,7 +474,9 @@
 						</li>
 						<hr>
 						{% endif %}
+						{% endif %}
 						{% if "leave"|app_installed %}
+						{% if request.user.is_saas_admin or "leave" in enabled_features %}
 							<li class="oh-inner-sidebar__item">
 								<div class="oh-accordion ms-2">
 									<div class="oh-accordion-header" style="font-size:16px;">
@@ -512,7 +517,9 @@
 							</li>
 							<hr>
 						{% endif %}
+						{% endif %}
 						{% if "payroll"|app_installed %}
+						{% if request.user.is_saas_admin or "payroll" in enabled_features %}
 							<li class="oh-inner-sidebar__item">
 								<div class="oh-accordion ms-2">
 									<div class="oh-accordion-header" style="font-size:16px;">
@@ -539,7 +546,9 @@
 							</li>
 							<hr>
 						{% endif %}
+						{% endif %}
 						{% if "pms"|app_installed %}
+						{% if request.user.is_saas_admin or "pms" in enabled_features %}
 							<li class="oh-inner-sidebar__item">
 								<div class="oh-accordion ms-2">
 									<div class="oh-accordion-header" style="font-size:16px;">
@@ -566,7 +575,9 @@
 							</li>
 							<hr>
 						{% endif %}
+						{% endif %}
 						{% if "helpdesk"|app_installed %}
+						{% if request.user.is_saas_admin or "helpdesk" in enabled_features %}
 							<li class="oh-inner-sidebar__item">
 								<div class="oh-accordion ms-2">
 									<div class="oh-accordion-header" style="font-size:16px;">
@@ -613,6 +624,7 @@
 								</div>
 							</li>
 							<hr>
+						{% endif %}
 						{% endif %}
 
 					</ul>

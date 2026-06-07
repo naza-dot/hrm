@@ -315,4 +315,8 @@ def enable_profile_edit(request):
 
 
 def enabled_features(request):
-    return {"enabled_features": getattr(request, "enabled_features", [])}
+    from horilla.horilla_settings import HORILLA_FEATURES
+    return {
+        "enabled_features": getattr(request, "enabled_features", []),
+        "featured_apps": HORILLA_FEATURES,
+    }

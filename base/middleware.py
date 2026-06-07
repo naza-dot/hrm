@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.core.cache import cache
 from django.db.models import Q
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 
 from base.backends import ConfiguredEmailBackend
@@ -267,6 +267,32 @@ class TwoFactorAuthMiddleware:
         return self.get_response(request)
 
 
+FEATURE_URL_PREFIXES = [
+    ("/attendance/", "attendance"),
+    ("/leave/", "leave"),
+    ("/payroll/", "payroll"),
+    ("/recruitment/", "recruitment"),
+    ("/onboarding/", "onboarding"),
+    ("/offboarding/", "offboarding"),
+    ("/pms/", "pms"),
+    ("/asset/", "asset"),
+    ("/helpdesk/", "helpdesk"),
+    ("/project/", "project"),
+    ("/biometric/", "biometric"),
+    ("/geofencing/", "geofencing"),
+]
+
+SAAS_EXEMPT_PATHS = [
+    "/login",
+    "/admin/",
+    "/accounts/",
+    "/saas-admin/",
+    "/health/",
+    "/i18n/",
+    "/register-company-admin/",
+]
+
+
 class FeatureGateMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -286,4 +312,14 @@ class FeatureGateMiddleware:
                 request.enabled_features = HORILLA_FEATURES
         else:
             request.enabled_features = []
+            return self.get_response(request)
+
+        if not request.user.is_saas_admin:
+            path = request.path_info
+            for prefix, feature_key in FEATURE_URL_PREFIXES:
+                if path.startswith(prefix):
+                    if feature_key not in request.enabled_features:
+                        return render(request, "no_perm.html")
+                    break
+
         return self.get_response(request)

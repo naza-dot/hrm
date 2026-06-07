@@ -111,7 +111,7 @@
             </li>
             {% for menues in sidebar %}
                 {% with app_name=menues.app|lower %}
-                {% if request.user.is_saas_admin or app_name not in enabled_features or app_name in enabled_features %}
+                {% if request.user.is_saas_admin or app_name not in featured_apps or app_name in enabled_features %}
                 <li class="oh-sidebar__menu-item" x-data="{ isOpen: getOpenState('{{menues.app}}GenericNav') }">
                     <a class="oh-sidebar__menu-link" data-id="{{menues.app}}GenericNav"
                         x-on:click.prevent="isOpen = !isOpen; saveOpenState('{{menues.app}}GenericNav', isOpen)"
