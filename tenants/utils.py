@@ -1,6 +1,8 @@
+import importlib
 import logging
 import threading
 
+from django.apps import apps
 from django.conf import settings
 from django.core.management import call_command
 from django.db import connections, DEFAULT_DB_ALIAS
@@ -9,12 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 def get_tenant_apps():
-    """Return all installed apps that are not in SHARED_APPS."""
-    return [
-        app for app in settings.INSTALLED_APPS
-        if app not in settings.SHARED_APPS
-        and not app.startswith("django.")
-    ]
+    """Return all installed apps that are not in SHARED_APPS and have migrations."""
+    tenant_apps = []
+    for app in settings.INSTALLED_APPS:
+        if app in settings.SHARED_APPS or app.startswith("django."):
+            continue
+        try:
+            app_config = apps.get_app_config(app)
+            if hasattr(app_config.module, "migrations"):
+                tenant_apps.append(app)
+        except LookupError:
+            continue
+    return tenant_apps
 
 
 def get_tenant_db_alias(schema_name):
