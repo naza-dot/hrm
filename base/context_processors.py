@@ -53,12 +53,12 @@ def get_companies(request):
     """
     This method will return the history additional field form
     """
-    companies = list(
-        [company.id, company.company, company.icon.url, False]
-        for company in Company.objects.all()
-    )
     is_saas_admin = getattr(request.user, "is_saas_admin", False) if request.user.is_authenticated else False
     if is_saas_admin:
+        companies = list(
+            [company.id, company.company, company.icon.url, False]
+            for company in Company.objects.all()
+        )
         companies = [
             [
                 "all",
@@ -67,11 +67,18 @@ def get_companies(request):
                 False,
             ],
         ] + companies
+    else:
+        try:
+            user_company = request.user.employee_get.employee_work_info.company_id
+            companies = [[user_company.id, user_company.company, user_company.icon.url, False]]
+        except AttributeError:
+            companies = []
     selected_company = request.session.get("selected_company")
     company_selected = False
     if selected_company and selected_company == "all":
-        companies[0][3] = True
-        company_selected = True
+        if companies:
+            companies[0][3] = True
+            company_selected = True
     else:
         for company in companies:
             if str(company[0]) == selected_company:

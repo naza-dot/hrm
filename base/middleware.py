@@ -72,6 +72,7 @@ class CompanyMiddleware:
         user_company_id = getattr(
             getattr(user, "employee_work_info", None), "company_id", None
         )
+        is_saas_admin = getattr(request.user, "is_saas_admin", False)
         if company_id and request.session.get("selected_company") != "all":
             if company_id == "all":
                 text = "All companies"
@@ -87,7 +88,7 @@ class CompanyMiddleware:
                 "text": text,
                 "id": company_id.id,
             }
-        else:
+        elif is_saas_admin:
             request.session["selected_company"] = "all"
             all_company = AllCompany()
             request.session["selected_company_instance"] = {
@@ -96,6 +97,16 @@ class CompanyMiddleware:
                 "text": all_company.text,
                 "id": all_company.id,
             }
+        else:
+            company_id = user_company_id
+            if company_id:
+                request.session["selected_company"] = str(company_id.id)
+                request.session["selected_company_instance"] = {
+                    "company": company_id.company,
+                    "icon": company_id.icon.url,
+                    "text": "My Company",
+                    "id": company_id.id,
+                }
 
     def _add_company_filter(self, model, company_id):
         """
