@@ -1,0 +1,42 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Journal Entries" %}</h2>
+    <div>
+      <a href="{% url 'journal-entry-create' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Create Journal Entry" %}</a>
+    </div>
+  </div>
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Entry #" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Description" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Reference" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Total Debit" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Total Credit" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Balanced" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for e in entries %}
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__td">{{ e.entry_number }}</div>
+        <div class="oh-sticky-table__td">{{ e.entry_date }}</div>
+        <div class="oh-sticky-table__td">{{ e.description|truncatewords:10 }}</div>
+        <div class="oh-sticky-table__td">{{ e.reference|default:"-" }}</div>
+        <div class="oh-sticky-table__td">${{ e.total_debit|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">${{ e.total_credit|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">
+          {% if e.is_balanced %}<span style="color:#28a745;">✓</span>{% else %}<span style="color:#dc3545;">✗</span>{% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="7">{% trans "No journal entries." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

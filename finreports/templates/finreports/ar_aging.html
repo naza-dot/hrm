@@ -1,0 +1,45 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Accounts Receivable Aging" %}</h2>
+    <span>{% trans "As of" %}: {{ as_of }}</span>
+  </div>
+
+  <div class="oh-card" style="padding:16px;margin-bottom:16px;background:#f8f9fa;">
+    <strong>{% trans "Total AR Outstanding" %}: ${{ total_ar|floatformat:2 }}</strong>
+  </div>
+
+  {% for key, bucket in buckets.items %}
+  <h4>{{ bucket.label }} — ${{ bucket.total|floatformat:2 }}</h4>
+  <div class="oh-sticky-table" style="margin-bottom:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Customer" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Invoice" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Due Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Total" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Due" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Days Overdue" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for item in bucket.items %}
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__td">{{ item.customer }}</div>
+        <div class="oh-sticky-table__td">{{ item.invoice }}</div>
+        <div class="oh-sticky-table__td">{{ item.date }}</div>
+        <div class="oh-sticky-table__td">{{ item.due_date }}</div>
+        <div class="oh-sticky-table__td">${{ item.total|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">${{ item.due|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">{{ item.days }}</div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="7">{% trans "None" %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Invoices" %}</h2>
+    <div>
+      <a href="{% url 'invoice-create' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Create Invoice" %}</a>
+    </div>
+  </div>
+
+  {% include "finance/filter_tags.html" %}
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Invoice #" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Customer" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Due Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Total" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Paid" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Status" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Actions" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for inv in invoices %}
+      <div class="oh-sticky-table__tr" onclick="window.location='{% url 'invoice-detail' inv.pk %}'" style="cursor:pointer;">
+        <div class="oh-sticky-table__td">{{ inv.invoice_number }}</div>
+        <div class="oh-sticky-table__td">{{ inv.customer.name }}</div>
+        <div class="oh-sticky-table__td">{{ inv.invoice_date }}</div>
+        <div class="oh-sticky-table__td">{{ inv.due_date }}</div>
+        <div class="oh-sticky-table__td">${{ inv.total|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">${{ inv.amount_paid|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">{{ inv.get_status_display }}</div>
+        <div class="oh-sticky-table__td">
+          <a href="{% url 'invoice-update' inv.pk %}" class="oh-btn oh-btn--light"><ion-icon name="create-outline"></ion-icon></a>
+          <a href="{% url 'invoice-send' inv.pk %}" class="oh-btn oh-btn--light"><ion-icon name="send-outline"></ion-icon></a>
+          <a href="{% url 'invoice-register-payment' inv.pk %}" class="oh-btn oh-btn--light"><ion-icon name="cash-outline"></ion-icon></a>
+          <a href="{% url 'invoice-delete' inv.pk %}" class="oh-btn oh-btn--light"><ion-icon name="trash-outline"></ion-icon></a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="8">{% trans "No invoices found." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if invoices.has_other_pages %}
+  <div class="oh-pagination" style="margin-top:16px;">
+    <span>{% trans "Page" %} {{ invoices.number }} {% trans "of" %} {{ invoices.paginator.num_pages }}</span>
+    <div>
+      {% if invoices.has_previous %}<a href="?page=1" class="oh-btn oh-btn--light">&laquo;</a>{% endif %}
+      {% if invoices.has_previous %}<a href="?page={{ invoices.previous_page_number }}" class="oh-btn oh-btn--light">&lsaquo;</a>{% endif %}
+      {% if invoices.has_next %}<a href="?page={{ invoices.next_page_number }}" class="oh-btn oh-btn--light">&rsaquo;</a>{% endif %}
+      {% if invoices.has_next %}<a href="?page={{ invoices.paginator.num_pages }}" class="oh-btn oh-btn--light">&raquo;</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "General Ledger" %}</h2>
+  </div>
+
+  <form method="get" style="margin-bottom:16px;display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+    <div class="oh-input__group"><label class="oh-input__label">{% trans "From" %}</label><input type="date" name="from_date" class="oh-input" value="{{ from_date }}"></div>
+    <div class="oh-input__group"><label class="oh-input__label">{% trans "To" %}</label><input type="date" name="to_date" class="oh-input" value="{{ to_date }}"></div>
+    <div class="oh-input__group">
+      <label class="oh-input__label">{% trans "Account" %}</label>
+      <select name="account" class="oh-input">
+        <option value="">{% trans "All Accounts" %}</option>
+        {% for a in accounts %}
+        <option value="{{ a.pk }}" {% if account_id|slugify == a.pk|slugify %}selected{% endif %}>{{ a.code }} - {{ a.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Filter" %}</button>
+  </form>
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Entry #" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Account" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Description" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Debit" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Credit" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for e in entries %}
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__td">{{ e.date }}</div>
+        <div class="oh-sticky-table__td">{{ e.entry_number }}</div>
+        <div class="oh-sticky-table__td">{{ e.account }}</div>
+        <div class="oh-sticky-table__td">{{ e.description|truncatewords:10 }}</div>
+        <div class="oh-sticky-table__td">{% if e.debit > 0 %}${{ e.debit|floatformat:2 }}{% endif %}</div>
+        <div class="oh-sticky-table__td">{% if e.credit > 0 %}${{ e.credit|floatformat:2 }}{% endif %}</div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="6">{% trans "No entries found." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

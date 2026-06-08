@@ -1,0 +1,24 @@
+{% extends "index.html" %}{% load i18n widget_tweaks %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{{ title }}</h2>
+  </div>
+  <div class="oh-card" style="max-width:600px;margin-top:16px;">
+    <form method="post" enctype="multipart/form-data" action="{% if pk %}{% url action pk %}{% else %}{% url action %}{% endif %}">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="oh-input__group" style="margin-bottom:12px;">
+        <label class="oh-input__label">{{ field.label }}</label>
+        {{ field|add_class:"oh-input w-100" }}
+        {% if field.errors %}<small style="color:#dc3545;">{{ field.errors.0 }}</small>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="oh-btn-group" style="margin-top:16px;">
+        <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Save" %}</button>
+        <a href="javascript:history.back()" class="oh-btn oh-btn--light">{% trans "Cancel" %}</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

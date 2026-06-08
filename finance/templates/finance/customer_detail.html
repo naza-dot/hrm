@@ -1,0 +1,57 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{{ customer.name }}</h2>
+    <div>
+      <a href="{% url 'customer-update' customer.pk %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Edit" %}</a>
+    </div>
+  </div>
+
+  <div class="row" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;">
+    <div class="oh-card" style="flex:1;padding:20px;min-width:250px;">
+      <h4>{% trans "Contact Information" %}</h4>
+      <p><strong>{% trans "Contact Person" %}:</strong> {{ customer.contact_person|default:"-" }}</p>
+      <p><strong>{% trans "Email" %}:</strong> {{ customer.email|default:"-" }}</p>
+      <p><strong>{% trans "Phone" %}:</strong> {{ customer.phone|default:"-" }}</p>
+      <p><strong>{% trans "Address" %}:</strong> {{ customer.address|linebreaksbr|default:"-" }}</p>
+      <p><strong>{% trans "Tax ID" %}:</strong> {{ customer.tax_id|default:"-" }}</p>
+      <p><strong>{% trans "Credit Limit" %}:</strong> ${{ customer.credit_limit|floatformat:2 }}</p>
+    </div>
+    <div class="oh-card" style="flex:1;padding:20px;min-width:250px;">
+      <h4>{% trans "Financial Summary" %}</h4>
+      <p><strong>{% trans "Opening Balance" %}:</strong> ${{ customer.opening_balance|floatformat:2 }}</p>
+      <p><strong>{% trans "Total Invoiced" %}:</strong> ${{ customer.total_invoiced|floatformat:2 }}</p>
+      <p><strong>{% trans "Total Paid" %}:</strong> ${{ customer.total_paid|floatformat:2 }}</p>
+      <p><strong>{% trans "Balance Due" %}:</strong> ${{ customer.balance_due|floatformat:2 }}</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:32px;">{% trans "Invoices" %}</h3>
+  <div class="oh-sticky-table" style="margin-top:8px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Invoice #" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Due Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Total" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Paid" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Status" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for inv in invoices %}
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__td">{{ inv.invoice_number }}</div>
+        <div class="oh-sticky-table__td">{{ inv.invoice_date }}</div>
+        <div class="oh-sticky-table__td">{{ inv.due_date }}</div>
+        <div class="oh-sticky-table__td">${{ inv.total|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">${{ inv.amount_paid|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">{{ inv.get_status_display }}</div>
+      </div>
+      {% empty %}<div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="6">{% trans "No invoices." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

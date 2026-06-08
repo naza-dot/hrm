@@ -1,0 +1,56 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Balance Sheet" %}</h2>
+  </div>
+
+  <form method="get" style="margin-bottom:16px;display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+    <div class="oh-input__group"><label class="oh-input__label">{% trans "As of" %}</label><input type="date" name="as_of" class="oh-input" value="{{ as_of }}"></div>
+    <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "View" %}</button>
+  </form>
+
+  <div class="oh-card" style="max-width:700px;padding:24px;">
+    <h3 style="border-bottom:2px solid #1a5676;padding-bottom:8px;">{% trans "Assets" %}</h3>
+    {% for item in assets %}
+    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+      <span>{{ item.name }}</span><span>${{ item.balance|floatformat:2 }}</span>
+    </div>
+    {% empty %}<p>{% trans "No assets." %}</p>{% endfor %}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:bold;border-top:1px solid #ddd;">
+      <span>{% trans "Total Assets" %}</span><span>${{ total_assets|floatformat:2 }}</span>
+    </div>
+
+    <h3 style="border-bottom:2px solid #dc3545;padding-bottom:8px;margin-top:24px;">{% trans "Liabilities" %}</h3>
+    {% for item in liabilities %}
+    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+      <span>{{ item.name }}</span><span>${{ item.balance|floatformat:2 }}</span>
+    </div>
+    {% empty %}<p>{% trans "No liabilities." %}</p>{% endfor %}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:bold;border-top:1px solid #ddd;">
+      <span>{% trans "Total Liabilities" %}</span><span>${{ total_liabilities|floatformat:2 }}</span>
+    </div>
+
+    <h3 style="border-bottom:2px solid #6f42c1;padding-bottom:8px;margin-top:24px;">{% trans "Equity" %}</h3>
+    {% for item in equities %}
+    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+      <span>{{ item.name }}</span><span>${{ item.balance|floatformat:2 }}</span>
+    </div>
+    {% empty %}<p>{% trans "No equity accounts." %}</p>{% endfor %}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:bold;border-top:1px solid #ddd;">
+      <span>{% trans "Total Equity" %}</span><span>${{ total_equity|floatformat:2 }}</span>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;padding:12px 0;font-weight:bold;font-size:1.1em;border-top:2px solid #000;margin-top:16px;">
+      <span>{% trans "Total Liabilities + Equity" %}</span>
+      <span>${{ total_liabilities_equity|floatformat:2 }}</span>
+    </div>
+
+    {% if total_assets == total_liabilities_equity %}
+    <p style="color:#28a745;margin-top:8px;">✓ {% trans "Balance Sheet is balanced." %}</p>
+    {% else %}
+    <p style="color:#dc3545;margin-top:8px;">✗ {% trans "Balance Sheet is NOT balanced. Difference:" %} ${{ total_assets|add:total_liabilities_equity|floatformat:2 }}</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

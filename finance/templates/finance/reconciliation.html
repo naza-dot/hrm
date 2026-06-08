@@ -1,0 +1,46 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Bank Reconciliation" %}</h2>
+  </div>
+
+  <form method="get" style="margin-bottom:16px;">
+    <div class="oh-input__group" style="display:inline-block;">
+      <select name="bank_account" class="oh-input" onchange="this.form.submit()">
+        <option value="">{% trans "All Bank Accounts" %}</option>
+        {% for ba in bank_accounts %}
+        <option value="{{ ba.pk }}" {% if selected_bank == ba.pk|slugify %}selected{% endif %}>{{ ba.account_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  <div class="oh-sticky-table">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Description" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Debit" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Credit" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Actions" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for t in transactions %}
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__td">{{ t.date }}</div>
+        <div class="oh-sticky-table__td">{{ t.description }}</div>
+        <div class="oh-sticky-table__td">{% if t.debit > 0 %}${{ t.debit|floatformat:2 }}{% endif %}</div>
+        <div class="oh-sticky-table__td">{% if t.credit > 0 %}${{ t.credit|floatformat:2 }}{% endif %}</div>
+        <div class="oh-sticky-table__td">
+          <a href="{% url 'reconciliation-match' t.pk %}" class="oh-btn oh-btn--secondary oh-btn--small">{% trans "Match" %}</a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="5">{% trans "No unreconciled transactions." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

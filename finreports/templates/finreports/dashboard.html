@@ -1,0 +1,90 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Financial Reports Dashboard" %}</h2>
+  </div>
+
+  <div class="row" style="display:flex;gap:16px;flex-wrap:wrap;">
+    <div class="oh-card" style="flex:1;padding:20px;min-width:200px;background:#f0f8ff;border-radius:8px;">
+      <h4 style="margin:0;color:#1a5676;">${{ net_income|floatformat:2 }}</h4>
+      <small>{% trans "Net Income (YTD)" %}</small>
+    </div>
+    <div class="oh-card" style="flex:1;padding:20px;min-width:200px;background:#f0fff0;border-radius:8px;">
+      <h4 style="margin:0;color:#28a745;">${{ total_assets|floatformat:2 }}</h4>
+      <small>{% trans "Total Assets" %}</small>
+    </div>
+    <div class="oh-card" style="flex:1;padding:20px;min-width:200px;background:#fff5f5;border-radius:8px;">
+      <h4 style="margin:0;color:#dc3545;">${{ total_liabilities|floatformat:2 }}</h4>
+      <small>{% trans "Total Liabilities" %}</small>
+    </div>
+    <div class="oh-card" style="flex:1;padding:20px;min-width:200px;background:#f8f9fa;border-radius:8px;">
+      <h4 style="margin:0;color:#6f42c1;">${{ total_equity|floatformat:2 }}</h4>
+      <small>{% trans "Total Equity" %}</small>
+    </div>
+    <div class="oh-card" style="flex:1;padding:20px;min-width:200px;background:#f0f8ff;border-radius:8px;">
+      <h4 style="margin:0;color:#1a5676;">${{ ar|floatformat:2 }}</h4>
+      <small>{% trans "AR Outstanding" %}</small>
+    </div>
+    <div class="oh-card" style="flex:1;padding:20px;min-width:200px;background:#fff5f5;border-radius:8px;">
+      <h4 style="margin:0;color:#dc3545;">${{ ap|floatformat:2 }}</h4>
+      <small>{% trans "AP Outstanding" %}</small>
+    </div>
+    <div class="oh-card" style="flex:1;padding:20px;min-width:200px;background:#f0fff0;border-radius:8px;">
+      <h4 style="margin:0;color:#28a745;">${{ cash_balance|floatformat:2 }}</h4>
+      <small>{% trans "Cash Balance" %}</small>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:24px;margin-top:32px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:300px;">
+      <h4>{% trans "Income Breakdown" %}</h4>
+      <div class="oh-sticky-table" style="margin-top:8px;">
+        <div class="oh-sticky-table__thead">
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__th">{% trans "Account" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Amount" %}</div>
+          </div>
+        </div>
+        <div class="oh-sticky-table__tbody">
+          {% for item in income_data %}
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__td">{{ item.name }}</div>
+            <div class="oh-sticky-table__td">${{ item.balance|floatformat:2 }}</div>
+          </div>
+          {% empty %}<div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="2">{% trans "No income data." %}</div></div>
+          {% endfor %}
+          <div class="oh-sticky-table__tr" style="font-weight:bold;">
+            <div class="oh-sticky-table__td">{% trans "Total Income" %}</div>
+            <div class="oh-sticky-table__td">${{ income|floatformat:2 }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:300px;">
+      <h4>{% trans "Expense Breakdown" %}</h4>
+      <div class="oh-sticky-table" style="margin-top:8px;">
+        <div class="oh-sticky-table__thead">
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__th">{% trans "Account" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Amount" %}</div>
+          </div>
+        </div>
+        <div class="oh-sticky-table__tbody">
+          {% for item in expense_data %}
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__td">{{ item.name }}</div>
+            <div class="oh-sticky-table__td">${{ item.balance|floatformat:2 }}</div>
+          </div>
+          {% empty %}<div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="2">{% trans "No expense data." %}</div></div>
+          {% endfor %}
+          <div class="oh-sticky-table__tr" style="font-weight:bold;">
+            <div class="oh-sticky-table__td">{% trans "Total Expenses" %}</div>
+            <div class="oh-sticky-table__td">${{ expenses|floatformat:2 }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

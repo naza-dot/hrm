@@ -1,0 +1,47 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Trial Balance" %}</h2>
+  </div>
+
+  <form method="get" style="margin-bottom:16px;display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+    <div class="oh-input__group"><label class="oh-input__label">{% trans "As of" %}</label><input type="date" name="as_of" class="oh-input" value="{{ as_of }}"></div>
+    <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "View" %}</button>
+  </form>
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Code" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Account" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Debit" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Credit" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for e in entries %}
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__td">{{ e.code }}</div>
+        <div class="oh-sticky-table__td">{{ e.name }}</div>
+        <div class="oh-sticky-table__td">{% if e.debit > 0 %}${{ e.debit|floatformat:2 }}{% endif %}</div>
+        <div class="oh-sticky-table__td">{% if e.credit > 0 %}${{ e.credit|floatformat:2 }}{% endif %}</div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="4">{% trans "No accounts found." %}</div></div>
+      {% endfor %}
+    </div>
+    <div class="oh-sticky-table__tr" style="font-weight:bold;">
+      <div class="oh-sticky-table__td" colspan="2">{% trans "Total" %}</div>
+      <div class="oh-sticky-table__td">${{ total_dr|floatformat:2 }}</div>
+      <div class="oh-sticky-table__td">${{ total_cr|floatformat:2 }}</div>
+    </div>
+  </div>
+
+  {% if total_dr == total_cr %}
+  <p style="color:#28a745;margin-top:8px;">✓ {% trans "Trial Balance is balanced." %}</p>
+  {% else %}
+  <p style="color:#dc3545;margin-top:8px;">✗ {% trans "Trial Balance is NOT balanced. Difference:" %} ${{ total_dr|add:total_cr|floatformat:2 }}</p>
+  {% endif %}
+</section>
+{% endblock %}

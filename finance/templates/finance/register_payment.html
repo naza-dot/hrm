@@ -1,0 +1,45 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Register Payment" %}</h2>
+  </div>
+  <div class="oh-card" style="max-width:500px;margin-top:16px;">
+    {% if invoice %}
+    <p><strong>{% trans "Invoice" %}:</strong> {{ invoice.invoice_number }} — {% trans "Balance Due" %}: ${{ invoice.balance_due|floatformat:2 }}</p>
+    {% endif %}
+    {% if bill %}
+    <p><strong>{% trans "Bill" %}:</strong> {{ bill.bill_number }} — {% trans "Balance Due" %}: ${{ bill.balance_due|floatformat:2 }}</p>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="oh-input__group" style="margin-bottom:12px;">
+        <label class="oh-input__label">{% trans "Amount" %}</label>
+        <input type="number" step="0.01" name="amount" class="oh-input w-100" required>
+      </div>
+      <div class="oh-input__group" style="margin-bottom:12px;">
+        <label class="oh-input__label">{% trans "Payment Date" %}</label>
+        <input type="date" name="payment_date" class="oh-input w-100" value="{% now 'Y-m-d' %}">
+      </div>
+      <div class="oh-input__group" style="margin-bottom:12px;">
+        <label class="oh-input__label">{% trans "Payment Method" %}</label>
+        <select name="method" class="oh-input w-100">
+          <option value="cash">{% trans "Cash" %}</option>
+          <option value="bank_transfer" selected>{% trans "Bank Transfer" %}</option>
+          <option value="check">{% trans "Cheque" %}</option>
+          <option value="credit_card">{% trans "Credit Card" %}</option>
+          <option value="online">{% trans "Online Payment" %}</option>
+        </select>
+      </div>
+      <div class="oh-input__group" style="margin-bottom:12px;">
+        <label class="oh-input__label">{% trans "Reference Number" %}</label>
+        <input type="text" name="reference_number" class="oh-input w-100">
+      </div>
+      <div class="oh-btn-group" style="margin-top:16px;">
+        <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Register Payment" %}</button>
+        <a href="javascript:history.back()" class="oh-btn oh-btn--light">{% trans "Cancel" %}</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

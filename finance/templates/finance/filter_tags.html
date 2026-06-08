@@ -1,0 +1,12 @@
+{% load i18n %}{% if filter_dict %}
+<div class="oh-filter_tags" style="margin:8px 0;">
+  {% for key, value in filter_dict.items %}
+  {% if value %}
+  <span class="oh-filter_tag">
+    {{ key }}: {{ value }}
+    <a href="?{% for k, v in filter_dict.items %}{% if k != key %}&{{ k }}={{ v }}{% endif %}{% endfor %}" style="margin-left:4px;">&times;</a>
+  </span>
+  {% endif %}
+  {% endfor %}
+</div>
+{% endif %}

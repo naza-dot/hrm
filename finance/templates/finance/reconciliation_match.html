@@ -1,0 +1,57 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Match Transaction" %}</h2>
+  </div>
+
+  <div class="oh-card" style="max-width:600px;margin-top:16px;">
+    <div style="padding:16px;background:#f8f9fa;border-radius:8px;margin-bottom:16px;">
+      <p><strong>{% trans "Transaction" %}:</strong> {{ transaction.date }} — {{ transaction.description }}</p>
+      <p><strong>{% trans "Debit" %}:</strong> ${{ transaction.debit|floatformat:2 }} <strong>{% trans "Credit" %}:</strong> ${{ transaction.credit|floatformat:2 }}</p>
+    </div>
+
+    <form method="post" action="{% url 'reconciliation-match' transaction.pk %}">
+      {% csrf_token %}
+      <div class="oh-input__group" style="margin-bottom:12px;">
+        <label class="oh-input__label">{% trans "Match with" %}</label>
+        <select name="match_type" class="oh-input w-100" id="matchTypeSelect" onchange="toggleMatchID()">
+          <option value="">{% trans "-- Select --" %}</option>
+          <option value="invoice">{% trans "Invoice" %}</option>
+          <option value="bill">{% trans "Bill" %}</option>
+          <option value="payment">{% trans "Payment" %}</option>
+        </select>
+      </div>
+      <div class="oh-input__group" style="margin-bottom:12px;" id="matchIDGroup">
+        <label class="oh-input__label">{% trans "Select Item" %}</label>
+        <select name="match_id" class="oh-input w-100" id="matchIDSelect">
+          <option value="">{% trans "-- Select --" %}</option>
+          {% for inv in invoices %}
+          <option value="{{ inv.pk }}" class="invoice-option" style="display:none;">{{ inv.invoice_number }} — ${{ inv.balance_due|floatformat:2 }}</option>
+          {% endfor %}
+          {% for b in bills %}
+          <option value="{{ b.pk }}" class="bill-option" style="display:none;">{{ b.bill_number }} — ${{ b.balance_due|floatformat:2 }}</option>
+          {% endfor %}
+          {% for pmt in request.user.payments.all|slice:":20" %}
+          <option value="{{ pmt.pk }}" class="payment-option" style="display:none;">#{{ pmt.pk }} — ${{ pmt.amount|floatformat:2 }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="oh-btn-group" style="margin-top:16px;">
+        <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Match & Reconciled" %}</button>
+        <a href="{% url 'reconciliation' %}" class="oh-btn oh-btn--light">{% trans "Cancel" %}</a>
+      </div>
+    </form>
+  </div>
+</section>
+<script>
+function toggleMatchID() {
+  const type = document.getElementById('matchTypeSelect').value;
+  document.querySelectorAll('#matchIDSelect option').forEach(o => o.style.display = 'none');
+  if (type) {
+    document.querySelectorAll('.' + type + '-option').forEach(o => o.style.display = '');
+    document.getElementById('matchIDGroup').style.display = '';
+  }
+}
+</script>
+{% endblock %}

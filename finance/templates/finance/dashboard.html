@@ -1,0 +1,108 @@
+{% extends "index.html" %}{% load i18n static %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Finance Dashboard" %}</h2>
+  </div>
+
+  <div class="row" style="display:flex; gap:16px; flex-wrap:wrap;">
+    <div class="col-sm-12 col-md-6 col-lg-3">
+      <div class="oh-card" style="padding:20px;background:#f8f9fa;border-radius:8px;">
+        <h4 style="margin:0;color:#1a5676;">{{ total_invoices }}</h4>
+        <small>{% trans "Total Invoices" %}</small>
+      </div>
+    </div>
+    <div class="col-sm-12 col-md-6 col-lg-3">
+      <div class="oh-card" style="padding:20px;background:#f8f9fa;border-radius:8px;">
+        <h4 style="margin:0;color:#1a5676;">{{ total_bills }}</h4>
+        <small>{% trans "Total Bills" %}</small>
+      </div>
+    </div>
+    <div class="col-sm-12 col-md-6 col-lg-3">
+      <div class="oh-card" style="padding:20px;background:#f8f9fa;border-radius:8px;">
+        <h4 style="margin:0;color:#28a745;">${{ total_receivables|floatformat:2 }}</h4>
+        <small>{% trans "Outstanding Receivables" %}</small>
+      </div>
+    </div>
+    <div class="col-sm-12 col-md-6 col-lg-3">
+      <div class="oh-card" style="padding:20px;background:#f8f9fa;border-radius:8px;">
+        <h4 style="margin:0;color:#dc3545;">${{ total_payables|floatformat:2 }}</h4>
+        <small>{% trans "Outstanding Payables" %}</small>
+      </div>
+    </div>
+    <div class="col-sm-12 col-md-6 col-lg-3">
+      <div class="oh-card" style="padding:20px;background:#f8f9fa;border-radius:8px;">
+        <h4 style="margin:0;color:#1a5676;">{{ total_customers }}</h4>
+        <small>{% trans "Active Customers" %}</small>
+      </div>
+    </div>
+    <div class="col-sm-12 col-md-6 col-lg-3">
+      <div class="oh-card" style="padding:20px;background:#f8f9fa;border-radius:8px;">
+        <h4 style="margin:0;color:#1a5676;">{{ total_vendors }}</h4>
+        <small>{% trans "Active Vendors" %}</small>
+      </div>
+    </div>
+    <div class="col-sm-12 col-md-6 col-lg-3">
+      <div class="oh-card" style="padding:20px;background:#f8f9fa;border-radius:8px;">
+        <h4 style="margin:0;color:#dc3545;">{{ invoices_overdue }}</h4>
+        <small>{% trans "Overdue Invoices" %}</small>
+      </div>
+    </div>
+    <div class="col-sm-12 col-md-6 col-lg-3">
+      <div class="oh-card" style="padding:20px;background:#f8f9fa;border-radius:8px;">
+        <h4 style="margin:0;color:#dc3545;">{{ bills_overdue }}</h4>
+        <small>{% trans "Overdue Bills" %}</small>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:24px;margin-top:32px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:300px;">
+      <h4>{% trans "Recent Payments" %}</h4>
+      <div class="oh-sticky-table" style="margin-top:8px;">
+        <div class="oh-sticky-table__thead">
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Type" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Amount" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Method" %}</div>
+          </div>
+        </div>
+        <div class="oh-sticky-table__tbody">
+          {% for p in recent_payments %}
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__td">{{ p.payment_date }}</div>
+            <div class="oh-sticky-table__td">{{ p.get_payment_type_display }}</div>
+            <div class="oh-sticky-table__td">${{ p.amount|floatformat:2 }}</div>
+            <div class="oh-sticky-table__td">{{ p.get_method_display }}</div>
+          </div>
+          {% empty %}
+          <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="4">{% trans "No payments yet." %}</div></div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:300px;">
+      <h4>{% trans "Bank Balances" %}</h4>
+      <div class="oh-sticky-table" style="margin-top:8px;">
+        <div class="oh-sticky-table__thead">
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__th">{% trans "Account" %}</div>
+            <div class="oh-sticky-table__th">{% trans "Balance" %}</div>
+          </div>
+        </div>
+        <div class="oh-sticky-table__tbody">
+          {% for b in bank_balances %}
+          <div class="oh-sticky-table__tr">
+            <div class="oh-sticky-table__td">{{ b.account.account_name }}</div>
+            <div class="oh-sticky-table__td">${{ b.balance|floatformat:2 }}</div>
+          </div>
+          {% empty %}
+          <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="2">{% trans "No bank accounts." %}</div></div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

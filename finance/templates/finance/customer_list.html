@@ -1,0 +1,55 @@
+{% extends "index.html" %}{% load i18n static %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Customers" %}</h2>
+    <div>
+      <a href="{% url 'customer-create' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Create Customer" %}</a>
+    </div>
+  </div>
+
+  {% include "finance/filter_tags.html" %}
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Name" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Contact" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Email" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Phone" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Balance Due" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Actions" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for c in customers %}
+      <div class="oh-sticky-table__tr" onclick="window.location='{% url 'customer-detail' c.pk %}'" style="cursor:pointer;">
+        <div class="oh-sticky-table__td">{{ c.name }}</div>
+        <div class="oh-sticky-table__td">{{ c.contact_person|default:"-" }}</div>
+        <div class="oh-sticky-table__td">{{ c.email|default:"-" }}</div>
+        <div class="oh-sticky-table__td">{{ c.phone|default:"-" }}</div>
+        <div class="oh-sticky-table__td">${{ c.balance_due|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">
+          <a href="{% url 'customer-update' c.pk %}" class="oh-btn oh-btn--light"><ion-icon name="create-outline"></ion-icon></a>
+          <a href="{% url 'customer-delete' c.pk %}" class="oh-btn oh-btn--light"><ion-icon name="trash-outline"></ion-icon></a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="6">{% trans "No customers found." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if customers.has_other_pages %}
+  <div class="oh-pagination" style="margin-top:16px;">
+    <span>{% trans "Page" %} {{ customers.number }} {% trans "of" %} {{ customers.paginator.num_pages }}</span>
+    <div>
+      {% if customers.has_previous %}<a href="?page=1" class="oh-btn oh-btn--light">&laquo;</a>{% endif %}
+      {% if customers.has_previous %}<a href="?page={{ customers.previous_page_number }}" class="oh-btn oh-btn--light">&lsaquo;</a>{% endif %}
+      {% if customers.has_next %}<a href="?page={{ customers.next_page_number }}" class="oh-btn oh-btn--light">&rsaquo;</a>{% endif %}
+      {% if customers.has_next %}<a href="?page={{ customers.paginator.num_pages }}" class="oh-btn oh-btn--light">&raquo;</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

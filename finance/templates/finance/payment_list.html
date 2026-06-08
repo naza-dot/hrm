@@ -1,0 +1,58 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Payments" %}</h2>
+    <div>
+      <a href="{% url 'payment-create' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Record Payment" %}</a>
+    </div>
+  </div>
+
+  {% include "finance/filter_tags.html" %}
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Type" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Party" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Amount" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Method" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Reference" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Actions" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for p in payments %}
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__td">{{ p.payment_date }}</div>
+        <div class="oh-sticky-table__td">{{ p.get_payment_type_display }}</div>
+        <div class="oh-sticky-table__td">
+          {% if p.customer %}{{ p.customer.name }}{% elif p.vendor %}{{ p.vendor.name }}{% else %}-{% endif %}
+        </div>
+        <div class="oh-sticky-table__td">${{ p.amount|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">{{ p.get_method_display }}</div>
+        <div class="oh-sticky-table__td">{{ p.reference_number|default:"-" }}</div>
+        <div class="oh-sticky-table__td">
+          <a href="{% url 'payment-delete' p.pk %}" class="oh-btn oh-btn--light"><ion-icon name="trash-outline"></ion-icon></a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="7">{% trans "No payments recorded." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if payments.has_other_pages %}
+  <div class="oh-pagination" style="margin-top:16px;">
+    <span>{% trans "Page" %} {{ payments.number }} {% trans "of" %} {{ payments.paginator.num_pages }}</span>
+    <div>
+      {% if payments.has_previous %}<a href="?page=1" class="oh-btn oh-btn--light">&laquo;</a>{% endif %}
+      {% if payments.has_previous %}<a href="?page={{ payments.previous_page_number }}" class="oh-btn oh-btn--light">&lsaquo;</a>{% endif %}
+      {% if payments.has_next %}<a href="?page={{ payments.next_page_number }}" class="oh-btn oh-btn--light">&rsaquo;</a>{% endif %}
+      {% if payments.has_next %}<a href="?page={{ payments.paginator.num_pages }}" class="oh-btn oh-btn--light">&raquo;</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

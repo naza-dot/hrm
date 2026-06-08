@@ -1,0 +1,41 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Profit & Loss Statement" %}</h2>
+  </div>
+
+  <form method="get" style="margin-bottom:16px;display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+    <div class="oh-input__group"><label class="oh-input__label">{% trans "From" %}</label><input type="date" name="from_date" class="oh-input" value="{{ from_date }}"></div>
+    <div class="oh-input__group"><label class="oh-input__label">{% trans "To" %}</label><input type="date" name="to_date" class="oh-input" value="{{ to_date }}"></div>
+    <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Filter" %}</button>
+  </form>
+
+  <div class="oh-card" style="max-width:700px;padding:24px;">
+    <h3 style="border-bottom:2px solid #1a5676;padding-bottom:8px;">{% trans "Income" %}</h3>
+    {% for item in incomes %}
+    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+      <span>{{ item.name }}</span><span>${{ item.amount|floatformat:2 }}</span>
+    </div>
+    {% empty %}<p>{% trans "No income recorded." %}</p>{% endfor %}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:bold;border-top:1px solid #ddd;">
+      <span>{% trans "Total Income" %}</span><span>${{ total_income|floatformat:2 }}</span>
+    </div>
+
+    <h3 style="border-bottom:2px solid #dc3545;padding-bottom:8px;margin-top:24px;">{% trans "Expenses" %}</h3>
+    {% for item in expenses %}
+    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+      <span>{{ item.name }}</span><span>${{ item.amount|floatformat:2 }}</span>
+    </div>
+    {% empty %}<p>{% trans "No expenses recorded." %}</p>{% endfor %}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:bold;border-top:1px solid #ddd;">
+      <span>{% trans "Total Expenses" %}</span><span>${{ total_expense|floatformat:2 }}</span>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;padding:12px 0;font-weight:bold;font-size:1.2em;border-top:2px solid #000;margin-top:16px;">
+      <span>{% trans "Net Income" %}</span>
+      <span style="color:{% if net_income >= 0 %}#28a745{% else %}#dc3545{% endif %};">${{ net_income|floatformat:2 }}</span>
+    </div>
+  </div>
+</section>
+{% endblock %}

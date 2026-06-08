@@ -1,0 +1,43 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Statement" %} — {{ statement.bank_account.account_name }} ({{ statement.statement_date }})</h2>
+    <div>
+      <span class="oh-btn oh-btn--light">{% trans "Closing Balance" %}: ${{ statement.closing_balance|floatformat:2 }}</span>
+    </div>
+  </div>
+
+  {% include "finance/filter_tags.html" %}
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Description" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Reference" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Debit" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Credit" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Reconciled" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for t in transactions %}
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__td">{{ t.date }}</div>
+        <div class="oh-sticky-table__td">{{ t.description }}</div>
+        <div class="oh-sticky-table__td">{{ t.reference|default:"-" }}</div>
+        <div class="oh-sticky-table__td">{% if t.debit > 0 %}${{ t.debit|floatformat:2 }}{% endif %}</div>
+        <div class="oh-sticky-table__td">{% if t.credit > 0 %}${{ t.credit|floatformat:2 }}{% endif %}</div>
+        <div class="oh-sticky-table__td">
+          {% if t.reconciled %}<span style="color:#28a745;">✓ {% trans "Reconciled" %}</span>
+          {% else %}<a href="{% url 'reconciliation-match' t.pk %}" class="oh-btn oh-btn--light">{% trans "Match" %}</a>{% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="6">{% trans "No transactions imported." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

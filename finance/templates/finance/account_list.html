@@ -1,0 +1,43 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Chart of Accounts" %}</h2>
+    <div>
+      <a href="{% url 'account-create' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Create Account" %}</a>
+    </div>
+  </div>
+
+  {% include "finance/filter_tags.html" %}
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Code" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Name" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Type" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Balance" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Status" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Actions" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for a in accounts %}
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__td">{{ a.code }}</div>
+        <div class="oh-sticky-table__td">{{ a.name }}</div>
+        <div class="oh-sticky-table__td">{{ a.get_account_type_display }}</div>
+        <div class="oh-sticky-table__td">${{ a.balance|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">{% if a.is_active %}<span style="color:#28a745;">{% trans "Active" %}</span>{% else %}<span style="color:#dc3545;">{% trans "Inactive" %}</span>{% endif %}</div>
+        <div class="oh-sticky-table__td">
+          <a href="{% url 'account-update' a.pk %}" class="oh-btn oh-btn--light"><ion-icon name="create-outline"></ion-icon></a>
+          <a href="{% url 'account-delete' a.pk %}" class="oh-btn oh-btn--light"><ion-icon name="trash-outline"></ion-icon></a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="6">{% trans "No accounts. Create your Chart of Accounts." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

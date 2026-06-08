@@ -1,0 +1,55 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Vendors" %}</h2>
+    <div>
+      <a href="{% url 'vendor-create' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Create Vendor" %}</a>
+    </div>
+  </div>
+
+  {% include "finance/filter_tags.html" %}
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Name" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Contact" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Email" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Phone" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Balance Due" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Actions" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for v in vendors %}
+      <div class="oh-sticky-table__tr" onclick="window.location='{% url 'vendor-detail' v.pk %}'" style="cursor:pointer;">
+        <div class="oh-sticky-table__td">{{ v.name }}</div>
+        <div class="oh-sticky-table__td">{{ v.contact_person|default:"-" }}</div>
+        <div class="oh-sticky-table__td">{{ v.email|default:"-" }}</div>
+        <div class="oh-sticky-table__td">{{ v.phone|default:"-" }}</div>
+        <div class="oh-sticky-table__td">${{ v.balance_due|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">
+          <a href="{% url 'vendor-update' v.pk %}" class="oh-btn oh-btn--light"><ion-icon name="create-outline"></ion-icon></a>
+          <a href="{% url 'vendor-delete' v.pk %}" class="oh-btn oh-btn--light"><ion-icon name="trash-outline"></ion-icon></a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="6">{% trans "No vendors found." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if vendors.has_other_pages %}
+  <div class="oh-pagination" style="margin-top:16px;">
+    <span>{% trans "Page" %} {{ vendors.number }} {% trans "of" %} {{ vendors.paginator.num_pages }}</span>
+    <div>
+      {% if vendors.has_previous %}<a href="?page=1" class="oh-btn oh-btn--light">&laquo;</a>{% endif %}
+      {% if vendors.has_previous %}<a href="?page={{ vendors.previous_page_number }}" class="oh-btn oh-btn--light">&lsaquo;</a>{% endif %}
+      {% if vendors.has_next %}<a href="?page={{ vendors.next_page_number }}" class="oh-btn oh-btn--light">&rsaquo;</a>{% endif %}
+      {% if vendors.has_next %}<a href="?page={{ vendors.paginator.num_pages }}" class="oh-btn oh-btn--light">&raquo;</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Bank Statements" %}</h2>
+    <div>
+      <a href="{% url 'bank-statement-create' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Import Statement" %}</a>
+    </div>
+  </div>
+
+  {% include "finance/filter_tags.html" %}
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Bank Account" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Statement Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Closing Balance" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Transactions" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Reconciled" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Actions" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for s in statements %}
+      <div class="oh-sticky-table__tr" onclick="window.location='{% url 'bank-statement-detail' s.pk %}'" style="cursor:pointer;">
+        <div class="oh-sticky-table__td">{{ s.bank_account.account_name }}</div>
+        <div class="oh-sticky-table__td">{{ s.statement_date }}</div>
+        <div class="oh-sticky-table__td">${{ s.closing_balance|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">{{ s.transactions.count }}</div>
+        <div class="oh-sticky-table__td">{{ s.reconciled_count }}/{{ s.transactions.count }}</div>
+        <div class="oh-sticky-table__td">
+          <a href="{% url 'bank-statement-delete' s.pk %}" class="oh-btn oh-btn--light"><ion-icon name="trash-outline"></ion-icon></a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="6">{% trans "No bank statements." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

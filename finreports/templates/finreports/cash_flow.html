@@ -1,0 +1,34 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Cash Flow Statement" %}</h2>
+  </div>
+
+  <form method="get" style="margin-bottom:16px;display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+    <div class="oh-input__group"><label class="oh-input__label">{% trans "From" %}</label><input type="date" name="from_date" class="oh-input" value="{{ from_date }}"></div>
+    <div class="oh-input__group"><label class="oh-input__label">{% trans "To" %}</label><input type="date" name="to_date" class="oh-input" value="{{ to_date }}"></div>
+    <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Filter" %}</button>
+  </form>
+
+  <div class="oh-card" style="max-width:700px;padding:24px;">
+    <h3 style="border-bottom:2px solid #1a5676;padding-bottom:8px;">{% trans "Operating Activities" %}</h3>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+      <span>{% trans "Payments Received (Incoming)" %}</span><span>${{ payments_in|floatformat:2 }}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+      <span>{% trans "Payments Made (Outgoing)" %}</span><span>(${{ payments_out|floatformat:2 }})</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+      <span>{% trans "Invoices Raised" %}</span><span>${{ invoices_created|floatformat:2 }}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+      <span>{% trans "Bills Received" %}</span><span>(${{ bills_created|floatformat:2 }})</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:12px 0;font-weight:bold;font-size:1.2em;border-top:2px solid #000;margin-top:8px;">
+      <span>{% trans "Net Cash Flow" %}</span>
+      <span style="color:{% if net_cash >= 0 %}#28a745{% else %}#dc3545{% endif %};">${{ net_cash|floatformat:2 }}</span>
+    </div>
+  </div>
+</section>
+{% endblock %}

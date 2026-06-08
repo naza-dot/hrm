@@ -1,0 +1,39 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Bank Accounts" %}</h2>
+    <div>
+      <a href="{% url 'bank-account-create' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Add Bank Account" %}</a>
+    </div>
+  </div>
+
+  {% include "finance/filter_tags.html" %}
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Account Name" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Bank" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Account #" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Actions" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for ba in bank_accounts %}
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__td">{{ ba.account_name }}</div>
+        <div class="oh-sticky-table__td">{{ ba.bank_name }}</div>
+        <div class="oh-sticky-table__td">{{ ba.account_number }}</div>
+        <div class="oh-sticky-table__td">
+          <a href="{% url 'bank-account-update' ba.pk %}" class="oh-btn oh-btn--light"><ion-icon name="create-outline"></ion-icon></a>
+          <a href="{% url 'bank-account-delete' ba.pk %}" class="oh-btn oh-btn--light"><ion-icon name="trash-outline"></ion-icon></a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="4">{% trans "No bank accounts." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

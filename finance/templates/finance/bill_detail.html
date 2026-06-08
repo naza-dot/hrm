@@ -1,0 +1,59 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Bill" %} {{ bill.bill_number }}</h2>
+    <div>
+      <a href="{% url 'bill-update' bill.pk %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Edit" %}</a>
+      <a href="{% url 'bill-register-payment' bill.pk %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Register Payment" %}</a>
+    </div>
+  </div>
+
+  <div class="row" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;">
+    <div class="oh-card" style="flex:2;padding:20px;min-width:300px;">
+      <p><strong>{% trans "Vendor" %}:</strong> {{ bill.vendor.name }}</p>
+      <p><strong>{% trans "Bill Date" %}:</strong> {{ bill.bill_date }}</p>
+      <p><strong>{% trans "Due Date" %}:</strong> {{ bill.due_date }}</p>
+      <p><strong>{% trans "Status" %}:</strong> {{ bill.get_status_display }}</p>
+      {% if bill.notes %}<p><strong>{% trans "Notes" %}:</strong> {{ bill.notes }}</p>{% endif %}
+
+      <h4 style="margin-top:24px;">{% trans "Line Items" %}</h4>
+      <table class="table table-striped" style="width:100%;margin-top:8px;">
+        <thead><tr>
+          <th>{% trans "Description" %}</th><th>{% trans "Qty" %}</th>
+          <th>{% trans "Unit Price" %}</th><th>{% trans "Tax %" %}</th><th>{% trans "Amount" %}</th>
+        </tr></thead>
+        <tbody>
+          {% for line in bill.lines.all %}
+          <tr>
+            <td>{{ line.description }}</td>
+            <td>{{ line.quantity }}</td>
+            <td>${{ line.unit_price|floatformat:2 }}</td>
+            <td>{{ line.tax_rate }}%</td>
+            <td>${{ line.amount|floatformat:2 }}</td>
+          </tr>
+          {% empty %}<tr><td colspan="5">{% trans "No line items." %}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><td colspan="4"><strong>{% trans "Subtotal" %}</strong></td><td>${{ bill.subtotal|floatformat:2 }}</td></tr>
+          <tr><td colspan="4"><strong>{% trans "Tax" %}</strong></td><td>${{ bill.tax_amount|floatformat:2 }}</td></tr>
+          <tr><td colspan="4"><strong>{% trans "Total" %}</strong></td><td>${{ bill.total|floatformat:2 }}</td></tr>
+          <tr><td colspan="4"><strong>{% trans "Paid" %}</strong></td><td>${{ bill.amount_paid|floatformat:2 }}</td></tr>
+          <tr><td colspan="4"><strong>{% trans "Balance Due" %}</strong></td><td>${{ bill.balance_due|floatformat:2 }}</td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="oh-card" style="flex:1;padding:20px;min-width:250px;">
+      <h4>{% trans "Payments" %}</h4>
+      {% for p in bill.payments.all %}
+      <div style="border-bottom:1px solid #eee;padding:8px 0;">
+        <small>{{ p.payment_date }}</small><br>
+        <strong>${{ p.amount|floatformat:2 }}</strong> — {{ p.get_method_display }}
+        {% if p.reference_number %}<br><small>{% trans "Ref" %}: {{ p.reference_number }}</small>{% endif %}
+      </div>
+      {% empty %}<p>{% trans "No payments recorded." %}</p>{% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

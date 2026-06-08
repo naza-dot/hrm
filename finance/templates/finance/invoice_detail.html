@@ -1,0 +1,65 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Invoice" %} {{ invoice.invoice_number }}</h2>
+    <div>
+      <a href="{% url 'invoice-update' invoice.pk %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Edit" %}</a>
+      <a href="{% url 'invoice-register-payment' invoice.pk %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Register Payment" %}</a>
+    </div>
+  </div>
+
+  <div class="row" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;">
+    <div class="oh-card" style="flex:2;padding:20px;min-width:300px;">
+      <p><strong>{% trans "Customer" %}:</strong> {{ invoice.customer.name }}</p>
+      <p><strong>{% trans "Invoice Date" %}:</strong> {{ invoice.invoice_date }}</p>
+      <p><strong>{% trans "Due Date" %}:</strong> {{ invoice.due_date }}</p>
+      <p><strong>{% trans "Status" %}:</strong> {{ invoice.get_status_display }}</p>
+      {% if invoice.notes %}<p><strong>{% trans "Notes" %}:</strong> {{ invoice.notes }}</p>{% endif %}
+
+      <h4 style="margin-top:24px;">{% trans "Line Items" %}</h4>
+      <table class="table table-striped" style="width:100%;margin-top:8px;">
+        <thead><tr>
+          <th>{% trans "Description" %}</th>
+          <th>{% trans "Qty" %}</th>
+          <th>{% trans "Unit Price" %}</th>
+          <th>{% trans "Tax %" %}</th>
+          <th>{% trans "Amount" %}</th>
+        </tr></thead>
+        <tbody>
+          {% for line in invoice.lines.all %}
+          <tr>
+            <td>{{ line.description }}</td>
+            <td>{{ line.quantity }}</td>
+            <td>${{ line.unit_price|floatformat:2 }}</td>
+            <td>{{ line.tax_rate }}%</td>
+            <td>${{ line.amount|floatformat:2 }}</td>
+          </tr>
+          {% empty %}<tr><td colspan="5">{% trans "No line items." %}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><td colspan="4"><strong>{% trans "Subtotal" %}</strong></td><td>${{ invoice.subtotal|floatformat:2 }}</td></tr>
+          <tr><td colspan="4"><strong>{% trans "Tax" %}</strong></td><td>${{ invoice.tax_amount|floatformat:2 }}</td></tr>
+          <tr><td colspan="4"><strong>{% trans "Total" %}</strong></td><td>${{ invoice.total|floatformat:2 }}</td></tr>
+          <tr><td colspan="4"><strong>{% trans "Paid" %}</strong></td><td>${{ invoice.amount_paid|floatformat:2 }}</td></tr>
+          <tr><td colspan="4"><strong>{% trans "Balance Due" %}</strong></td><td>${{ invoice.balance_due|floatformat:2 }}</td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="oh-card" style="flex:1;padding:20px;min-width:250px;">
+      <h4>{% trans "Payments" %}</h4>
+      {% for p in invoice.payments.all %}
+      <div style="border-bottom:1px solid #eee;padding:8px 0;">
+        <small>{{ p.payment_date }}</small><br>
+        <strong>${{ p.amount|floatformat:2 }}</strong> — {{ p.get_method_display }}
+        {% if p.reference_number %}<br><small>{% trans "Ref" %}: {{ p.reference_number }}</small>{% endif %}
+      </div>
+      {% empty %}
+      <p>{% trans "No payments recorded." %}</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

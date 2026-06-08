@@ -60,6 +60,8 @@ HORILLA_FEATURES = [
     "project",
     "biometric",
     "geofencing",
+    "finance",
+    "finreports",
 ]
 
 APPS = [

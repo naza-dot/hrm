@@ -1,0 +1,60 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{% trans "Bills" %}</h2>
+    <div>
+      <a href="{% url 'bill-create' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Create Bill" %}</a>
+    </div>
+  </div>
+
+  {% include "finance/filter_tags.html" %}
+
+  <div class="oh-sticky-table" style="margin-top:16px;">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Bill #" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Vendor" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Due Date" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Total" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Paid" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Status" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Actions" %}</div>
+      </div>
+    </div>
+    <div class="oh-sticky-table__tbody">
+      {% for b in bills %}
+      <div class="oh-sticky-table__tr" onclick="window.location='{% url 'bill-detail' b.pk %}'" style="cursor:pointer;">
+        <div class="oh-sticky-table__td">{{ b.bill_number }}</div>
+        <div class="oh-sticky-table__td">{{ b.vendor.name }}</div>
+        <div class="oh-sticky-table__td">{{ b.bill_date }}</div>
+        <div class="oh-sticky-table__td">{{ b.due_date }}</div>
+        <div class="oh-sticky-table__td">${{ b.total|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">${{ b.amount_paid|floatformat:2 }}</div>
+        <div class="oh-sticky-table__td">{{ b.get_status_display }}</div>
+        <div class="oh-sticky-table__td">
+          <a href="{% url 'bill-update' b.pk %}" class="oh-btn oh-btn--light"><ion-icon name="create-outline"></ion-icon></a>
+          <a href="{% url 'bill-register-payment' b.pk %}" class="oh-btn oh-btn--light"><ion-icon name="cash-outline"></ion-icon></a>
+          <a href="{% url 'bill-delete' b.pk %}" class="oh-btn oh-btn--light"><ion-icon name="trash-outline"></ion-icon></a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="oh-sticky-table__tr"><div class="oh-sticky-table__td" colspan="8">{% trans "No bills found." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if bills.has_other_pages %}
+  <div class="oh-pagination" style="margin-top:16px;">
+    <span>{% trans "Page" %} {{ bills.number }} {% trans "of" %} {{ bills.paginator.num_pages }}</span>
+    <div>
+      {% if bills.has_previous %}<a href="?page=1" class="oh-btn oh-btn--light">&laquo;</a>{% endif %}
+      {% if bills.has_previous %}<a href="?page={{ bills.previous_page_number }}" class="oh-btn oh-btn--light">&lsaquo;</a>{% endif %}
+      {% if bills.has_next %}<a href="?page={{ bills.next_page_number }}" class="oh-btn oh-btn--light">&rsaquo;</a>{% endif %}
+      {% if bills.has_next %}<a href="?page={{ bills.paginator.num_pages }}" class="oh-btn oh-btn--light">&raquo;</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

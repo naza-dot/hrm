@@ -1,0 +1,16 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-card" style="max-width:500px;margin:40px auto;padding:32px;text-align:center;">
+    <h3>{% trans "Confirm Delete" %}</h3>
+    <p>{% trans "Are you sure you want to delete" %} "{{ object }}"?
+    <form method="post" action="{% url action object.pk %}">
+      {% csrf_token %}
+      <div class="oh-btn-group" style="margin-top:16px;justify-content:center;">
+        <button type="submit" class="oh-btn oh-btn--danger">{% trans "Delete" %}</button>
+        <a href="javascript:history.back()" class="oh-btn oh-btn--light">{% trans "Cancel" %}</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

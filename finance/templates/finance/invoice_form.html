@@ -1,0 +1,92 @@
+{% extends "index.html" %}{% load i18n widget_tweaks %}
+{% block content %}
+<section class="oh-wrapper oh-main__section">
+  <div class="oh-main__section-header">
+    <h2 class="oh-main__section-title">{{ title }}</h2>
+  </div>
+  <div class="oh-card" style="max-width:800px;margin-top:16px;">
+    <form method="post" id="invoiceForm" action="{% if pk %}{% url action pk %}{% else %}{% url action %}{% endif %}">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="oh-input__group" style="margin-bottom:12px;">
+        <label class="oh-input__label">{{ field.label }}</label>
+        {{ field|add_class:"oh-input w-100" }}
+        {% if field.errors %}<small style="color:#dc3545;">{{ field.errors.0 }}</small>{% endif %}
+      </div>
+      {% endfor %}
+
+      <h4 style="margin-top:24px;">{% trans "Line Items" %}</h4>
+      <table class="table table-striped" id="lineItemsTable">
+        <thead><tr>
+          <th>{% trans "Description" %}</th><th>{% trans "Quantity" %}</th>
+          <th>{% trans "Unit Price" %}</th><th>{% trans "Tax (%)" %}</th>
+          <th>{% trans "Amount" %}</th><th></th>
+        </tr></thead>
+        <tbody id="lineItemsBody">
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4"><strong>{% trans "Total" %}</strong></td>
+            <td><strong id="totalAmount">0.00</strong></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <button type="button" class="oh-btn oh-btn--light" onclick="addLine()">+ {% trans "Add Line" %}</button>
+
+      <input type="hidden" name="lines" id="linesInput">
+      <div class="oh-btn-group" style="margin-top:16px;">
+        <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">{% trans "Save" %}</button>
+        <a href="javascript:history.back()" class="oh-btn oh-btn--light">{% trans "Cancel" %}</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+let lineIndex = 0;
+function addLine(desc='', qty='1', price='0', tax='0', amt='0') {
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td><input type="text" class="oh-input w-100" name="line_desc" value="${desc}"></td>
+    <td><input type="number" class="oh-input w-100 line-qty" value="${qty}" step="0.01" min="0" onchange="calcLine(this)"></td>
+    <td><input type="number" class="oh-input w-100 line-price" value="${price}" step="0.01" min="0" onchange="calcLine(this)"></td>
+    <td><input type="number" class="oh-input w-100 line-tax" value="${tax}" step="0.01" min="0" onchange="calcLine(this)"></td>
+    <td><input type="number" class="oh-input w-100 line-amount" value="${amt}" step="0.01" readonly></td>
+    <td><button type="button" class="oh-btn oh-btn--danger" onclick="this.closest('tr').remove();updateTotal();">&times;</button></td>
+  `;
+  document.getElementById('lineItemsBody').appendChild(row);
+  updateTotal();
+}
+function calcLine(el) {
+  const row = el.closest('tr');
+  const qty = parseFloat(row.querySelector('.line-qty').value) || 0;
+  const price = parseFloat(row.querySelector('.line-price').value) || 0;
+  const tax = parseFloat(row.querySelector('.line-tax').value) || 0;
+  const amount = qty * price * (1 + tax / 100);
+  row.querySelector('.line-amount').value = amount.toFixed(2);
+  updateTotal();
+}
+function updateTotal() {
+  let total = 0;
+  document.querySelectorAll('.line-amount').forEach(el => total += parseFloat(el.value) || 0);
+  document.getElementById('totalAmount').textContent = total.toFixed(2);
+}
+document.getElementById('invoiceForm').addEventListener('submit', function() {
+  const lines = [];
+  document.querySelectorAll('#lineItemsBody tr').forEach(row => {
+    lines.push({
+      description: row.querySelector('[name="line_desc"]').value,
+      quantity: parseFloat(row.querySelector('.line-qty').value) || 0,
+      unit_price: parseFloat(row.querySelector('.line-price').value) || 0,
+      tax_rate: parseFloat(row.querySelector('.line-tax').value) || 0,
+      amount: parseFloat(row.querySelector('.line-amount').value) || 0,
+    });
+  });
+  document.getElementById('linesInput').value = JSON.stringify(lines);
+});
+{% if existing_lines %}
+try { const data = JSON.parse('{{ existing_lines|escapejs }}'); data.forEach(l => addLine(l.description, l.quantity, l.unit_price, l.tax_rate, l.amount)); } catch(e) {}
+{% endif %}
+</script>
+{% endblock %}
