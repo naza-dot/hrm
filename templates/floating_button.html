@@ -121,7 +121,8 @@
             <i class="material-icons mt-2">leaderboard</i>
         </a>
     </div>
-    {% if "helpdesk"|app_installed and (request.user.is_saas_admin or "helpdesk" in enabled_features) %}
+    {% if "helpdesk"|app_installed %}
+    {% if request.user.is_saas_admin or "helpdesk" in enabled_features %}
         <div id="fab8" class="fab round" data-tooltip="{% trans 'Create Ticket' %}">
             <a
                 class="text-light"
@@ -134,7 +135,9 @@
             </a>
         </div>
     {% endif %}
-    {% if "asset"|app_installed and (request.user.is_saas_admin or "asset" in enabled_features) %}
+    {% endif %}
+    {% if "asset"|app_installed %}
+    {% if request.user.is_saas_admin or "asset" in enabled_features %}
     <div id="fab7" class="fab round" data-tooltip="{% trans 'Create Asset Request' %}">
         <a
             class="text-light"
@@ -147,7 +150,9 @@
         </a>
     </div>
     {% endif %}
-    {% if "payroll"|app_installed and (request.user.is_saas_admin or "payroll" in enabled_features) %}
+    {% endif %}
+    {% if "payroll"|app_installed %}
+    {% if request.user.is_saas_admin or "payroll" in enabled_features %}
     <div id="fab6" class="fab round" data-tooltip="{% trans 'Create Reimbursement' %}">
         <a
             class="text-light"
@@ -160,6 +165,8 @@
         </a>
     </div>
     {% endif %}
+    {% endif %}
+    {% if "attendance"|app_installed %}
     {% if request.user.is_saas_admin or "attendance" in enabled_features %}
     <div id="fab5" class="fab round" data-tooltip="{% trans 'Create Work Type Request' %}">
         <a
@@ -184,7 +191,9 @@
         </a>
     </div>
     {% endif %}
-    {% if "leave"|app_installed and (request.user.is_saas_admin or "leave" in enabled_features) %}
+    {% endif %}
+    {% if "leave"|app_installed %}
+    {% if request.user.is_saas_admin or "leave" in enabled_features %}
         <div id="fab3" class="fab round" data-tooltip="{% trans 'Create Leave Request' %}">
             <a
                 class="text-light"
@@ -203,7 +212,9 @@
             </a>
         </div>
     {% endif %}
-    {% if "attendance"|app_installed and (request.user.is_saas_admin or "attendance" in enabled_features) %}
+    {% endif %}
+    {% if "attendance"|app_installed %}
+    {% if request.user.is_saas_admin or "attendance" in enabled_features %}
     <div id="fab2" class="fab round" data-tooltip= "{% trans 'Create Attendance Request' %}">
         <a
             class="text-light"
@@ -217,6 +228,7 @@
             </span>
         </a>
     </div>
+    {% endif %}
     {% endif %}
 </div>
 <div id="fab1" class="fab round" data-tooltip= "{% trans 'Quick Action' %}">

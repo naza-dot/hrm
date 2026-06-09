@@ -1,6 +1,7 @@
 {% load static basefilters horillafilters employee_filter i18n %} {% load tz %} {% now "Y-m-d" as current_date %}
 {% load accessibility_filters %}
 {% if "attendance"|app_installed %}
+{% if request.user.is_saas_admin or "attendance" in enabled_features %}
     {% if not 'offline_employees' in charts %}
         {% if perms.employee.view_employee or request.user|is_reportingmanager %}
             <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart" id="notInYetId">
@@ -42,7 +43,10 @@
         {% endif %}
     {% endif %}
 {% endif %}
-{% if "leave"|app_installed and not 'overall_leave_chart' in charts %}
+{% endif %}
+{% if "leave"|app_installed %}
+{% if request.user.is_saas_admin or "leave" in enabled_features %}
+{% if not 'overall_leave_chart' in charts %}
     {% if perms.leave.view_leaverequest %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-4 oh-card-dashboard--moveable dashboardChart" id="movable1">
             <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
@@ -67,7 +71,11 @@
         </div>
     {% endif %}
 {% endif %}
-{% if "recruitment"|app_installed and perms.recruitment.view_candidate or request.user|is_stagemanager %}
+{% endif %}
+{% endif %}
+{% if "recruitment"|app_installed %}
+{% if request.user.is_saas_admin or "recruitment" in enabled_features %}
+{% if perms.recruitment.view_candidate or request.user|is_stagemanager %}
     {% if not 'hired_candidates' in charts %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart" id="movable2">
             <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
@@ -85,7 +93,9 @@
             </div>
         </div>
     {% endif %}
-    {% if "onboarding"|app_installed and not 'onboarding_candidates' in charts %}
+    {% if "onboarding"|app_installed %}
+    {% if request.user.is_saas_admin or "onboarding" in enabled_features %}
+    {% if not 'onboarding_candidates' in charts %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart" id="movable3">
             <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
                 <div class="oh-card-dashboard__header oh-card-dashboard__header--divider">
@@ -102,8 +112,14 @@
             </div>
         </div>
     {% endif %}
+    {% endif %}
+    {% endif %}
 {% endif %}
-{% if "recruitment"|app_installed and not 'recruitment_analytics' in charts %}
+{% endif %}
+{% endif %}
+{% if "recruitment"|app_installed %}
+{% if request.user.is_saas_admin or "recruitment" in enabled_features %}
+{% if not 'recruitment_analytics' in charts %}
     {% if request.user|is_stagemanager or perms.recruitment.view_recruitment %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart" id="movable8">
             <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
@@ -122,7 +138,11 @@
         </div>
     {% endif %}
 {% endif %}
-{% if "attendance"|app_installed and not 'attendance_analytic' in charts %}
+{% endif %}
+{% endif %}
+{% if "attendance"|app_installed %}
+{% if request.user.is_saas_admin or "attendance" in enabled_features %}
+{% if not 'attendance_analytic' in charts %}
     {% if request.user|is_reportingmanager or perms.attendance.view_attendance %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart" id="movable4">
             <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
@@ -156,7 +176,11 @@
         </div>
     {% endif %}
 {% endif %}
-{% if "attendance"|app_installed and not 'hours_chart' in charts %}
+{% endif %}
+{% endif %}
+{% if "attendance"|app_installed %}
+{% if request.user.is_saas_admin or "attendance" in enabled_features %}
+{% if not 'hours_chart' in charts %}
     {% if request.user|is_reportingmanager or perms.attendance.view_attendance %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart" id="pendingHours">
             <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
@@ -180,6 +204,8 @@
             </div>
         </div>
     {% endif %}
+{% endif %}
+{% endif %}
 {% endif %}
 {% if not 'employees_chart' in charts %}
     {% if 'employees_chart'|feature_is_accessible:request or perms.employee.view_employee or request.user|is_reportingmanager %}
@@ -238,7 +264,9 @@
         </div>
     {% endif %}
 {% endif %}
-{% if not 'objective_status' in charts and "pms"|app_installed %}
+{% if not 'objective_status' in charts %}
+{% if "pms"|app_installed %}
+{% if request.user.is_saas_admin or "pms" in enabled_features %}
     <div class="col-12 col-sm-12 col-md-12 col-lg-4 oh-card-dashboard--moveable dashboardChart" id="movable9">
         <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
             <div class="oh-card-dashboard__header oh-card-dashboard__header--divider">
@@ -255,7 +283,11 @@
         </div>
     </div>
 {% endif %}
-{% if "pms"|app_installed and not 'key_result_status' in charts %}
+{% endif %}
+{% endif %}
+{% if "pms"|app_installed %}
+{% if request.user.is_saas_admin or "pms" in enabled_features %}
+{% if not 'key_result_status' in charts %}
     {% if perms.pms.view_employeekeyresult or request.user|is_reportingmanager %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-4 oh-card-dashboard--moveable dashboardChart" id="movable10">
             <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
@@ -274,7 +306,11 @@
         </div>
     {% endif %}
 {% endif %}
-{% if "pms"|app_installed and not 'feedback_status' in charts %}
+{% endif %}
+{% endif %}
+{% if "pms"|app_installed %}
+{% if request.user.is_saas_admin or "pms" in enabled_features %}
+{% if not 'feedback_status' in charts %}
     {% if perms.pms.view_feedback or request.user|is_reportingmanager %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-4 oh-card-dashboard--moveable dashboardChart" id="movable11">
             <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
@@ -295,7 +331,10 @@
         </div>
     {% endif %}
 {% endif %}
+{% endif %}
+{% endif %}
 {% if not 'shift_request_approve' in charts %}
+{% if request.user.is_saas_admin or "attendance" in enabled_features %}
     {% if perms.base.change_shiftrequest or request.user|is_reportingmanager %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart"
             id="shiftRequestApprove">
@@ -316,7 +355,9 @@
         </div>
     {% endif %}
 {% endif %}
+{% endif %}
 {% if not 'work_type_request_approve' in charts %}
+{% if request.user.is_saas_admin or "attendance" in enabled_features %}
     {% if perms.base.change_worktyperequest or request.user|is_reportingmanager %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart"
             id="WorkTypeRequestApprove">
@@ -338,7 +379,10 @@
         </div>
     {% endif %}
 {% endif %}
-{% if "attendance"|app_installed and not 'overtime_approve' in charts %}
+{% endif %}
+{% if "attendance"|app_installed %}
+{% if request.user.is_saas_admin or "attendance" in enabled_features %}
+{% if not 'overtime_approve' in charts %}
     {% if perms.attendance.change_attendance or request.user|is_reportingmanager %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart" id="OTApprove">
             <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent" style="height:425px"
@@ -361,7 +405,10 @@
         </div>
     {% endif %}
 {% endif %}
+{% endif %}
+{% endif %}
 {% if "attendance"|app_installed %}
+{% if request.user.is_saas_admin or "attendance" in enabled_features %}
     {% if not 'attendance_validate' in charts %}
         {% if perms.attendance.change_attendance or request.user|is_reportingmanager %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart" id="AttendanceValidate">
@@ -385,7 +432,10 @@
         {% endif %}
     {% endif %}
 {% endif %}
-{% if "leave"|app_installed and not 'leave_request_approve' in charts %}
+{% endif %}
+{% if "leave"|app_installed %}
+{% if request.user.is_saas_admin or "leave" in enabled_features %}
+{% if not 'leave_request_approve' in charts %}
     {% if perms.leave.change_leaverequest or request.user|is_reportingmanager %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart" id="LeaveApprove">
             <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent" style="height:425px">
@@ -405,7 +455,11 @@
         </div>
     {% endif %}
 {% endif %}
-{% if "leave"|app_installed and not 'leave_allocation_approve' in charts %}
+{% endif %}
+{% endif %}
+{% if "leave"|app_installed %}
+{% if request.user.is_saas_admin or "leave" in enabled_features %}
+{% if not 'leave_allocation_approve' in charts %}
     {% if perms.leave.change_leaveallocationrequest or request.user|is_reportingmanager %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart"
             id="LeaveAllocationApprove">
@@ -426,7 +480,11 @@
         </div>
     {% endif %}
 {% endif %}
-{% if "pms"|app_installed and not 'feedback_answer' in charts %}
+{% endif %}
+{% endif %}
+{% if "pms"|app_installed %}
+{% if request.user.is_saas_admin or "pms" in enabled_features %}
+{% if not 'feedback_answer' in charts %}
     <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart" id="feedbackAnswer">
         <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent" style="height:425px">
             <div class="oh-card-dashboard__header oh-card-dashboard__header--divider">
@@ -444,7 +502,11 @@
         </div>
     </div>
 {% endif %}
-{% if "asset"|app_installed and not 'asset_request_approve' in charts %}
+{% endif %}
+{% endif %}
+{% if "asset"|app_installed %}
+{% if request.user.is_saas_admin or "asset" in enabled_features %}
+{% if not 'asset_request_approve' in charts %}
     {% if perms.asset.view_assetrequest %}
         <div class="col-12 col-sm-12 col-md-12 col-lg-6 oh-card-dashboard--moveable dashboardChart"
             id="assetRequestApprove">
@@ -464,4 +526,6 @@
             </div>
         </div>
     {% endif %}
+{% endif %}
+{% endif %}
 {% endif %}

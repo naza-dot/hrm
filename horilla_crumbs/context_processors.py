@@ -167,6 +167,23 @@ sidebar_urls = [
     "asset-pivot",
     "pms-report",
     "pms-pivot",
+    "accounts",
+    "customers",
+    "vendors",
+    "invoices",
+    "bills",
+    "payments",
+    "bank-accounts",
+    "bank-statements",
+    "reconciliation",
+    "journal-entries",
+    "profit-loss",
+    "balance-sheet",
+    "cash-flow",
+    "general-ledger",
+    "trial-balance",
+    "ar-aging",
+    "ap-aging",
 ]
 remove_urls = [
     "feedback-detailed-view",
@@ -343,3 +360,5 @@ urlpatterns.append(path("payroll/", lambda request: redirect("view-payroll-dashb
 urlpatterns.append(path("pms/", lambda request: redirect("dashboard-view")))
 urlpatterns.append(path("asset/", lambda request: redirect("asset-dashboard")))
 urlpatterns.append(path("project/", lambda request: redirect("project-dashboard-view")))
+urlpatterns.append(path("finance/", lambda request: redirect("finance-dashboard")))
+urlpatterns.append(path("finreports/", lambda request: redirect("finreports-dashboard")))

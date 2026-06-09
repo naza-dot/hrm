@@ -195,15 +195,21 @@
                                     <a href="{% url 'holiday-view' %}" class="oh-sidebar__submenu-link">{% trans "Holidays" %}</a>
                                 </li>
                             {% endif %}
-                            {% if perms.base.view_companyleaves %}
-                                <li class="oh-sidebar__submenu-item">
-                                    <a href="{% url 'company-leave-view' %}" class="oh-sidebar__submenu-link">{% trans "Company Leaves" %}</a>
-                                </li>
+                            {% if "leave"|app_installed %}
+                                {% if perms.base.view_companyleaves %}
+                                    {% if request.user.is_saas_admin or "leave" in enabled_features %}
+                                        <li class="oh-sidebar__submenu-item">
+                                            <a href="{% url 'company-leave-view' %}" class="oh-sidebar__submenu-link">{% trans "Company Leaves" %}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endif %}
                             {% endif %}
                             {% if "leave"|app_installed %}
-                                <li class="oh-sidebar__submenu-item">
-                                    <a href="{% url 'restrict-view' %}" class="oh-sidebar__submenu-link">{% trans "Restrict Leaves" %}</a>
-                                </li>
+                                {% if request.user.is_saas_admin or "leave" in enabled_features %}
+                                    <li class="oh-sidebar__submenu-item">
+                                        <a href="{% url 'restrict-view' %}" class="oh-sidebar__submenu-link">{% trans "Restrict Leaves" %}</a>
+                                    </li>
+                                {% endif %}
                             {% endif %}
                         </ul>
                     </div>

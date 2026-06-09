@@ -12,7 +12,8 @@ from django.core.mail import EmailMessage
 from django.core.mail.backends.smtp import EmailBackend
 
 from base.models import DynamicEmailConfiguration, EmailLog
-from horilla import settings
+from django.conf import settings
+
 from horilla.horilla_middlewares import _thread_locals
 
 logger = logging.getLogger(__name__)
@@ -125,7 +126,7 @@ class DefaultHorillaMailBackend(EmailBackend):
             self.configuration.from_email
             if self.configuration
             else getattr(settings, "DEFAULT_FROM_EMAIL", None)
-        )
+        ) or getattr(settings, "DEFAULT_FROM_EMAIL", None) or "noreply@example.com"
 
     @property
     def dynamic_display_name(self):
@@ -199,9 +200,14 @@ class ConfiguredEmailBackend(BACKEND_CLASS):
     def send_messages(self, email_messages):
         response = super(BACKEND_CLASS, self).send_messages(email_messages)
         for message in email_messages:
+            from_email = (
+                message.from_email
+                or self.dynamic_from_email_with_display_name
+                or settings.DEFAULT_FROM_EMAIL
+            )
             email_log = EmailLog(
                 subject=message.subject,
-                from_email=self.dynamic_from_email_with_display_name,
+                from_email=from_email,
                 to=message.to,
                 body=message.body,
                 status="sent" if response else "failed",
