@@ -1,0 +1,13 @@
+{% load i18n %}
+<form hx-post="{% url 'outlook_test_email' %}" hx-swap="outerHTML" hx-target="this"
+      hx-on-htmx-after-request="setTimeout(() => { reloadMessage(); }, 100);">
+  {% csrf_token %}
+  <div class="oh-input-group mb-2">
+    <label class="oh-label">{% trans "Send test email to" %}</label>
+    <input type="email" name="email_to" value="{{ email_to }}"
+           class="oh-input w-100" placeholder="{% trans 'Enter email address' %}" required>
+  </div>
+  <button type="submit" class="oh-btn oh-btn--secondary oh-btn--w-100-resp">
+    {% trans "Send Test" %}
+  </button>
+</form>

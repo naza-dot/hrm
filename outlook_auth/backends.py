@@ -109,7 +109,21 @@ def __init__(
 def send_mail(self, *args, **kwargs):
     """
     Sent mail
+
+    If ``self.connection`` was provided (SMTP backend), delegate to it
+    instead of the Graph API path so that test‑mail and SMTP‑only flows work.
     """
+    # If an explicit SMTP connection was passed, use it and skip Graph API
+    if self.connection is not None:
+        logger.info(
+            "send_mail: using provided SMTP connection (%s) instead of Graph API",
+            self.connection.__class__.__name__,
+        )
+        try:
+            self.connection.send_messages([self])
+        except Exception as e:
+            logger.error("send_mail: SMTP connection error: %s", e, exc_info=True)
+        return
 
     self.email_data = {
         "message": {
@@ -152,7 +166,7 @@ def send_mail(self, *args, **kwargs):
 
                 outlook_attachments.append(
                     {
-                        "@odata.type": "#microsoft.graph.fileAttachment",
+                        "@odata.type": "#microsoft.fileAttachment",
                         "name": filename,
                         "contentType": mimetype,
                         "contentBytes": content_bytes,

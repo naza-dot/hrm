@@ -134,6 +134,20 @@
         <div style="display: none;" data-ids="[]" id="selectedRecords"></div>
         <div hx-get="{% url "outlook_server_nav" %}" hx-trigger="load"></div>
         <div class="oh-wrapper" hx-get="{% url "outlook_server_list" %}" hx-trigger="load"></div>
+
+        <!-- Outlook Test Email -->
+        <div class="oh-card mt-4 p-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
+            <h5 class="oh-inner-sidebar-content__title" style="font-size: 16px;">
+                <ion-icon name="mail-outline" class="me-1"></ion-icon>
+                {% trans "Test Outlook Mail" %}
+            </h5>
+            <p class="text-muted" style="font-size: 13px;">
+                {% trans "Send a test email using the Outlook Graph API to verify your configuration." %}
+            </p>
+            <div id="outlookTestEmailContainer">
+                {% include "outlook/test_email_form.html" %}
+            </div>
+        </div>
     </div>
 </div>
 

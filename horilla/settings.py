@@ -287,6 +287,30 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
+# Console logging for development
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "base.views": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "outlook_auth.views": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "outlook_auth.backends": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+    },
+}
+
 # Production settings
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True

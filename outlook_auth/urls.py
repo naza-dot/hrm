@@ -25,4 +25,5 @@ urlpatterns = [
         cbv.ServerForm.as_view(),
         name="outlook_server_change",
     ),
+    path("test-email/", views.outlook_test_email, name="outlook_test_email"),
 ]

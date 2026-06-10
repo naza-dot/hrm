@@ -6,8 +6,11 @@ This module is used to map url pattens with django views or methods
 
 import csv
 import json
+import logging
 import os
 import threading
+
+logger = logging.getLogger(__name__)
 import uuid
 from datetime import datetime, timedelta
 from email.mime.image import MIMEImage
@@ -1567,6 +1570,13 @@ def mail_server_test_email(request):
                 id=instance_id
             ).first()
             email_backend.configuration = emailconfig
+            logger.info(
+                "Test email using config id=%s host=%s port=%s username=%s",
+                instance_id,
+                email_backend.dynamic_host,
+                email_backend.dynamic_port,
+                email_backend.dynamic_username,
+            )
 
             try:
                 msg = EmailMultiAlternatives(
@@ -1583,9 +1593,14 @@ def mail_server_test_email(request):
                     msg_img.add_header("Content-ID", "<unique_image_id>")
                     msg.attach(msg_img)
 
+                logger.info("Sending test email to %s", email_to)
                 msg.send()
+                logger.info("Test email send() completed without exception")
 
             except Exception as e:
+                logger.error(
+                    "Test email failed: %s", e, exc_info=True
+                )
                 messages.error(request, " ".join([_("Something went wrong :"), str(e)]))
                 return HorillaRedirect(request)
 
@@ -5196,12 +5211,12 @@ def general_settings(request):
         from payroll.forms.component_forms import PayrollSettingsForm
         from payroll.forms.forms import EncashmentGeneralSettingsForm
 
-        currency_instance, _ = PayrollSettings.objects.get_or_create(
+        currency_instance, __ = PayrollSettings.objects.get_or_create(
             company_id=company,
             defaults={"currency_symbol": "$", "position": "prefix"},
         )
         currency_form = PayrollSettingsForm(instance=currency_instance)
-        encashment_instance, _ = EncashmentGeneralSettings.objects.get_or_create(
+        encashment_instance, __ = EncashmentGeneralSettings.objects.get_or_create(
             company_id=company,
             defaults={"bonus_amount": 1},
         )
@@ -5211,12 +5226,17 @@ def general_settings(request):
         currency_form = None
 
     # Fetch or create EmployeeGeneralSetting instance
-    prefix_instance, _ = EmployeeGeneralSetting.objects.get_or_create(
-        company_id=company,
-        defaults={"badge_id_prefix": "PEP"},
-    )
+    try:
+        prefix_instance, __ = EmployeeGeneralSetting.objects.get_or_create(
+            company_id=company,
+            defaults={"badge_id_prefix": "PEP"},
+        )
+    except EmployeeGeneralSetting.MultipleObjectsReturned:
+        prefix_instance = EmployeeGeneralSetting.objects.filter(
+            company_id=company
+        ).first()
     prefix_form = EmployeeGeneralSettingPrefixForm(instance=prefix_instance)
-    instance, _ = AnnouncementExpire.objects.get_or_create(
+    instance, __ = AnnouncementExpire.objects.get_or_create(
         company_id=company,
         defaults={"days": 30},
     )
@@ -5253,6 +5273,8 @@ def general_settings(request):
             form.instance.company_id = company
             form.save()
             messages.success(request, _("Settings updated."))
+            if request.META.get("HTTP_HX_REQUEST"):
+                return HttpResponse()
             return HorillaRedirect(request)
     return render(
         request,
@@ -6014,7 +6036,7 @@ def enable_account_block_unblock(request):
 
     if request.method == "POST":
         enabled = request.POST.get("enable_block_account") == "on"
-        instance, _ = AccountBlockUnblock.objects.get_or_create(
+        instance, __ = AccountBlockUnblock.objects.get_or_create(
             company_id=company,
         )
         instance.is_enabled = enabled
@@ -6043,7 +6065,7 @@ def enable_profile_edit_feature(request):
 
     if request.method == "POST":
         enabled = request.POST.get("enable_profile_edit") == "on"
-        instance, _ = ProfileEditFeature.objects.get_or_create(
+        instance, __ = ProfileEditFeature.objects.get_or_create(
             company_id=company,
         )
         feature = DefaultAccessibility.objects.filter(feature="profile_edit").first()

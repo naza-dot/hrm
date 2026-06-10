@@ -3561,6 +3561,8 @@ def encashment_condition_create(request):
             if encashment_form.is_valid():
                 encashment_form.save()
                 messages.success(request, _("Settings updated."))
+                if request.META.get("HTTP_HX_REQUEST"):
+                    return HttpResponse()
                 return HorillaRedirect(request)
         else:
             encashment_form = EncashmentGeneralSettingsForm(instance=instance)
@@ -3581,15 +3583,20 @@ def initial_prefix(request):
     """
     This method is used to set the initial prefix using a form.
     """
-    instance = EmployeeGeneralSetting.objects.first()  # Get the first instance or None
+    try:
+        instance = EmployeeGeneralSetting.objects.first()
+    except Exception:
+        instance = None
     if not instance:
-        instance = EmployeeGeneralSetting()  # Create a new instance if none exists
+        instance = EmployeeGeneralSetting()
 
     if request.method == "POST":
         form = EmployeeGeneralSettingPrefixForm(request.POST, instance=instance)
         if form.is_valid():
             form.save()
             messages.success(request, _("Initial prefix updated successfully."))
+            if request.META.get("HTTP_HX_REQUEST"):
+                return HttpResponse()
             return HorillaRedirect(request)
         else:
             messages.error(request, "There was an error updating the prefix.")
