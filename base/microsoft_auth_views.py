@@ -5,6 +5,7 @@ Microsoft OAuth authentication views for Horilla HRM
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
@@ -69,7 +70,7 @@ def microsoft_auth_login(request):
         if not company:
             company = Company.objects.first()
         if not company:
-            company, _ = Company.objects.get_or_create(
+            company, __ = Company.objects.get_or_create(
                 company="Default", address="", country="", state="", city="", zip=""
             )
         MicrosoftSSOConfig.objects.update_or_create(
@@ -82,10 +83,10 @@ def microsoft_auth_login(request):
                 "is_active": True,
             },
         )
-        messages.success(request, "Microsoft SSO settings updated.")
-        return render(request, 'base/microsoft_sso_settings.html', {
-            'redirect_uri': redirect_uri,
-        })
+        messages.success(request, _("Microsoft SSO settings updated."))
+        if request.META.get("HTTP_HX_REQUEST"):
+            return HttpResponse()
+        return redirect("microsoft-sso-settings")
 
     # GET: initiate OAuth flow using DB-stored credentials
     config, tenant_id, client_id, client_secret = _get_microsoft_sso_config(request)

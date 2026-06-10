@@ -1893,6 +1893,7 @@ class PayslipAutoGenerate(models.Model):
         blank=True,
         verbose_name=_("Company"),
     )
+    objects = HorillaCompanyManager("company_id")
 
     def clean(self):
         # Unique condition checking for all company

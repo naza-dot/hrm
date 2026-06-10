@@ -6,6 +6,8 @@ from collections.abc import Iterable
 
 from django.db import models
 from django.dispatch import receiver
+
+from base.horilla_company_manager import HorillaCompanyManager
 from simple_history.models import (
     HistoricalRecords,
     _default_get_user,
@@ -122,8 +124,15 @@ def post_create_horilla_audit_log(sender, instance, *_args, **kwargs):
 class HistoryTrackingFields(HorillaModel):
     tracking_fields = models.JSONField(null=True, blank=True, editable=False)
     work_info_track = models.BooleanField(default=True)
+    company_id = models.ForeignKey(
+        "base.Company", on_delete=models.CASCADE, null=True
+    )
+    objects = HorillaCompanyManager("company_id")
 
 
 class AccountBlockUnblock(HorillaModel):
     is_enabled = models.BooleanField(default=False, null=True, blank=True)
-    objects = models.Manager()
+    company_id = models.ForeignKey(
+        "base.Company", on_delete=models.CASCADE, null=True
+    )
+    objects = HorillaCompanyManager("company_id")

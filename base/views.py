@@ -5168,6 +5168,24 @@ def general_settings(request):
     """
     This method is used to render settings template
     """
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        company = Company.objects.first()
+
+    selected_company_id = request.session.get("selected_company")
+
+    if selected_company_id == "all" or not selected_company_id:
+        companies = Company.objects.all()
+    else:
+        companies = Company.objects.filter(id=selected_company_id)
+        try:
+            company = companies.first()
+        except Exception:
+            pass
+
     if apps.is_installed("payroll"):
         PayrollSettings = get_horilla_model_class(
             app_label="payroll", model="payrollsettings"
@@ -5178,35 +5196,43 @@ def general_settings(request):
         from payroll.forms.component_forms import PayrollSettingsForm
         from payroll.forms.forms import EncashmentGeneralSettingsForm
 
-        currency_instance = PayrollSettings.objects.first()
+        currency_instance, _ = PayrollSettings.objects.get_or_create(
+            company_id=company,
+            defaults={"currency_symbol": "$", "position": "prefix"},
+        )
         currency_form = PayrollSettingsForm(instance=currency_instance)
-        encashment_instance = EncashmentGeneralSettings.objects.first()
+        encashment_instance, _ = EncashmentGeneralSettings.objects.get_or_create(
+            company_id=company,
+            defaults={"bonus_amount": 1},
+        )
         encashment_form = EncashmentGeneralSettingsForm(instance=encashment_instance)
     else:
         encashment_form = None
         currency_form = None
 
-    selected_company_id = request.session.get("selected_company")
-
-    if selected_company_id == "all" or not selected_company_id:
-        companies = Company.objects.all()
-    else:
-        companies = Company.objects.filter(id=selected_company_id)
-
     # Fetch or create EmployeeGeneralSetting instance
-    prefix_instance = EmployeeGeneralSetting.objects.first()
+    prefix_instance, _ = EmployeeGeneralSetting.objects.get_or_create(
+        company_id=company,
+        defaults={"badge_id_prefix": "PEP"},
+    )
     prefix_form = EmployeeGeneralSettingPrefixForm(instance=prefix_instance)
-    instance = AnnouncementExpire.objects.first()
+    instance, _ = AnnouncementExpire.objects.get_or_create(
+        company_id=company,
+        defaults={"days": 30},
+    )
     form = AnnouncementExpireForm(instance=instance)
-    enabled_block_unblock = (
-        AccountBlockUnblock.objects.exists()
-        and AccountBlockUnblock.objects.first().is_enabled
-    )
-    enabled_profile_edit = (
-        ProfileEditFeature.objects.exists()
-        and ProfileEditFeature.objects.first().is_enabled
-    )
-    history_tracking_instance = HistoryTrackingFields.objects.first()
+
+    block_unblock = AccountBlockUnblock.objects.filter(
+        company_id=company
+    ).first()
+    enabled_block_unblock = block_unblock.is_enabled if block_unblock else False
+
+    profile_edit = ProfileEditFeature.objects.filter(company_id=company).first()
+    enabled_profile_edit = profile_edit.is_enabled if profile_edit else False
+
+    history_tracking_instance = HistoryTrackingFields.objects.filter(
+        company_id=company
+    ).first()
     history_fields_form_initial = {}
     if history_tracking_instance and history_tracking_instance.tracking_fields:
         history_fields_form_initial = {
@@ -5224,6 +5250,7 @@ def general_settings(request):
     if request.method == "POST":
         form = AnnouncementExpireForm(request.POST, instance=instance)
         if form.is_valid():
+            form.instance.company_id = company
             form.save()
             messages.success(request, _("Settings updated."))
             return HorillaRedirect(request)
@@ -5277,7 +5304,7 @@ def microsoft_sso_settings(request):
     if not company:
         company = Company.objects.first()
     if not company:
-        company, _ = Company.objects.get_or_create(
+        company, __ = Company.objects.get_or_create(
             company="Default", address="", country="", state="", city="", zip=""
         )
 
@@ -5288,7 +5315,7 @@ def microsoft_sso_settings(request):
 
         if client_id and client_secret and tenant_id:
             try:
-                config, _ = MicrosoftSSOConfig.objects.update_or_create(
+                MicrosoftSSOConfig.objects.update_or_create(
                     company_id=company,
                     defaults={
                         "client_id": client_id,
@@ -5298,12 +5325,8 @@ def microsoft_sso_settings(request):
                         "is_active": True,
                     },
                 )
-                settings.MICROSOFT_AUTH_CLIENT_ID = config.client_id
-                settings.MICROSOFT_AUTH_CLIENT_SECRET = config.client_secret
-                settings.MICROSOFT_AUTH_TENANT_ID = config.tenant_id
                 messages.success(request, _("Microsoft SSO settings updated."))
             except (OperationalError, ProgrammingError):
-                config = None
                 messages.error(
                     request,
                     _(
@@ -5315,19 +5338,17 @@ def microsoft_sso_settings(request):
                 request,
                 _("Please provide Client ID, Client Secret, and Tenant ID."),
             )
+        if request.META.get("HTTP_HX_REQUEST"):
+            return HttpResponse()
+        return redirect("microsoft-sso-settings")
 
     config = None
     try:
         config = MicrosoftSSOConfig.objects.filter(company_id=company).first()
-        if config:
-            settings.MICROSOFT_AUTH_CLIENT_ID = config.client_id
-            settings.MICROSOFT_AUTH_CLIENT_SECRET = config.client_secret
-            settings.MICROSOFT_AUTH_TENANT_ID = config.tenant_id
     except (OperationalError, ProgrammingError):
         config = None
 
     return render(request, "base/microsoft_sso_settings.html", {
-        "settings": settings,
         "redirect_uri": redirect_uri,
         "config": config,
     })
@@ -5954,11 +5975,19 @@ def get_time_format(request):
 
 @login_required
 def history_field_settings(request):
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        company = Company.objects.first()
+
     if request.method == "POST":
         fields = request.POST.getlist("tracking_fields")
         check = request.POST.get("work_info_track")
         history_object, created = HistoryTrackingFields.objects.get_or_create(
-            pk=1, defaults={"tracking_fields": {"tracking_fields": fields}}
+            company_id=company,
+            defaults={"tracking_fields": {"tracking_fields": fields}},
         )
 
         if not created:
@@ -5976,14 +6005,20 @@ def history_field_settings(request):
 @login_required
 @permission_required("horilla_audit.change_accountblockunblock")
 def enable_account_block_unblock(request):
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        company = Company.objects.first()
+
     if request.method == "POST":
         enabled = request.POST.get("enable_block_account") == "on"
-        instance = AccountBlockUnblock.objects.first()
-        if instance:
-            instance.is_enabled = enabled
-            instance.save()
-        else:
-            AccountBlockUnblock.objects.create(is_enabled=enabled)
+        instance, _ = AccountBlockUnblock.objects.get_or_create(
+            company_id=company,
+        )
+        instance.is_enabled = enabled
+        instance.save()
         messages.success(
             request,
             _(
@@ -5999,16 +6034,21 @@ def enable_account_block_unblock(request):
 @login_required
 @permission_required("employee.change_employee")
 def enable_profile_edit_feature(request):
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        company = Company.objects.first()
 
     if request.method == "POST":
         enabled = request.POST.get("enable_profile_edit") == "on"
-        instance = ProfileEditFeature.objects.first()
+        instance, _ = ProfileEditFeature.objects.get_or_create(
+            company_id=company,
+        )
         feature = DefaultAccessibility.objects.filter(feature="profile_edit").first()
-        if instance:
-            instance.is_enabled = enabled
-            instance.save()
-        else:
-            ProfileEditFeature.objects.create(is_enabled=enabled)
+        instance.is_enabled = enabled
+        instance.save()
 
         if enabled and not feature:
             DefaultAccessibility.objects.create(
@@ -7324,7 +7364,13 @@ def employee_chart_show(request):
 @login_required
 @permission_required("base.view_biometricattendance")
 def enable_biometric_attendance_view(request):
-    biometric = BiometricAttendance.objects.first()
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        company = Company.objects.first()
+    biometric = BiometricAttendance.objects.filter(company_id=company).first()
     return render(
         request,
         "base/install_biometric_attendance.html",
@@ -7335,11 +7381,18 @@ def enable_biometric_attendance_view(request):
 @login_required
 @permission_required("base.add_biometricattendance")
 def activate_biometric_attendance(request):
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        company = Company.objects.first()
+
     if request.method == "GET":
         is_installed = request.GET.get("is_installed")
-        instance = BiometricAttendance.objects.first()
+        instance = BiometricAttendance.objects.filter(company_id=company).first()
         if not instance:
-            instance = BiometricAttendance.objects.create()
+            instance = BiometricAttendance.objects.create(company_id=company)
         if is_installed == "true":
             instance.is_installed = True
             messages.success(

@@ -5,7 +5,8 @@
         <h2 class="oh-inner-sidebar-content__title">{% trans "Microsoft SSO" %}</h2>
     </div>
     <div class="oh-inner-sidebar-content__body">
-        <form action="{% url 'microsoft-sso-settings' %}" class="settings-label mb-1" method="post">
+        <form hx-post="{% url 'microsoft-sso-settings' %}" class="settings-label mb-1" hx-swap="none"
+              hx-on-htmx-after-request="setTimeout(() => { reloadMessage(); }, 100);">
             {% csrf_token %}
             <div class="row">
                 <div class="col-sm-12 col-md-12 col-lg-4">

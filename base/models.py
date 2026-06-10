@@ -1275,6 +1275,7 @@ class DynamicEmailConfiguration(HorillaModel):
     company_id = models.OneToOneField(
         Company, on_delete=models.CASCADE, null=True, blank=True
     )
+    objects = HorillaCompanyManager("company_id")
 
     def clean(self):
         if self.use_ssl and self.use_tls:
@@ -1539,7 +1540,8 @@ class AnnouncementExpire(models.Model):
     """
 
     days = models.IntegerField(null=True, blank=True, default=30)
-    objects = models.Manager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    objects = HorillaCompanyManager("company_id")
 
 
 class Announcement(HorillaModel):
@@ -1701,7 +1703,7 @@ class BiometricAttendance(models.Model):
         on_delete=models.PROTECT,
         related_name="biometric_enabled_company",
     )
-    objects = models.Manager()
+    objects = HorillaCompanyManager("company_id")
 
     def __str__(self):
         return f"{self.is_installed}"
@@ -1723,6 +1725,8 @@ class AttendanceAllowedIP(models.Model):
     additional_data = models.JSONField(
         null=True, blank=True, default=default_additional_data
     )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    objects = HorillaCompanyManager("company_id")
 
     def clean(self):
         """
@@ -1747,6 +1751,8 @@ class TrackLateComeEarlyOut(HorillaModel):
             "By enabling this, you track the late comes and early outs of employees in their attendance."
         ),
     )
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    objects = HorillaCompanyManager("company_id")
 
     class Meta:
         verbose_name = _("Track Late Come Early Out")
@@ -1757,9 +1763,9 @@ class TrackLateComeEarlyOut(HorillaModel):
         return f"Tracking late come early out {tracking}"
 
     def save(self, *args, **kwargs):
-        if not self.pk and TrackLateComeEarlyOut.objects.exists():
+        if not self.pk and TrackLateComeEarlyOut.objects.filter(company_id=self.company_id).exists():
             raise ValidationError(
-                _("Only one TrackLateComeEarlyOut instance is allowed.")
+                _("Only one TrackLateComeEarlyOut instance per company is allowed.")
             )
         return super().save(*args, **kwargs)
 

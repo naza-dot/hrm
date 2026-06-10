@@ -888,7 +888,7 @@ class EmployeeBonusPoint(HorillaModel):
         bonus_point.save()
 
 
-class BonusPointSetting(models.Model):
+class BonusPointSetting(HorillaModel):
     MODEL_CHOICES = [
         ("pms.models.EmployeeObjective", _("Objective")),
         ("pms.models.EmployeeKeyResult", _("Key Result")),
@@ -932,6 +932,8 @@ class BonusPointSetting(models.Model):
     field_2 = models.CharField(max_length=25, choices=FIELD_2, null=True, blank=True)
     points = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     is_active = models.BooleanField(default=True)
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    objects = HorillaCompanyManager("company_id")
 
     def get_model_display(self):
         """

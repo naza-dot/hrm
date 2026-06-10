@@ -995,7 +995,8 @@ class ProfileEditFeature(HorillaModel):
     """
 
     is_enabled = models.BooleanField(default=False)
-    objects = models.Manager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    objects = HorillaCompanyManager("company_id")
 
 
 ACCESSBILITY_FEATURE.append(("gender_chart", "Can view Gender Chart"))
