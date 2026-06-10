@@ -424,7 +424,19 @@ def settings(request):
     """
     This method is used to render settings template
     """
-    instance = PayrollSettings.objects.first()
+    user = request.user
+    try:
+        company = user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        selected_company_id = request.session.get("selected_company")
+        company = Company.objects.filter(id=selected_company_id).first()
+
+    instance, created = PayrollSettings.objects.get_or_create(
+        company_id=company,
+        defaults={"currency_symbol": "$", "position": "prefix"},
+    )
     currency_form = PayrollSettingsForm(instance=instance)
     selected_company_id = request.session.get("selected_company")
 
@@ -434,13 +446,13 @@ def settings(request):
         companies = Company.objects.filter(id=selected_company_id)
 
     if request.method == "POST":
-
-        currency_form = PayrollSettingsForm(request.POST, instance=instance)
-        if currency_form.is_valid():
-
-            currency_form.save()
+        form = PayrollSettingsForm(request.POST, instance=instance)
+        if form.is_valid():
+            form.instance.company_id = company
+            form.save()
             messages.success(request, _("Payroll settings updated."))
             return HorillaRedirect(request)
+        currency_form = form
     return render(
         request,
         "payroll/settings/payroll_settings.html",

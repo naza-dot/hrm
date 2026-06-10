@@ -5270,7 +5270,12 @@ def microsoft_sso_settings(request):
     else:
         redirect_uri = request.build_absolute_uri('/login-microsoft/callback/').replace('http://', f'{scheme}://')
 
-    company = Company.objects.first()
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        company = Company.objects.first()
     if not company:
         company, _ = Company.objects.get_or_create(
             company="Default", address="", country="", state="", city="", zip=""

@@ -1,116 +1,193 @@
-{% extends 'settings.html' %} {% load i18n %} {% block settings %}
+{% extends 'settings.html' %} {% load static %} {% load i18n %} {% block settings %}
 <div class="oh-inner-sidebar-content">
-    <div class="oh-inner-sidebar-content__header mt-3">
+    <div class="oh-inner-sidebar-content__header mt-4">
         <h2 class="oh-inner-sidebar-content__title">{% trans "Microsoft SSO" %}</h2>
     </div>
     <div class="oh-inner-sidebar-content__body">
-        <!-- Microsoft SSO settings will be added here -->
-        <form method="post" action="{% url 'microsoft-sso-settings' %}">
+        <form action="{% url 'microsoft-sso-settings' %}" class="settings-label mb-1" method="post">
             {% csrf_token %}
-            <div class="form-group mb-3">
-                <label for="client_id" class="form-label">Client ID</label>
-                <input type="text" class="form-control" id="client_id" name="client_id" value="{{ config.client_id|default:settings.MICROSOFT_AUTH_CLIENT_ID }}" placeholder="Enter Client ID">
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-4">
+                    <div class="oh-input-group">
+                        <div class="oh-label__info" for="client_id">
+                            <label class="oh-label" for="client_id">{% trans "Client ID" %}</label>
+                        </div>
+                        <input type="text" class="oh-input w-100" id="client_id" name="client_id"
+                               value="{{ config.client_id|default:settings.MICROSOFT_AUTH_CLIENT_ID }}"
+                               placeholder="{% trans 'Enter Client ID' %}">
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4">
+                    <div class="oh-input-group">
+                        <div class="oh-label__info" for="client_secret">
+                            <label class="oh-label" for="client_secret">{% trans "Client Secret" %}</label>
+                        </div>
+                        <div class="oh-password-input-container">
+                            <input type="password" class="oh-input oh-input--password w-100" id="client_secret"
+                                   name="client_secret" value="{{ config.client_secret|default:settings.MICROSOFT_AUTH_CLIENT_SECRET }}"
+                                   placeholder="{% trans 'Enter Client Secret' %}">
+                            <button type="button" class="oh-btn oh-btn--transparent oh-password-input--toggle">
+                                <ion-icon class="oh-passowrd-input__show-icon" title="{% trans 'Show Password' %}" name="eye-outline"></ion-icon>
+                                <ion-icon class="oh-passowrd-input__hide-icon d-none" title="{% trans 'Hide Password' %}" name="eye-off-outline"></ion-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4">
+                    <div class="oh-input-group">
+                        <div class="oh-label__info" for="tenant_id">
+                            <label class="oh-label" for="tenant_id">{% trans "Tenant ID" %}</label>
+                        </div>
+                        <input type="text" class="oh-input w-100" id="tenant_id" name="tenant_id"
+                               value="{{ config.tenant_id|default:settings.MICROSOFT_AUTH_TENANT_ID }}"
+                               placeholder="{% trans 'Enter Tenant ID' %}">
+                    </div>
+                </div>
             </div>
-            <div class="form-group mb-3">
-                <label for="client_secret" class="form-label">Client Secret</label>
-                <input type="password" class="form-control" id="client_secret" name="client_secret" value="{{ config.client_secret|default:settings.MICROSOFT_AUTH_CLIENT_SECRET }}" placeholder="Enter Client Secret">
+            <div class="row mt-3">
+                <div class="col-sm-12 col-md-12 col-lg-12 d-flex align-items-end">
+                    <button type="submit" class="oh-btn oh-btn--secondary mt-2 mr-0 oh-btn--w-100-resp">
+                        <ion-icon class="me-1" name="save-outline"></ion-icon>
+                        {% trans "Save Changes" %}
+                    </button>
+                </div>
             </div>
-            <div class="form-group mb-3">
-                <label for="tenant_id" class="form-label">Tenant ID</label>
-                <input type="text" class="form-control" id="tenant_id" name="tenant_id" value="{{ config.tenant_id|default:settings.MICROSOFT_AUTH_TENANT_ID }}" placeholder="Enter Tenant ID">
-            </div>
-            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <div class="oh-inner-sidebar-content__footer"></div>
         </form>
-        <!-- Display redirect URI for Entra ID configuration -->
-        <div class="mt-4 p-3 bg-light rounded">
-            <h5>Redirect URI</h5>
-            <p class="text-monospace">{{ redirect_uri }}</p>
-            <p class="text-muted">Copy this URI and paste it into your Azure AD App registration under <strong>Redirect URIs</strong>.</p>
+
+        <!-- Redirect URI display card -->
+        <div class="oh-card mt-4 p-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-8">
+                    <h5 class="oh-inner-sidebar-content__title" style="font-size: 16px;">
+                        <ion-icon name="link-outline" class="me-1"></ion-icon>
+                        {% trans "Redirect URI" %}
+                    </h5>
+                    <code class="oh-input w-100 d-block p-2 mt-2" style="background: #fff; border: 1px solid #dee2e6; border-radius: 4px; font-size: 13px;">
+                        {{ redirect_uri }}
+                    </code>
+                    <p class="text-muted mt-2" style="font-size: 13px;">
+                        {% trans "Copy this URI and paste it into your Azure AD App registration under" %}
+                        <strong>{% trans "Redirect URIs" %}</strong>.
+                    </p>
+                </div>
+            </div>
         </div>
-        <p class="mt-3">Current settings: Client ID: {{ config.client_id|default:settings.MICROSOFT_AUTH_CLIENT_ID }}, Tenant ID: {{ config.tenant_id|default:settings.MICROSOFT_AUTH_TENANT_ID }}</p>
-        <button id="sync-users-btn" class="btn btn-secondary mt-3">Sync Users from Entra ID</button>
-        <div id="sync-result" class="mt-3"></div>
-        <script>
-            document.getElementById('sync-users-btn').addEventListener('click', function() {
-                const btn = this;
-                const originalText = btn.textContent;
-                btn.disabled = true;
-                btn.textContent = 'Syncing...';
-                
-                fetch('{% url "microsoft-sync-users" %}', {
-                    method: 'GET',
-                    credentials: 'same-origin',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const resultDiv = document.getElementById('sync-result');
-                    if (data.error) {
-                        resultDiv.innerHTML = '<div class="alert alert-danger"><strong>Error:</strong> ' + 
-                            (data.message || data.error) + 
-                            (data.details ? '<br><small>' + data.details + '</small>' : '') + 
-                            '</div>';
-                    } else if (data.success) {
-                        let html = '<div class="alert alert-success"><strong>Success!</strong> Synced ' + 
-                            data.synced_count + ' users out of ' + data.total_users + ' from Microsoft Entra ID.';
-                        if (data.errors && data.errors.length > 0) {
-                            html += '<br><small><strong>Warnings:</strong> ' + data.errors.join('; ') + '</small>';
-                        }
-                        html += '</div>';
-                        
-                        // Build table of users
-                        if (data.users && data.users.length > 0) {
-                            html += '<div class="mt-3"><h5>Fetched Users (' + data.users.length + ')</h5>';
-                            html += '<div class="table-responsive"><table class="table table-sm table-striped"><thead class="table-light"><tr>';
-                            html += '<th>Display Name</th><th>Email</th><th>Phone</th><th>Job Title</th>';
-                            html += '</tr></thead><tbody>';
-                            
-                            data.users.forEach(function(user) {
-                                const displayName = user.displayName || '—';
-                                const email = user.mail || user.userPrincipalName || '—';
-                                const phone = user.mobilePhone || (user.businessPhones && user.businessPhones.length > 0 ? user.businessPhones[0] : '—');
-                                const jobTitle = user.jobTitle || '—';
-                                
-                                html += '<tr>';
-                                html += '<td>' + escapeHtml(displayName) + '</td>';
-                                html += '<td><small>' + escapeHtml(email) + '</small></td>';
-                                html += '<td><small>' + escapeHtml(phone) + '</small></td>';
-                                html += '<td><small>' + escapeHtml(jobTitle) + '</small></td>';
-                                html += '</tr>';
-                            });
-                            
-                            html += '</tbody></table></div></div>';
-                        }
-                        
-                        resultDiv.innerHTML = html;
-                    } else {
-                        resultDiv.innerHTML = '<div class="alert alert-info">Fetched ' + (data.users ? data.users.length : 0) + ' users.</div>';
-                    }
-                })
-                .catch(err => {
-                    document.getElementById('sync-result').innerHTML = '<div class="alert alert-danger"><strong>Fetch Error:</strong> ' + err.message + '</div>';
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.textContent = originalText;
-                });
-            });
-            
-            // Helper function to escape HTML
-            function escapeHtml(text) {
-                if (!text) return '';
-                const map = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
-                };
-                return text.replace(/[&<>"']/g, m => map[m]);
-            }
-        </script>
+
+        <!-- Current config summary -->
+        {% if config %}
+        <div class="oh-card mt-4 p-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
+            <h5 class="oh-inner-sidebar-content__title" style="font-size: 16px;">
+                <ion-icon name="information-circle-outline" class="me-1"></ion-icon>
+                {% trans "Configuration Status" %}
+            </h5>
+            <div class="row mt-2">
+                <div class="col-sm-12 col-md-4">
+                    <small class="text-muted d-block">{% trans "Client ID" %}</small>
+                    <span class="fw-bold">{{ config.client_id|truncatechars:30 }}</span>
+                </div>
+                <div class="col-sm-12 col-md-4">
+                    <small class="text-muted d-block">{% trans "Tenant ID" %}</small>
+                    <span class="fw-bold">{{ config.tenant_id|truncatechars:30 }}</span>
+                </div>
+                <div class="col-sm-12 col-md-4">
+                    <small class="text-muted d-block">{% trans "Status" %}</small>
+                    <span class="oh-dot oh-dot--small me-1" style="background-color: #31b46e;"></span>
+                    <span class="fw-bold" style="color: #31b46e;">{% trans "Active" %}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sync Users button -->
+        <div class="mt-4">
+            <button id="sync-users-btn" class="oh-btn oh-btn--secondary oh-btn--shadow">
+                <ion-icon class="me-1" name="sync-outline"></ion-icon>
+                {% trans "Sync Users from Entra ID" %}
+            </button>
+            <div id="sync-result" class="mt-3"></div>
+        </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('sync-users-btn').addEventListener('click', function() {
+        const btn = this;
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<ion-icon class="me-1" name="hourglass-outline"></ion-icon> Syncing...';
+
+        fetch('{% url "microsoft-sync-users" %}', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const resultDiv = document.getElementById('sync-result');
+            if (data.error) {
+                resultDiv.innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated">' +
+                    '<strong>Error:</strong> ' + (data.message || data.error) +
+                    (data.details ? '<br><small>' + data.details + '</small>' : '') +
+                    '</div>';
+            } else if (data.success) {
+                let html = '<div class="oh-alert oh-alert--success oh-alert--animated"><strong>Success!</strong> Synced ' +
+                    data.synced_count + ' users out of ' + data.total_users + ' from Microsoft Entra ID.';
+                if (data.errors && data.errors.length > 0) {
+                    html += '<br><small><strong>Warnings:</strong> ' + data.errors.join('; ') + '</small>';
+                }
+                html += '</div>';
+
+                if (data.users && data.users.length > 0) {
+                    html += '<div class="mt-3"><h6 class="oh-inner-sidebar-content__title">Fetched Users (' + data.users.length + ')</h6>';
+                    html += '<div style="overflow-x: auto;"><table class="oh-sticky-table"><thead class="oh-sticky-table__thead"><tr class="oh-sticky-table__tr">';
+                    html += '<th class="oh-sticky-table__th">Display Name</th><th class="oh-sticky-table__th">Email</th>';
+                    html += '<th class="oh-sticky-table__th">Phone</th><th class="oh-sticky-table__th">Job Title</th>';
+                    html += '</tr></thead><tbody>';
+
+                    data.users.forEach(function(user) {
+                        const displayName = user.displayName || '—';
+                        const email = user.mail || user.userPrincipalName || '—';
+                        const phone = user.mobilePhone || (user.businessPhones && user.businessPhones.length > 0 ? user.businessPhones[0] : '—');
+                        const jobTitle = user.jobTitle || '—';
+
+                        html += '<tr class="oh-sticky-table__tr">';
+                        html += '<td class="oh-sticky-table__td">' + escapeHtml(displayName) + '</td>';
+                        html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(email) + '</small></td>';
+                        html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(phone) + '</small></td>';
+                        html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(jobTitle) + '</small></td>';
+                        html += '</tr>';
+                    });
+
+                    html += '</tbody></table></div></div>';
+                }
+
+                resultDiv.innerHTML = html;
+            } else {
+                resultDiv.innerHTML = '<div class="oh-alert oh-alert--info oh-alert--animated">Fetched ' + (data.users ? data.users.length : 0) + ' users.</div>';
+            }
+        })
+        .catch(err => {
+            document.getElementById('sync-result').innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated"><strong>Fetch Error:</strong> ' + err.message + '</div>';
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        });
+    });
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+</script>
 {% endblock settings %}

@@ -37,8 +37,13 @@ def microsoft_auth_login(request):
         client_id = request.POST.get("client_id")
         client_secret = request.POST.get("client_secret")
         tenant_id = request.POST.get("tenant_id")
-        # Assume a single company for now – use the first company
-        company = Company.objects.first()
+        # Use the current user's company
+        try:
+            company = request.user.employee_get.employee_work_info.company_id
+        except Exception:
+            company = None
+        if not company:
+            company = Company.objects.first()
         if not company:
             # Create a default company if none exists to avoid errors during
             # SSO configuration.  This mirrors the behaviour of the

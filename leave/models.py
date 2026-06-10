@@ -1448,8 +1448,8 @@ class LeaveGeneralSetting(HorillaModel):
     """
 
     compensatory_leave = models.BooleanField(default=True)
-    objects = models.Manager()
     company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    objects = HorillaCompanyManager("company_id")
 
 
 if apps.is_installed("attendance"):

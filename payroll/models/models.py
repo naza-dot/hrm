@@ -1823,6 +1823,7 @@ class PayrollGeneralSetting(models.Model):
         default=30,
     )
     company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    objects = HorillaCompanyManager("company_id")
 
 
 class EncashmentGeneralSettings(models.Model):
@@ -1832,7 +1833,8 @@ class EncashmentGeneralSettings(models.Model):
 
     bonus_amount = models.IntegerField(default=1)
     leave_amount = models.IntegerField(blank=True, null=True, verbose_name="Amount")
-    objects = models.Manager()
+    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    objects = HorillaCompanyManager("company_id")
 
 
 DAYS = [
