@@ -5369,14 +5369,24 @@ def microsoft_sync_users(request):
 
     # Import here to avoid circular imports at module load time
     import requests
-    from django.conf import settings
     from django.http import JsonResponse
     from employee.models import Employee, EmployeeWorkInformation
-    from base.models import Department, JobPosition, EmployeeType, Company
+    from base.models import Department, JobPosition, EmployeeType, Company, MicrosoftSSOConfig
 
-    tenant_id = settings.MICROSOFT_AUTH_TENANT_ID
-    client_id = settings.MICROSOFT_AUTH_CLIENT_ID
-    client_secret = settings.MICROSOFT_AUTH_CLIENT_SECRET
+    # Load credentials from the database only – never from environment variables
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+        config = MicrosoftSSOConfig.objects.filter(
+            company_id=company, is_active=True
+        ).first()
+    except Exception:
+        config = MicrosoftSSOConfig.objects.filter(is_active=True).first()
+    if not config:
+        config = MicrosoftSSOConfig.objects.filter(is_active=True).first()
+
+    tenant_id = config.tenant_id if config else ""
+    client_id = config.client_id if config else ""
+    client_secret = config.client_secret if config else ""
 
     if not all([tenant_id, client_id, client_secret]):
         return JsonResponse({

@@ -14,30 +14,54 @@ from employee.models import Employee
 from .models import Company, MicrosoftSSOConfig
 
 
-def microsoft_auth_login(request):
-    """Handle Microsoft SSO settings form and redirect to Microsoft OAuth.
+def _get_microsoft_sso_config(request):
+    """Load the active MicrosoftSSOConfig from the database.
 
-    The view now accepts a POST request from the settings form.  When a
-    POST is received the client credentials are stored in the
-    :class:`MicrosoftSSOConfig` model.  On a GET request the user is
-    redirected to the Microsoft OAuth flow.
+    Tries the current user's company first, then falls back to any active
+    config.  Returns ``(config, tenant_id, client_id, client_secret)``
+    where all values are strings (empty if not configured).
     """
-    # Calculate redirect_uri for use in context
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+        config = MicrosoftSSOConfig.objects.filter(
+            company_id=company, is_active=True
+        ).first()
+    except Exception:
+        config = MicrosoftSSOConfig.objects.filter(is_active=True).first()
+    if not config:
+        config = MicrosoftSSOConfig.objects.filter(is_active=True).first()
+    tenant_id = config.tenant_id if config else ""
+    client_id = config.client_id if config else ""
+    client_secret = config.client_secret if config else ""
+    return config, tenant_id, client_id, client_secret
+
+
+def _compute_redirect_uri(request):
     scheme = 'https'
     if settings.DEBUG:
         scheme = getattr(settings, 'MICROSOFT_AUTH_SCHEME', 'https')
     site_url = getattr(settings, "SITE_URL", None)
     if site_url:
-        redirect_uri = f"{site_url.rstrip('/')}/login-microsoft/callback/"
-    else:
-        redirect_uri = request.build_absolute_uri('/login-microsoft/callback/').replace('http://', f'{scheme}://')
+        return f"{site_url.rstrip('/')}/login-microsoft/callback/"
+    return request.build_absolute_uri('/login-microsoft/callback/').replace(
+        'http://', f'{scheme}://'
+    )
+
+
+def microsoft_auth_login(request):
+    """Handle Microsoft SSO settings form and redirect to Microsoft OAuth.
+
+    On POST the client credentials are stored in the
+    :class:`MicrosoftSSOConfig` model.  On a GET request the user is
+    redirected to the Microsoft OAuth flow using credentials from the
+    database only (never from environment variables).
+    """
+    redirect_uri = _compute_redirect_uri(request)
 
     if request.method == "POST":
-        # Store credentials in the database
         client_id = request.POST.get("client_id")
         client_secret = request.POST.get("client_secret")
         tenant_id = request.POST.get("tenant_id")
-        # Use the current user's company
         try:
             company = request.user.employee_get.employee_work_info.company_id
         except Exception:
@@ -45,67 +69,51 @@ def microsoft_auth_login(request):
         if not company:
             company = Company.objects.first()
         if not company:
-            # Create a default company if none exists to avoid errors during
-            # SSO configuration.  This mirrors the behaviour of the
-            # original project where a company is expected to exist.
             company, _ = Company.objects.get_or_create(
                 company="Default", address="", country="", state="", city="", zip=""
             )
-        config, _ = MicrosoftSSOConfig.objects.update_or_create(
+        MicrosoftSSOConfig.objects.update_or_create(
             company_id=company,
             defaults={
                 "client_id": client_id,
                 "client_secret": client_secret,
                 "tenant_id": tenant_id,
+                "redirect_uri": redirect_uri,
                 "is_active": True,
             },
         )
-        # Update settings for the current request
-        settings.MICROSOFT_AUTH_CLIENT_ID = config.client_id
-        settings.MICROSOFT_AUTH_CLIENT_SECRET = config.client_secret
-        settings.MICROSOFT_AUTH_TENANT_ID = config.tenant_id
         messages.success(request, "Microsoft SSO settings updated.")
-        # Do not redirect; simply return a success response
-        from django.http import HttpResponse
-        # After saving, re-render the settings page with a success message
         return render(request, 'base/microsoft_sso_settings.html', {
-            'settings': settings,
             'redirect_uri': redirect_uri,
         })
-    
-    # Microsoft OAuth authorization URL
+
+    # GET: initiate OAuth flow using DB-stored credentials
+    config, tenant_id, client_id, client_secret = _get_microsoft_sso_config(request)
+
+    if not client_id or not tenant_id:
+        messages.error(
+            request,
+            _("Microsoft SSO is not configured. Please configure it in Settings → Microsoft."),
+        )
+        return redirect("microsoft-sso-settings")
+
     auth_url = "https://login.microsoftonline.com/{}/oauth2/v2.0/authorize".format(
-        settings.MICROSOFT_AUTH_TENANT_ID
+        tenant_id
     )
-    
-    # OAuth parameters
-    # Use HTTPS scheme for redirect URI (can be overridden with env var for development)
-    scheme = 'https'  # Default to HTTPS for production
-    if settings.DEBUG:
-        # In debug mode, allow HTTP scheme override
-        scheme = getattr(settings, 'MICROSOFT_AUTH_SCHEME', 'https')
-    
-    # Use the configured site URL if available, otherwise fallback to request
-    site_url = getattr(settings, "SITE_URL", None)
-    if site_url:
-        redirect_uri = f"{site_url.rstrip('/')}/login-microsoft/callback/"
-    else:
-        redirect_uri = request.build_absolute_uri('/login-microsoft/callback/').replace('http://', f'{scheme}://')
+
     params = {
-        'client_id': settings.MICROSOFT_AUTH_CLIENT_ID,
+        'client_id': client_id,
         'response_type': 'code',
         'redirect_uri': redirect_uri,
         'response_mode': 'query',
         'scope': 'openid profile email',
         'state': request.session.session_key or 'microsoft_auth_state'
     }
-    
-    # Store state in session for security
+
     request.session['microsoft_auth_state'] = params['state']
-    
-    # Redirect to Microsoft OAuth
+
     auth_url = "https://login.microsoftonline.com/{}/oauth2/v2.0/authorize?{}".format(
-        settings.MICROSOFT_AUTH_TENANT_ID,
+        tenant_id,
         urlencode(params)
     )
     return redirect(auth_url)
@@ -115,7 +123,6 @@ def microsoft_auth_callback(request):
     """
     Handle Microsoft OAuth callback
     """
-    # Verify state for security
     state = request.GET.get('state')
     stored_state = request.session.get('microsoft_auth_state')
     
@@ -123,27 +130,28 @@ def microsoft_auth_callback(request):
         messages.error(request, _("Invalid authentication state."))
         return redirect('login')
     
-    # Get authorization code
     code = request.GET.get('code')
     if not code:
         error = request.GET.get('error', 'unknown_error')
         messages.error(request, _("Authentication failed: {}").format(error))
         return redirect('login')
     
+    config, tenant_id, client_id, client_secret = _get_microsoft_sso_config(request)
+    if not client_id or not tenant_id:
+        messages.error(request, _("Microsoft SSO is not configured."))
+        return redirect('login')
+    
     try:
-        # Exchange authorization code for access token
-        token_url = f"https://login.microsoftonline.com/{settings.MICROSOFT_AUTH_TENANT_ID}/oauth2/v2.0/token"
+        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
         
-        # Use HTTPS scheme for redirect URI (can be overridden with env var for development)
-        scheme = 'https'  # Default to HTTPS for production
+        scheme = 'https'
         if settings.DEBUG:
-            # In debug mode, allow HTTP scheme override
             scheme = getattr(settings, 'MICROSOFT_AUTH_SCHEME', 'https')
         
         redirect_uri = request.build_absolute_uri('/login-microsoft/callback/').replace('http://', f'{scheme}://')
         token_data = {
-            'client_id': settings.MICROSOFT_AUTH_CLIENT_ID,
-            'client_secret': settings.MICROSOFT_AUTH_CLIENT_SECRET,
+            'client_id': client_id,
+            'client_secret': client_secret,
             'code': code,
             'redirect_uri': redirect_uri,
             'grant_type': 'authorization_code'

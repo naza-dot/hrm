@@ -1,4 +1,5 @@
 {% extends 'settings.html' %} {% load static %} {% load i18n %} {% block settings %}
+{% include "generic/components.html" %}
 <div class="oh-inner-sidebar-content">
     <div class="oh-inner-sidebar-content__header mt-4">
         <h2 class="oh-inner-sidebar-content__title">{% trans "Microsoft SSO" %}</h2>
@@ -13,7 +14,7 @@
                             <label class="oh-label" for="client_id">{% trans "Client ID" %}</label>
                         </div>
                         <input type="text" class="oh-input w-100" id="client_id" name="client_id"
-                               value="{{ config.client_id|default:settings.MICROSOFT_AUTH_CLIENT_ID }}"
+                               value="{{ config.client_id|default:'' }}"
                                placeholder="{% trans 'Enter Client ID' %}">
                     </div>
                 </div>
@@ -24,7 +25,7 @@
                         </div>
                         <div class="oh-password-input-container">
                             <input type="password" class="oh-input oh-input--password w-100" id="client_secret"
-                                   name="client_secret" value="{{ config.client_secret|default:settings.MICROSOFT_AUTH_CLIENT_SECRET }}"
+                                   name="client_secret" value="{{ config.client_secret|default:'' }}"
                                    placeholder="{% trans 'Enter Client Secret' %}">
                             <button type="button" class="oh-btn oh-btn--transparent oh-password-input--toggle">
                                 <ion-icon class="oh-passowrd-input__show-icon" title="{% trans 'Show Password' %}" name="eye-outline"></ion-icon>
@@ -39,7 +40,7 @@
                             <label class="oh-label" for="tenant_id">{% trans "Tenant ID" %}</label>
                         </div>
                         <input type="text" class="oh-input w-100" id="tenant_id" name="tenant_id"
-                               value="{{ config.tenant_id|default:settings.MICROSOFT_AUTH_TENANT_ID }}"
+                               value="{{ config.tenant_id|default:'' }}"
                                placeholder="{% trans 'Enter Tenant ID' %}">
                     </div>
                 </div>
@@ -107,6 +108,31 @@
             </button>
             <div id="sync-result" class="mt-3"></div>
         </div>
+    </div>
+</div>
+
+<!-- Outlook Mail Servers section -->
+<div class="oh-inner-sidebar-content mt-5">
+    <div class="oh-inner-sidebar-content__header">
+        <h2 class="oh-inner-sidebar-content__title">{% trans "Outlook Mail" %}</h2>
+    </div>
+    <div class="oh-inner-sidebar-content__body">
+        <div class="oh-modal" id="mailServerModal" role="dialog" aria-labelledby="mailServerModal" aria-hidden="true">
+            <div class="oh-modal__dialog">
+                <div class="oh-modal__dialog-header">
+                    <h2 class="oh-modal__dialog-title" id="editModal1ModalLabel">
+                        {% trans "Mail Server" %}
+                    </h2>
+                    <button class="oh-modal__close" aria-label="Close">
+                        <ion-icon name="close-outline"></ion-icon>
+                    </button>
+                </div>
+                <div class="oh-modal__dialog-body" id="mailServerModalBody"></div>
+            </div>
+        </div>
+        <div style="display: none;" data-ids="[]" id="selectedRecords"></div>
+        <div hx-get="{% url "outlook_server_nav" %}" hx-trigger="load"></div>
+        <div class="oh-wrapper" hx-get="{% url "outlook_server_list" %}" hx-trigger="load"></div>
     </div>
 </div>
 
