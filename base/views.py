@@ -27,6 +27,7 @@ from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.core.management import call_command
 from django.db import OperationalError, ProgrammingError
+from django.views.decorators.http import require_POST
 from django.db.models import ProtectedError, Q
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -275,6 +276,70 @@ def load_demo_database(request):
                 messages.error(request, _("Database Authentication Failed"))
         return redirect(home)
     return redirect("/")
+
+
+@require_POST
+@login_required
+def load_demo_database_tenant(request):
+    """Load demo fixtures into the tenant schema for the current user's company.
+
+    Seeds tenant schema using the same fixtures as the global demo loader but
+    targets the tenant schema by creating a temporary DB alias with the
+    appropriate search_path.
+    """
+    from tenants.utils import register_tenant_database, unregister_tenant_database
+    from tenants.models import Client
+
+    try:
+        client = Client.objects.filter(company=request.user.company, status="active").first()
+    except Exception:
+        client = None
+
+    if not client:
+        messages.error(request, _("No active tenant schema found for your company."))
+        return redirect(home)
+
+    schema_name = client.schema_name
+    alias = register_tenant_database(schema_name)
+
+    data_files = [
+        "user_data.json",
+        "employee_info_data.json",
+        "base_data.json",
+        "work_info_data.json",
+    ]
+
+    optional_apps = [
+        ("attendance", "attendance_data.json"),
+        ("leave", "leave_data.json"),
+        ("asset", "asset_data.json"),
+        ("recruitment", "recruitment_data.json"),
+        ("onboarding", "onboarding_data.json"),
+        ("offboarding", "offboarding_data.json"),
+        ("pms", "pms_data.json"),
+        ("payroll", "payroll_data.json"),
+        ("payroll", "payroll_loanaccount_data.json"),
+        ("project", "project_data.json"),
+    ]
+
+    data_files += [file for app, file in optional_apps if apps.is_installed(app)]
+
+    load_errors = []
+    for file in data_files:
+        file_path = path.join(settings.BASE_DIR, "load_data", file)
+        try:
+            call_command("loaddata", file_path, database=alias)
+        except Exception as e:
+            load_errors.append(str(e))
+
+    unregister_tenant_database(schema_name)
+
+    if load_errors:
+        messages.error(request, _(f"Some fixtures failed to load: {load_errors}"))
+    else:
+        messages.success(request, _("Tenant demo data loaded successfully."))
+
+    return redirect(home)
 
 
 def initialize_database(request):

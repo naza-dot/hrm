@@ -38,6 +38,7 @@ urlpatterns = [
     path("", views.home, name="home-page"),
     path("initialize-database", views.initialize_database, name="initialize-database"),
     path("load-demo-database", views.load_demo_database, name="load-demo-database"),
+    path("load-tenant-demo", views.load_demo_database_tenant, name="load-tenant-demo-database"),
     path(
         "initialize-database-user",
         views.initialize_database_user,

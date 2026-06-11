@@ -121,6 +121,16 @@
             <i class="material-icons mt-2">leaderboard</i>
         </a>
     </div>
+    {% if request.user.is_authenticated and (request.user.is_staff or request.user.is_saas_admin) %}
+    <div id="fab10" class="fab round" data-tooltip="{% trans 'Load Tenant Demo Data' %}">
+        <form method="post" action="{% url 'load-tenant-demo-database' %}" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="text-light" style="background:transparent;border:0;padding:0;width:100%;height:100%;">
+                <i class="material-icons mt-2">cloud_download</i>
+            </button>
+        </form>
+    </div>
+    {% endif %}
     {% if "helpdesk"|app_installed %}
     {% if request.user.is_saas_admin or "helpdesk" in enabled_features %}
         <div id="fab8" class="fab round" data-tooltip="{% trans 'Create Ticket' %}">
