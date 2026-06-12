@@ -367,7 +367,16 @@
             '"': '&quot;',
             "'": '&#039;'
         };
-        return text.replace(/[&<>"']/g, m => map[m]);
+        return text.replace(/[&<>"\']/g, m => map[m]);
     }
+</script>
+
+<script>
+  $(document).ready(function() {
+    $(".oh-inner-sidebar__item .oh-accordion").click(function(e) {
+      e.stopPropagation();
+      $(this).toggleClass('oh-accordion--show');
+    });
+  });
 </script>
 {% endblock settings %}
