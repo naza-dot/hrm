@@ -13,7 +13,7 @@
 {% endif %}
 
 
-{% if "offboarding"|app_installed and perms.offboarding.change_offboardinggeneralsetting %}
+{% if "offboarding"|app_installed and "offboarding" in enabled_features and perms.offboarding.change_offboardinggeneralsetting %}
     {% include "offboarding/settings/settings.html" %}
 {% endif %}
 

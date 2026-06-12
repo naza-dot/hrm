@@ -1209,6 +1209,17 @@ class MicrosoftSSOConfig(HorillaModel):
         max_length=500, verbose_name=_("Redirect URI"), blank=True, null=True
     )
     is_active = models.BooleanField(default=True, verbose_name=_("Active"))
+
+    mail_from_email = models.EmailField(
+        null=True, blank=True, max_length=256, verbose_name=_("From Email")
+    )
+    mail_display_name = models.CharField(
+        null=True, blank=True, max_length=256, verbose_name=_("Display Name")
+    )
+    is_primary_mail_server = models.BooleanField(
+        default=False, verbose_name=_("Primary Mail Server")
+    )
+
     created_at = models.DateTimeField(auto_now_add=True, null=True, verbose_name=_("Created at"))
 
     objects = HorillaCompanyManager(related_company_field="company_id")
@@ -1217,6 +1228,13 @@ class MicrosoftSSOConfig(HorillaModel):
         verbose_name = _("Microsoft SSO Config")
         verbose_name_plural = _("Microsoft SSO Configs")
         unique_together = ("company_id",)
+
+    def save(self, *args, **kwargs):
+        if self.is_primary_mail_server:
+            MicrosoftSSOConfig.objects.filter(
+                company_id=self.company_id, is_primary_mail_server=True
+            ).exclude(pk=self.pk).update(is_primary_mail_server=False)
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.company_id} SSO"

@@ -5342,6 +5342,9 @@ def microsoft_sso_settings(request):
         client_id = request.POST.get("client_id", "").strip()
         client_secret = request.POST.get("client_secret", "").strip()
         tenant_id = request.POST.get("tenant_id", "").strip()
+        mail_from_email = request.POST.get("mail_from_email", "").strip() or None
+        mail_display_name = request.POST.get("mail_display_name", "").strip() or None
+        is_primary_mail_server = request.POST.get("is_primary_mail_server") == "true"
 
         if client_id and client_secret and tenant_id:
             try:
@@ -5353,6 +5356,9 @@ def microsoft_sso_settings(request):
                         "tenant_id": tenant_id,
                         "redirect_uri": redirect_uri,
                         "is_active": True,
+                        "mail_from_email": mail_from_email,
+                        "mail_display_name": mail_display_name,
+                        "is_primary_mail_server": is_primary_mail_server,
                     },
                 )
                 messages.success(request, _("Microsoft SSO settings updated."))
@@ -5814,6 +5820,203 @@ def microsoft_sync_users(request):
             "message": f"Failed to sync users: {str(e)}",
             "details": traceback.format_exc()
         }, status=500)
+
+
+@login_required
+def microsoft_test_connection(request):
+    """
+    Test the Microsoft Entra ID connection by attempting to fetch users and
+    organization properties via the Graph API.
+    Returns JSON with individual status per check.
+    """
+    import requests
+
+    result = {
+        "users": False,
+        "properties": False,
+    }
+
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+        config = MicrosoftSSOConfig.objects.filter(
+            company_id=company, is_active=True
+        ).first()
+    except Exception:
+        config = MicrosoftSSOConfig.objects.filter(is_active=True).first()
+    if not config:
+        config = MicrosoftSSOConfig.objects.filter(is_active=True).first()
+
+    tenant_id = config.tenant_id if config else ""
+    client_id = config.client_id if config else ""
+    client_secret = config.client_secret if config else ""
+
+    if not all([tenant_id, client_id, client_secret]):
+        return JsonResponse({
+            "error": "Microsoft SSO not configured",
+            "message": "Please configure Microsoft SSO credentials first",
+            **result,
+        }, status=400)
+
+    try:
+        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+        token_data = {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "scope": "https://graph.microsoft.com/.default",
+            "grant_type": "client_credentials",
+        }
+        token_resp = requests.post(token_url, data=token_data, timeout=10)
+        if token_resp.status_code != 200:
+            return JsonResponse({**result, "error": "Token acquisition failed"})
+        access_token = token_resp.json().get("access_token")
+        if not access_token:
+            return JsonResponse({**result, "error": "No access token"})
+
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+
+        # Test users endpoint
+        users_resp = requests.get(
+            "https://graph.microsoft.com/v1.0/users?$top=1&$select=id",
+            headers=headers,
+            timeout=10,
+        )
+        if users_resp.status_code == 200:
+            result["users"] = True
+
+        # Test organization endpoint (user properties)
+        org_resp = requests.get(
+            "https://graph.microsoft.com/v1.0/organization",
+            headers=headers,
+            timeout=10,
+        )
+        if org_resp.status_code == 200:
+            result["properties"] = True
+
+    except Exception as e:
+        return JsonResponse({**result, "error": str(e)})
+
+    return JsonResponse(result)
+
+
+@login_required
+def microsoft_test_mail(request):
+    """
+    Send a test email via Microsoft Graph API using client credentials flow.
+    Returns JSON with detailed step-by-step progress.
+    """
+    import requests
+
+    steps = []
+    email_to = request.POST.get("email_to", "").strip()
+
+    if not email_to:
+        return JsonResponse({"error": "Email address is required"}, status=400)
+
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+        config = MicrosoftSSOConfig.objects.filter(
+            company_id=company, is_active=True
+        ).first()
+    except Exception:
+        config = MicrosoftSSOConfig.objects.filter(is_active=True).first()
+    if not config:
+        config = MicrosoftSSOConfig.objects.filter(is_active=True).first()
+
+    mail_from_email = config.mail_from_email if config else None
+    mail_display_name = config.mail_display_name if config else None
+
+    steps.append({"step": "Configuration loaded", "success": bool(config)})
+    if not config:
+        return JsonResponse({"steps": steps, "error": "Not configured"})
+
+    sender_info = None
+    if mail_from_email:
+        sender_info = mail_from_email
+        if mail_display_name:
+            sender_info = f"{mail_display_name} <{mail_from_email}>"
+    steps.append({"step": f"Sender: {sender_info or 'Not configured — using app default'}", "success": True})
+
+    try:
+        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+        token_data = {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "scope": "https://graph.microsoft.com/.default",
+            "grant_type": "client_credentials",
+        }
+        token_resp = requests.post(token_url, data=token_data, timeout=10)
+        token_ok = token_resp.status_code == 200
+        steps.append({"step": "Access token obtained", "success": token_ok})
+        if not token_ok:
+            steps.append({"step": "Sending email", "success": False, "detail": "Aborted — no token"})
+            return JsonResponse({"steps": steps, "error": "Token acquisition failed"})
+
+        access_token = token_resp.json().get("access_token")
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        email_data = {
+            "message": {
+                "subject": "Horilla – Microsoft SSO test email",
+                "body": {
+                    "contentType": "HTML",
+                    "content": f"<h3>Test email</h3><p>Sent at: {now}</p>",
+                },
+                "toRecipients": [
+                    {"emailAddress": {"address": email_to}}
+                ],
+            }
+        }
+
+        if mail_from_email:
+            email_data["message"]["from"] = {
+                "emailAddress": {"address": mail_from_email}
+            }
+
+        send_ok = False
+        send_detail = None
+
+        # If a from email is configured, try sending as that user
+        if mail_from_email:
+            send_url = f"https://graph.microsoft.com/v1.0/users/{mail_from_email}/sendMail"
+            send_resp = requests.post(send_url, headers=headers, json=email_data, timeout=10)
+            if send_resp.status_code == 202:
+                send_ok = True
+            else:
+                send_detail = send_resp.text[:200]
+
+        if not send_ok:
+            users_resp = requests.get(
+                "https://graph.microsoft.com/v1.0/users?$top=1&$select=id,userPrincipalName&$filter=userType eq 'Member'",
+                headers=headers,
+                timeout=10,
+            )
+            if users_resp.status_code == 200:
+                users = users_resp.json().get("value", [])
+                if users:
+                    upn = users[0].get("userPrincipalName", "")
+                    if upn:
+                        send_url = f"https://graph.microsoft.com/v1.0/users/{upn}/sendMail"
+                        if mail_from_email:
+                            email_data["message"]["from"] = {
+                                "emailAddress": {"address": mail_from_email}
+                            }
+                        send_resp = requests.post(send_url, headers=headers, json=email_data, timeout=10)
+                        if send_resp.status_code == 202:
+                            send_ok = True
+                        else:
+                            send_detail = send_resp.text[:200]
+
+        if not send_ok and not send_detail:
+            send_detail = "No available user found to send mail through"
+
+        steps.append({"step": "Sending email", "success": send_ok, "detail": send_detail})
+
+    except Exception as e:
+        steps.append({"step": "Sending email", "success": False, "detail": str(e)})
+
+    all_ok = all(s["success"] for s in steps)
+    return JsonResponse({"steps": steps, "success": all_ok})
 
 
 @permission_required("base.change_company")

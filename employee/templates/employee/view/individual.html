@@ -328,7 +328,7 @@
 								</li>
 							{% endif %}
 
-							{% if "attendance"|app_installed %}
+							{% if "attendance"|app_installed and "attendance" in enabled_features %}
 								{% if perms.attendance.view_attendance or request.user|check_manager:employee %}
 								<li data-cell-index="11" data-cell-title="{% trans 'Attendance' %}" class="oh-general__tab">
 									<a hx-get="{% url 'attendance-tab' employee.id %}" hx-target="#attendance_target"
@@ -338,7 +338,7 @@
 								{% endif %}
 							{% endif %}
 
-							{% if "leave"|app_installed %}
+							{% if "leave"|app_installed and "leave" in enabled_features %}
 								{% if perms.leave.view_leaverequest or request.user|check_manager:employee or request.user == employee.employee_user_id %}
 									<li data-cell-index="12" data-cell-title="{% trans 'Leave' %}" class="oh-general__tab">
 										<a hx-get="{% url 'leave-tab' employee.id %}" hx-target="#leave"
@@ -348,7 +348,7 @@
 								{% endif %}
 							{% endif %}
 
-							{% if "payroll"|app_installed %}
+							{% if "payroll"|app_installed and "payroll" in enabled_features %}
 								{% if perms.payroll.view_payslip or request.user == employee.employee_user_id %}
 									<li data-cell-index="13" data-cell-title="{% trans 'Payroll' %}" class="oh-general__tab">
 										<a href="#" class="oh-general__tab-link" data-action="general-tab"
@@ -368,7 +368,7 @@
 								{% endif %}
 							{% endif %}
 
-							{% if "attendance"|app_installed or "leave"|app_installed %}
+							{% if "attendance" in enabled_features or "leave" in enabled_features %}
 								{% if perms.attendance.view_penaltyaccount or request.user == employee.employee_user_id %}
 									<li data-cell-index="23" data-cell-title="{% trans " Penalty Account" %}" class="oh-general__tab">
 										<a data-action="general-tab" data-target="#penaltyTarget" id="penalty" class="oh-general__tab-link" role="button">{% trans "Penalty Account" %}</a>
@@ -383,7 +383,7 @@
 								</li>
 							{% endif %}
 
-							{% if "asset"|app_installed %}
+							{% if "asset"|app_installed and "asset" in enabled_features %}
 								{% if perms.asset.view_asset or request.user|check_manager:employee or request.user == employee.employee_user_id %}
 									<li data-cell-index="16" data-cell-title="{% trans 'Assets' %}" class="oh-general__tab">
 										<a hx-get={% url 'asset-tab' employee.id %} hx-target="#asset_target"
@@ -394,7 +394,7 @@
 								{% endif %}
 							{% endif %}
 
-							{% if "pms"|app_installed %}
+							{% if "pms"|app_installed and "pms" in enabled_features %}
 								{% if perms.pms.view_feedback or request.user|check_manager:employee or request.user == employee.employee_user_id %}
 									<li data-cell-index="17" data-cell-title="{% trans 'Performance' %}" class="oh-general__tab">
 										<a hx-get={% url 'performance-tab' employee.id %} hx-target="#performance_target"
@@ -443,7 +443,7 @@
 							</li>
 							{% endif %}
 
-							{% if "payroll"|app_installed %}
+							{% if "payroll"|app_installed and "payroll" in enabled_features %}
 								{% if perms.employee.view_bonuspoint or request.user|check_manager:employee or request.user == employee.employee_user_id %}
 									<li data-cell-index="21" data-cell-title="{% trans 'Bonus' %}" class="oh-general__tab">
 										<a hx-get={% url 'bonus-points-tab' employee.id %} hx-target="#bonus_points_target"

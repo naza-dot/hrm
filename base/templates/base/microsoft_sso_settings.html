@@ -1,5 +1,4 @@
 {% extends 'settings.html' %} {% load static %} {% load i18n %} {% block settings %}
-{% include "generic/components.html" %}
 <div class="oh-inner-sidebar-content">
     <div class="oh-inner-sidebar-content__header mt-4">
         <h2 class="oh-inner-sidebar-content__title">{% trans "Microsoft SSO" %}</h2>
@@ -57,6 +56,56 @@
             <div class="oh-inner-sidebar-content__footer"></div>
         </form>
 
+        <!-- Mail Configuration -->
+        <div class="oh-card mt-4 p-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
+            <h5 class="oh-inner-sidebar-content__title" style="font-size: 16px;">
+                <ion-icon name="mail-outline" class="me-1"></ion-icon>
+                {% trans "Mail Configuration" %}
+            </h5>
+            <p class="text-muted mt-1" style="font-size: 13px;">
+                {% trans "Configure the sender details when sending emails via the Microsoft Graph API." %}
+            </p>
+            <div class="row mt-2">
+                <div class="col-sm-12 col-md-12 col-lg-4">
+                    <div class="oh-input-group">
+                        <div class="oh-label__info" for="mail_from_email">
+                            <label class="oh-label" for="mail_from_email">{% trans "From Email" %}</label>
+                        </div>
+                        <input type="email" class="oh-input w-100" id="mail_from_email" name="mail_from_email"
+                               value="{{ config.mail_from_email|default:'' }}"
+                               placeholder="{% trans 'sender@company.com' %}">
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4">
+                    <div class="oh-input-group">
+                        <div class="oh-label__info" for="mail_display_name">
+                            <label class="oh-label" for="mail_display_name">{% trans "Display Name" %}</label>
+                        </div>
+                        <input type="text" class="oh-input w-100" id="mail_display_name" name="mail_display_name"
+                               value="{{ config.mail_display_name|default:'' }}"
+                               placeholder="{% trans 'Company Name' %}">
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4 d-flex align-items-end">
+                    <div class="oh-input-group w-100">
+                        <div class="oh-label__info">
+                            <label class="oh-label">{% trans "Primary Mail Server" %}</label>
+                        </div>
+                        <div class="oh-switch p-0">
+                            <label class="oh-switch__toggle">
+                                <input type="checkbox" class="oh-switch__checkbox" name="is_primary_mail_server" value="true"
+                                    {% if config.is_primary_mail_server %} checked {% endif %}
+                                    onchange="this.value = this.checked ? 'true' : 'false';">
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 12px;">
+                            {% trans "Use Microsoft Graph as the default mail backend for this company." %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Redirect URI display card -->
         <div class="oh-card mt-4 p-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
             <div class="row">
@@ -109,6 +158,15 @@
             </button>
             <div id="sync-result" class="mt-3"></div>
         </div>
+
+        <!-- Test Connection -->
+        <div class="mt-4">
+            <button id="test-connection-btn" class="oh-btn oh-btn--secondary oh-btn--shadow">
+                <ion-icon class="me-1" name="pulse-outline"></ion-icon>
+                {% trans "Test Connection" %}
+            </button>
+            <div id="connection-result" class="mt-3"></div>
+        </div>
     </div>
 </div>
 
@@ -118,9 +176,25 @@
         <h2 class="oh-inner-sidebar-content__title">{% trans "Mailing" %}</h2>
     </div>
     <div class="oh-inner-sidebar-content__body">
-        <p class="text-muted" style="font-size: 13px;">
-            {% trans "Mailing configuration will be available here." %}
-        </p>
+        <div class="oh-card p-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
+            <p class="text-muted" style="font-size: 13px;">
+                {% trans "Send a test email to verify your Microsoft Entra ID app registration can send mails." %}
+            </p>
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-6">
+                    <div class="oh-input-group">
+                        <input type="email" id="test-mail-to" class="oh-input w-100" placeholder="{% trans 'Enter recipient email' %}">
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-3 d-flex align-items-end">
+                    <button id="test-mail-btn" class="oh-btn oh-btn--secondary oh-btn--w-100-resp">
+                        <ion-icon class="me-1" name="send-outline"></ion-icon>
+                        {% trans "Send Test Mail" %}
+                    </button>
+                </div>
+            </div>
+            <div id="test-mail-steps" class="mt-3"></div>
+        </div>
     </div>
 </div>
 
@@ -185,6 +259,98 @@
         })
         .catch(err => {
             document.getElementById('sync-result').innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated"><strong>Fetch Error:</strong> ' + err.message + '</div>';
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        });
+    });
+
+    // Test Connection
+    document.getElementById('test-connection-btn').addEventListener('click', function() {
+        const btn = this;
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<ion-icon class="me-1" name="hourglass-outline"></ion-icon> Testing...';
+
+        fetch('{% url "microsoft-test-connection" %}', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const resultDiv = document.getElementById('connection-result');
+            let html = '<div style="font-size: 14px;">';
+            html += '<div class="mt-2"><span class="me-2">' + (data.users ? '&#9989;' : '&#10060;') + '</span>{% trans "Users" %}</div>';
+            html += '<div class="mt-1"><span class="me-2">' + (data.properties ? '&#9989;' : '&#10060;') + '</span>{% trans "User Properties" %}</div>';
+            if (data.error) {
+                html += '<div class="mt-2 text-danger"><small>' + escapeHtml(data.error) + '</small></div>';
+            }
+            html += '</div>';
+            resultDiv.innerHTML = html;
+        })
+        .catch(err => {
+            document.getElementById('connection-result').innerHTML = '<div class="text-danger mt-2"><small>Fetch Error: ' + escapeHtml(err.message) + '</small></div>';
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        });
+    });
+
+    // Test Mail
+    document.getElementById('test-mail-btn').addEventListener('click', function() {
+        const btn = this;
+        const emailInput = document.getElementById('test-mail-to');
+        const emailTo = emailInput.value.trim();
+        if (!emailTo) {
+            emailInput.classList.add('oh-input--error');
+            return;
+        }
+        emailInput.classList.remove('oh-input--error');
+
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<ion-icon class="me-1" name="hourglass-outline"></ion-icon> Sending...';
+
+        const stepsDiv = document.getElementById('test-mail-steps');
+        stepsDiv.innerHTML = '';
+
+        const formData = new FormData();
+        formData.append('email_to', emailTo);
+
+        fetch('{% url "microsoft-test-mail" %}', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            let html = '';
+            if (data.steps) {
+                data.steps.forEach(function(s) {
+                    const icon = s.success ? '&#9989;' : '&#10060;';
+                    html += '<div class="mt-1" style="font-size: 14px;"><span class="me-2">' + icon + '</span>' + escapeHtml(s.step);
+                    if (s.detail) {
+                        html += '<br><small class="text-muted">' + escapeHtml(s.detail) + '</small>';
+                    }
+                    html += '</div>';
+                });
+            }
+            if (data.error && !data.steps) {
+                html = '<div class="text-danger mt-2"><small>' + escapeHtml(data.error) + '</small></div>';
+            }
+            stepsDiv.innerHTML = html;
+        })
+        .catch(err => {
+            stepsDiv.innerHTML = '<div class="text-danger mt-2"><small>Error: ' + escapeHtml(err.message) + '</small></div>';
         })
         .finally(() => {
             btn.disabled = false;

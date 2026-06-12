@@ -209,7 +209,8 @@ def resignation_request_enabled(request):
             company = None
         if not company:
             selected_company_id = request.session.get("selected_company")
-            company = Company.objects.filter(id=selected_company_id).first() if selected_company_id else None
+            if selected_company_id and selected_company_id != "all":
+                company = Company.objects.filter(id=selected_company_id).first()
         if company:
             first = OffboardingGeneralSetting.objects.filter(company_id=company).first()
         else:
@@ -235,7 +236,8 @@ def timerunner_enabled(request):
             company = None
         if not company:
             selected_company_id = request.session.get("selected_company")
-            company = Company.objects.filter(id=selected_company_id).first() if selected_company_id else None
+            if selected_company_id and selected_company_id != "all":
+                company = Company.objects.filter(id=selected_company_id).first()
         if company:
             first = AttendanceGeneralSetting.objects.filter(company_id=company).first()
         else:
@@ -261,7 +263,8 @@ def intial_notice_period(request):
             company = None
         if not company:
             selected_company_id = request.session.get("selected_company")
-            company = Company.objects.filter(id=selected_company_id).first() if selected_company_id else None
+            if selected_company_id and selected_company_id != "all":
+                company = Company.objects.filter(id=selected_company_id).first()
         if company:
             first = PayrollGeneralSetting.objects.filter(company_id=company).first()
         else:
