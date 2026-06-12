@@ -644,6 +644,12 @@
             localStorage.setItem("lastActiveTab", path);
         }
     });
+
+    // Robust delegated accordion toggle — ensures all accordion headers
+    // remain clickable regardless of other event handlers or DOM changes.
+    $(document).on("click", ".oh-accordion-header", function (e) {
+        $(this).parent(".oh-accordion").toggleClass("oh-accordion--show");
+    });
 </script>
 <script src="{% static 'build/js/settingsDriver.js' %}"></script>
 {% if not request.user.driverviewed_set.first or "settings" not in request.user.driverviewed_set.first.user_viewed %}

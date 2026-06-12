@@ -13,7 +13,7 @@ from django.utils.translation import gettext_lazy as _
 
 from base.context_processors import intial_notice_period
 from base.methods import closest_numbers, eval_validate, paginator_qry, sortby
-from base.models import Department, JobPosition
+from base.models import Company, Department, JobPosition
 from base.views import general_settings
 from employee.models import Employee
 from horilla import horilla_middlewares
@@ -948,11 +948,23 @@ def enable_resignation_request(request):
     """
     Enable disable resignation letter feature
     """
-    resignation_request_feature = OffboardingGeneralSetting.objects.first()
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        selected_company_id = request.session.get("selected_company")
+        company = Company.objects.filter(id=selected_company_id).first()
+    if not company:
+        company = Company.objects.first()
+
+    resignation_request_feature = OffboardingGeneralSetting.objects.filter(
+        company_id=company
+    ).first()
     resignation_request_feature = (
         resignation_request_feature
         if resignation_request_feature
-        else OffboardingGeneralSetting()
+        else OffboardingGeneralSetting(company_id=company)
     )
     resignation_request_feature.resignation_request = (
         "resignation_request" in request.GET.keys()

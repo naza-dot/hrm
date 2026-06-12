@@ -132,6 +132,7 @@ from base.models import (
     BaserequestFile,
     BiometricAttendance,
     Company,
+    CurrencySetting,
     MicrosoftSSOConfig,
     CompanyLeaves,
     DashboardEmployeeCharts,
@@ -5201,21 +5202,20 @@ def general_settings(request):
         except Exception:
             pass
 
+    currency_instance, __ = CurrencySetting.objects.get_or_create(
+        company_id=company,
+        defaults={"currency_symbol": "$", "position": "prefix"},
+    )
+    from base.forms import CurrencySettingForm
+
+    currency_form = CurrencySettingForm(instance=currency_instance)
+
     if apps.is_installed("payroll"):
-        PayrollSettings = get_horilla_model_class(
-            app_label="payroll", model="payrollsettings"
-        )
         EncashmentGeneralSettings = get_horilla_model_class(
             app_label="payroll", model="encashmentgeneralsettings"
         )
-        from payroll.forms.component_forms import PayrollSettingsForm
         from payroll.forms.forms import EncashmentGeneralSettingsForm
 
-        currency_instance, __ = PayrollSettings.objects.get_or_create(
-            company_id=company,
-            defaults={"currency_symbol": "$", "position": "prefix"},
-        )
-        currency_form = PayrollSettingsForm(instance=currency_instance)
         encashment_instance, __ = EncashmentGeneralSettings.objects.get_or_create(
             company_id=company,
             defaults={"bonus_amount": 1},
@@ -5223,7 +5223,6 @@ def general_settings(request):
         encashment_form = EncashmentGeneralSettingsForm(instance=encashment_instance)
     else:
         encashment_form = None
-        currency_form = None
 
     # Fetch or create EmployeeGeneralSetting instance
     try:
@@ -5268,6 +5267,15 @@ def general_settings(request):
     else:
         pagination_form = DynamicPaginationForm()
     if request.method == "POST":
+        if "currency_symbol" in request.POST:
+            currency_form = CurrencySettingForm(request.POST, instance=currency_instance)
+            if currency_form.is_valid():
+                currency_form.instance.company_id = company
+                currency_form.save()
+                messages.success(request, _("Currency settings updated."))
+                if request.META.get("HTTP_HX_REQUEST"):
+                    return HttpResponse()
+                return HorillaRedirect(request)
         form = AnnouncementExpireForm(request.POST, instance=instance)
         if form.is_valid():
             form.instance.company_id = company

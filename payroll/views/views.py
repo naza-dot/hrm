@@ -38,6 +38,7 @@ from horilla.decorators import (
     owner_can_enter,
     permission_required,
 )
+from horilla.methods import handle_no_permission
 from horilla.group_by import group_by_queryset
 from horilla.horilla_settings import HORILLA_DATE_FORMATS
 from horilla.http.response import HorillaRedirect
@@ -419,7 +420,6 @@ def contract_filter(request):
 
 
 @login_required
-@permission_required("payroll.view_payrollsettings")
 def settings(request):
     """
     This method is used to render settings template
@@ -432,6 +432,11 @@ def settings(request):
     if not company:
         selected_company_id = request.session.get("selected_company")
         company = Company.objects.filter(id=selected_company_id).first()
+
+    if request.method == "POST" and not request.user.has_perm(
+        "payroll.change_payrollsettings"
+    ):
+        return handle_no_permission(request)
 
     instance, created = PayrollSettings.objects.get_or_create(
         company_id=company,
@@ -1845,9 +1850,20 @@ def initial_notice_period(request):
     """
     This method is used to set initial value notice period
     """
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        selected_company_id = request.session.get("selected_company")
+        company = Company.objects.filter(id=selected_company_id).first()
+    if not company:
+        company = Company.objects.first()
+
     notice_period = eval_validate(request.GET["notice_period"])
-    settings = PayrollGeneralSetting.objects.first()
-    settings = settings if settings else PayrollGeneralSetting()
+    settings = PayrollGeneralSetting.objects.filter(company_id=company).first()
+    if not settings:
+        settings = PayrollGeneralSetting(company_id=company)
     settings.notice_period = max(notice_period, 0)
     settings.save()
     messages.success(

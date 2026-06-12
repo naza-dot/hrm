@@ -1938,6 +1938,26 @@ def create_company_features(sender, instance, created, **kwargs):
             )
 
 
+class CurrencySetting(HorillaModel):
+    choices = [
+        ("prefix", _("Prefix")),
+        ("postfix", _("Postfix")),
+    ]
+    currency_symbol = models.CharField(null=True, default="$", max_length=5)
+    position = models.CharField(
+        max_length=15, null=True, choices=choices, default="postfix"
+    )
+    company_id = models.ForeignKey(Company, null=True, on_delete=models.PROTECT)
+    objects = HorillaCompanyManager("company_id")
+
+    class Meta:
+        verbose_name = _("Currency Setting")
+        verbose_name_plural = _("Currency Settings")
+
+    def __str__(self):
+        return f"Currency Setting {self.currency_symbol}"
+
+
 class CompanyInviteToken(models.Model):
     company = models.ForeignKey(
         Company, on_delete=models.CASCADE, related_name="invite_tokens"

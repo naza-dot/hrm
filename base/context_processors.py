@@ -203,7 +203,17 @@ def resignation_request_enabled(request):
         OffboardingGeneralSetting = get_horilla_model_class(
             app_label="offboarding", model="offboardinggeneralsetting"
         )
-        first = OffboardingGeneralSetting.objects.first()
+        try:
+            company = request.user.employee_get.employee_work_info.company_id
+        except Exception:
+            company = None
+        if not company:
+            selected_company_id = request.session.get("selected_company")
+            company = Company.objects.filter(id=selected_company_id).first() if selected_company_id else None
+        if company:
+            first = OffboardingGeneralSetting.objects.filter(company_id=company).first()
+        else:
+            first = OffboardingGeneralSetting.objects.first()
     if first:
         enabled_resignation_request = first.resignation_request
     return {"enabled_resignation_request": enabled_resignation_request}
@@ -211,7 +221,7 @@ def resignation_request_enabled(request):
 
 def timerunner_enabled(request):
     """
-    Check weather resignation_request enabled of not in offboarding
+    Check weather timerunner enabled of not in attendance
     """
     first = None
     enabled_timerunner = True
@@ -219,7 +229,17 @@ def timerunner_enabled(request):
         AttendanceGeneralSetting = get_horilla_model_class(
             app_label="attendance", model="attendancegeneralsetting"
         )
-        first = AttendanceGeneralSetting.objects.first()
+        try:
+            company = request.user.employee_get.employee_work_info.company_id
+        except Exception:
+            company = None
+        if not company:
+            selected_company_id = request.session.get("selected_company")
+            company = Company.objects.filter(id=selected_company_id).first() if selected_company_id else None
+        if company:
+            first = AttendanceGeneralSetting.objects.filter(company_id=company).first()
+        else:
+            first = AttendanceGeneralSetting.objects.first()
     if first:
         enabled_timerunner = first.time_runner
     return {"enabled_timerunner": enabled_timerunner}
@@ -235,7 +255,17 @@ def intial_notice_period(request):
         PayrollGeneralSetting = get_horilla_model_class(
             app_label="payroll", model="payrollgeneralsetting"
         )
-        first = PayrollGeneralSetting.objects.first()
+        try:
+            company = request.user.employee_get.employee_work_info.company_id
+        except Exception:
+            company = None
+        if not company:
+            selected_company_id = request.session.get("selected_company")
+            company = Company.objects.filter(id=selected_company_id).first() if selected_company_id else None
+        if company:
+            first = PayrollGeneralSetting.objects.filter(company_id=company).first()
+        else:
+            first = PayrollGeneralSetting.objects.first()
     if first:
         initial = first.notice_period
     return {"get_initial_notice_period": initial}

@@ -63,6 +63,7 @@ from base.models import (
     ShiftRequest,
     ShiftRequestComment,
     Tags,
+    CurrencySetting,
     TrackLateComeEarlyOut,
     WorkType,
     WorkTypeRequest,
@@ -2875,3 +2876,10 @@ class PenaltyAccountForm(ModelForm):
                 id__in=available_leaves.values_list("leave_type_id", flat=True)
             )
             self.fields["leave_type_id"].queryset = assigned_leave_types
+
+
+class CurrencySettingForm(ModelForm):
+    class Meta:
+        model = CurrencySetting
+        fields = "__all__"
+        exclude = ["company_id"]

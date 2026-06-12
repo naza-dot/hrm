@@ -148,6 +148,7 @@ class EncashmentGeneralSettingsForm(ModelForm):
     class Meta:
         model = EncashmentGeneralSettings
         fields = "__all__"
+        exclude = ["company_id"]
 
 
 class DashboardExport(Form):

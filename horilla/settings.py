@@ -82,7 +82,6 @@ TENANT_APPS = [
     "asset",
     "attendance",
     "payroll",
-    "outlook_auth",
 ]
 
 INSTALLED_APPS = list(dict.fromkeys(SHARED_APPS + TENANT_APPS))
@@ -306,8 +305,7 @@ LOGGING = {
     },
     "loggers": {
         "base.views": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
-        "outlook_auth.views": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
-        "outlook_auth.backends": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+
     },
 }
 

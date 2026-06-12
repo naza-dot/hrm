@@ -3548,23 +3548,34 @@ def encashment_condition_create(request):
         EncashmentGeneralSettings = get_horilla_model_class(
             app_label="payroll", model="encashmentgeneralsettings"
         )
-        instance = (
-            EncashmentGeneralSettings.objects.first()
-            if apps.is_installed("payroll")
-            else QuerySet().none()
-        )
+
+        try:
+            company = request.user.employee_get.employee_work_info.company_id
+        except Exception:
+            company = None
+        if not company:
+            selected_company_id = request.session.get("selected_company")
+            company = Company.objects.filter(id=selected_company_id).first()
+        if not company:
+            company = Company.objects.first()
+
+        instance = EncashmentGeneralSettings.objects.filter(
+            company_id=company
+        ).first()
 
         if request.method == "POST":
             encashment_form = EncashmentGeneralSettingsForm(
                 request.POST, instance=instance
             )
             if encashment_form.is_valid():
+                encashment_form.instance.company_id = company
                 encashment_form.save()
                 messages.success(request, _("Settings updated."))
                 if request.META.get("HTTP_HX_REQUEST"):
                     return HttpResponse()
                 return HorillaRedirect(request)
         else:
+            instance = instance if instance else EncashmentGeneralSettings(company_id=company)
             encashment_form = EncashmentGeneralSettingsForm(instance=instance)
 
         return render(

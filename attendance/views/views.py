@@ -110,6 +110,7 @@ from base.methods import (
 )
 from base.models import (
     AttendanceAllowedIP,
+    Company,
     EmployeeShiftSchedule,
     TrackLateComeEarlyOut,
     WorkType,
@@ -2425,9 +2426,18 @@ def enable_timerunner(request):
     """
     This method is used to enable/disable the timerunner feature
     """
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+    except Exception:
+        company = None
+    if not company:
+        selected_company_id = request.session.get("selected_company")
+        company = Company.objects.filter(id=selected_company_id).first()
+    if not company:
+        company = Company.objects.first()
 
-    time_runner = AttendanceGeneralSetting.objects.first()
-    time_runner = time_runner if time_runner else AttendanceGeneralSetting()
+    time_runner = AttendanceGeneralSetting.objects.filter(company_id=company).first()
+    time_runner = time_runner if time_runner else AttendanceGeneralSetting(company_id=company)
     time_runner.time_runner = "time_runner" in request.GET.keys()
     time_runner.save()
     return HttpResponse("success")

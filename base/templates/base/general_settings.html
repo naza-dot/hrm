@@ -21,6 +21,10 @@
     {% include "attendance/settings/settings.html" %}
 {% endif %}
 
+{% if perms.base.change_currencysetting %}
+    {% include "base/currency_settings.html" %}
+{% endif %}
+
 {% if "payroll"|app_installed and perms.payroll.change_payrollgeneralsetting %}
     {% include "payroll/settings/settings.html" %}
 {% endif %}
@@ -38,10 +42,6 @@
 
 {% if perms.base.view_historytrackingfields %}
     {% include "base/audit_tag/history_tracking_fields.html" %}
-{% endif %}
-
-{% if "payroll"|app_installed and perms.payroll.view_payrollsettings %}
-    {% include "payroll/settings/payroll_settings.html" %}
 {% endif %}
 
 
