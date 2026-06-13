@@ -12,7 +12,7 @@
 				</button>
 			{% endif %}
 		</div>
-		{% if mail_servers %}
+		{% if mail_servers or microsoft_mail_servers %}
 			{% include 'base/mail_server/mail_server_view.html' %}
 		{% else %}
 			<div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">

@@ -1492,14 +1492,18 @@ def add_remove_dynamic_fields(request, **kwargs):
 @permission_required("base.view_dynamicemailconfiguration")
 def mail_server_conf(request):
     mail_servers = DynamicEmailConfiguration.objects.all()
+    microsoft_mail_servers = MicrosoftSSOConfig.objects.exclude(
+        mail_from_email__isnull=True
+    ).exclude(mail_from_email="")
     primary_mail_not_exist = True
-    if DynamicEmailConfiguration.objects.filter(is_primary=True).exists():
+    if DynamicEmailConfiguration.objects.filter(is_primary=True).exists() or MicrosoftSSOConfig.objects.filter(is_primary_mail_server=True).exists():
         primary_mail_not_exist = False
     return render(
         request,
         "base/mail_server/mail_server.html",
         {
             "mail_servers": mail_servers,
+            "microsoft_mail_servers": microsoft_mail_servers,
             "primary_mail_not_exist": primary_mail_not_exist,
         },
     )
@@ -5369,9 +5373,6 @@ def microsoft_sso_settings(request):
             client_id = request.POST.get("client_id", "").strip()
             client_secret = request.POST.get("client_secret", "").strip()
             tenant_id = request.POST.get("tenant_id", "").strip()
-            mail_from_email = request.POST.get("mail_from_email", "").strip() or None
-            mail_display_name = request.POST.get("mail_display_name", "").strip() or None
-            is_primary_mail_server = request.POST.get("is_primary_mail_server") == "true"
 
             if client_id and client_secret and tenant_id:
                 try:
@@ -5383,9 +5384,6 @@ def microsoft_sso_settings(request):
                             "tenant_id": tenant_id,
                             "redirect_uri": redirect_uri,
                             "is_active": True,
-                            "mail_from_email": mail_from_email,
-                            "mail_display_name": mail_display_name,
-                            "is_primary_mail_server": is_primary_mail_server,
                         },
                     )
                     messages.success(request, _("Microsoft SSO settings updated."))

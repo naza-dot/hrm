@@ -14,6 +14,30 @@
         background-color: #fff3cd;
         border-color: #ffeeba;
     }
+
+    .oh-badge--primary-mail {
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 4px;
+        background-color: #31b46e;
+        color: #fff;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+
+    .oh-badge--microsoft {
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 4px;
+        background-color: #0078d4;
+        color: #fff;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
 </style>
 
 {% if primary_mail_not_exist %}
@@ -31,6 +55,7 @@
         }, 800);
     </script>
 {% endif %}
+{% if mail_servers %}
 <div class="oh-sticky-table">
     <div class="oh-sticky-table__table oh-table--sortable">
         <div class="oh-sticky-table__thead">
@@ -81,3 +106,54 @@
         </div>
     </div>
 </div>
+{% endif %}
+
+{% if microsoft_mail_servers %}
+<h6 class="oh-inner-sidebar-content__title mt-4 mb-2" style="font-size: 14px;">
+    <ion-icon name="logo-microsoft" class="me-1"></ion-icon>
+    {% trans "Microsoft Graph Mail" %}
+</h6>
+<div class="oh-sticky-table">
+    <div class="oh-sticky-table__table oh-table--sortable">
+        <div class="oh-sticky-table__thead">
+            <div class="oh-sticky-table__tr">
+                <div class="oh-sticky-table__th" style="width: 350px;">
+                    {% trans 'From Email' %}
+                </div>
+                <div class="oh-sticky-table__th">
+                    {% trans 'Display Name' %}
+                </div>
+                <div class="oh-sticky-table__th">
+                    {% trans 'Company' %}
+                </div>
+                <div class="oh-sticky-table__th"></div>
+            </div>
+        </div>
+        <div class="oh-sticky-table__tbody">
+            {% for server in microsoft_mail_servers %}
+                <div class="oh-sticky-table__tr {% if server.is_primary_mail_server %} highlight-selected {% endif %}" draggable="true">
+                    <div class="oh-sticky-table__td">
+                        {{ server.mail_from_email }}
+                        {% if server.is_primary_mail_server %}
+                            <span class="oh-badge--primary-mail">{% trans "Primary" %}</span>
+                        {% endif %}
+                    </div>
+                    <div class="oh-sticky-table__td">
+                        {{ server.mail_display_name|default:'—' }}
+                        <span class="oh-badge--microsoft">{% trans "Microsoft" %}</span>
+                    </div>
+                    <div class="oh-sticky-table__td">{{ server.company_id }}</div>
+                    <div class="oh-sticky-table__td">
+                        <div class="oh-btn-group">
+                            <a href="{% url 'microsoft-sso-settings' %}"
+                                class="oh-btn oh-btn--light-bkg w-100" title="{% trans 'Configure' %}">
+                                <ion-icon name="settings-outline" role="img" class="md hydrated" aria-label="settings outline"></ion-icon>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
