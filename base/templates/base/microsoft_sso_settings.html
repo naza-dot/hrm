@@ -58,54 +58,67 @@
         </form>
 
         <!-- Mail Configuration -->
-        <div class="oh-card mt-4 p-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
-            <h5 class="oh-inner-sidebar-content__title" style="font-size: 16px;">
-                <ion-icon name="mail-outline" class="me-1"></ion-icon>
-                {% trans "Mail Configuration" %}
-            </h5>
-            <p class="text-muted mt-1" style="font-size: 13px;">
-                {% trans "Configure the sender details when sending emails via the Microsoft Graph API." %}
-            </p>
-            <div class="row mt-2">
-                <div class="col-sm-12 col-md-12 col-lg-4">
-                    <div class="oh-input-group">
-                        <div class="oh-label__info" for="mail_from_email">
-                            <label class="oh-label" for="mail_from_email">{% trans "From Email" %}</label>
+        <form hx-post="{% url 'microsoft-sso-settings' %}" hx-swap="none"
+              hx-on-htmx-after-request="setTimeout(() => { reloadMessage(); }, 100);">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="microsoft_mail">
+            <div class="oh-card mt-4 p-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
+                <h5 class="oh-inner-sidebar-content__title" style="font-size: 16px;">
+                    <ion-icon name="mail-outline" class="me-1"></ion-icon>
+                    {% trans "Mail Configuration" %}
+                </h5>
+                <p class="text-muted mt-1" style="font-size: 13px;">
+                    {% trans "Configure the sender details when sending emails via the Microsoft Graph API." %}
+                </p>
+                <div class="row mt-2">
+                    <div class="col-sm-12 col-md-12 col-lg-4">
+                        <div class="oh-input-group">
+                            <div class="oh-label__info" for="mail_from_email">
+                                <label class="oh-label" for="mail_from_email">{% trans "From Email" %}</label>
+                            </div>
+                            <input type="email" class="oh-input w-100" id="mail_from_email" name="mail_from_email"
+                                   value="{{ config.mail_from_email|default:'' }}"
+                                   placeholder="{% trans 'sender@company.com' %}">
                         </div>
-                        <input type="email" class="oh-input w-100" id="mail_from_email" name="mail_from_email"
-                               value="{{ config.mail_from_email|default:'' }}"
-                               placeholder="{% trans 'sender@company.com' %}">
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-4">
+                        <div class="oh-input-group">
+                            <div class="oh-label__info" for="mail_display_name">
+                                <label class="oh-label" for="mail_display_name">{% trans "Display Name" %}</label>
+                            </div>
+                            <input type="text" class="oh-input w-100" id="mail_display_name" name="mail_display_name"
+                                   value="{{ config.mail_display_name|default:'' }}"
+                                   placeholder="{% trans 'Company Name' %}">
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-4 d-flex align-items-end">
+                        <div class="oh-input-group w-100">
+                            <div class="oh-label__info">
+                                <label class="oh-label">{% trans "Primary Mail Server" %}</label>
+                            </div>
+                            <div class="oh-switch p-0">
+                                <label class="oh-switch__toggle">
+                                    <input type="checkbox" class="oh-switch__checkbox" name="is_primary_mail_server" value="true"
+                                        {% if config.is_primary_mail_server %} checked {% endif %}
+                                        onchange="this.value = this.checked ? 'true' : 'false';">
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1" style="font-size: 12px;">
+                                {% trans "Use Microsoft Graph as the default mail backend for this company." %}
+                            </small>
+                        </div>
                     </div>
                 </div>
-                <div class="col-sm-12 col-md-12 col-lg-4">
-                    <div class="oh-input-group">
-                        <div class="oh-label__info" for="mail_display_name">
-                            <label class="oh-label" for="mail_display_name">{% trans "Display Name" %}</label>
-                        </div>
-                        <input type="text" class="oh-input w-100" id="mail_display_name" name="mail_display_name"
-                               value="{{ config.mail_display_name|default:'' }}"
-                               placeholder="{% trans 'Company Name' %}">
-                    </div>
-                </div>
-                <div class="col-sm-12 col-md-12 col-lg-4 d-flex align-items-end">
-                    <div class="oh-input-group w-100">
-                        <div class="oh-label__info">
-                            <label class="oh-label">{% trans "Primary Mail Server" %}</label>
-                        </div>
-                        <div class="oh-switch p-0">
-                            <label class="oh-switch__toggle">
-                                <input type="checkbox" class="oh-switch__checkbox" name="is_primary_mail_server" value="true"
-                                    {% if config.is_primary_mail_server %} checked {% endif %}
-                                    onchange="this.value = this.checked ? 'true' : 'false';">
-                            </label>
-                        </div>
-                        <small class="text-muted d-block mt-1" style="font-size: 12px;">
-                            {% trans "Use Microsoft Graph as the default mail backend for this company." %}
-                        </small>
+                <div class="row mt-3">
+                    <div class="col-sm-12 col-md-12 col-lg-12 d-flex align-items-end">
+                        <button type="submit" class="oh-btn oh-btn--secondary mt-2 mr-0 oh-btn--w-100-resp">
+                            <ion-icon class="me-1" name="save-outline"></ion-icon>
+                            {% trans "Save Mail Configuration" %}
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </form>
 
         <!-- Redirect URI display card -->
         <div class="oh-card mt-4 p-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">

@@ -5339,29 +5339,25 @@ def microsoft_sso_settings(request):
         )
 
     if request.method == "POST":
-        client_id = request.POST.get("client_id", "").strip()
-        client_secret = request.POST.get("client_secret", "").strip()
-        tenant_id = request.POST.get("tenant_id", "").strip()
-        mail_from_email = request.POST.get("mail_from_email", "").strip() or None
-        mail_display_name = request.POST.get("mail_display_name", "").strip() or None
-        is_primary_mail_server = request.POST.get("is_primary_mail_server") == "true"
+        action = request.POST.get("action", "")
 
-        if client_id and client_secret and tenant_id:
+        if action == "microsoft_mail":
+            mail_from_email = request.POST.get("mail_from_email", "").strip() or None
+            mail_display_name = request.POST.get("mail_display_name", "").strip() or None
+            is_primary_mail_server = request.POST.get("is_primary_mail_server") == "true"
+
             try:
                 MicrosoftSSOConfig.objects.update_or_create(
                     company_id=company,
                     defaults={
-                        "client_id": client_id,
-                        "client_secret": client_secret,
-                        "tenant_id": tenant_id,
-                        "redirect_uri": redirect_uri,
-                        "is_active": True,
                         "mail_from_email": mail_from_email,
                         "mail_display_name": mail_display_name,
                         "is_primary_mail_server": is_primary_mail_server,
                     },
                 )
-                messages.success(request, _("Microsoft SSO settings updated."))
+                messages.success(
+                    request, _("Mail configuration saved successfully.")
+                )
             except (OperationalError, ProgrammingError):
                 messages.error(
                     request,
@@ -5370,10 +5366,41 @@ def microsoft_sso_settings(request):
                     ),
                 )
         else:
-            messages.error(
-                request,
-                _("Please provide Client ID, Client Secret, and Tenant ID."),
-            )
+            client_id = request.POST.get("client_id", "").strip()
+            client_secret = request.POST.get("client_secret", "").strip()
+            tenant_id = request.POST.get("tenant_id", "").strip()
+            mail_from_email = request.POST.get("mail_from_email", "").strip() or None
+            mail_display_name = request.POST.get("mail_display_name", "").strip() or None
+            is_primary_mail_server = request.POST.get("is_primary_mail_server") == "true"
+
+            if client_id and client_secret and tenant_id:
+                try:
+                    MicrosoftSSOConfig.objects.update_or_create(
+                        company_id=company,
+                        defaults={
+                            "client_id": client_id,
+                            "client_secret": client_secret,
+                            "tenant_id": tenant_id,
+                            "redirect_uri": redirect_uri,
+                            "is_active": True,
+                            "mail_from_email": mail_from_email,
+                            "mail_display_name": mail_display_name,
+                            "is_primary_mail_server": is_primary_mail_server,
+                        },
+                    )
+                    messages.success(request, _("Microsoft SSO settings updated."))
+                except (OperationalError, ProgrammingError):
+                    messages.error(
+                        request,
+                        _(
+                            "Microsoft SSO database table is not available yet. Please run migrations or check the database."
+                        ),
+                    )
+            else:
+                messages.error(
+                    request,
+                    _("Please provide Client ID, Client Secret, and Tenant ID."),
+                )
         if request.META.get("HTTP_HX_REQUEST"):
             return HttpResponse()
         return redirect("microsoft-sso-settings")
@@ -5937,10 +5964,10 @@ def microsoft_test_mail(request):
     steps.append({"step": f"Sender: {sender_info or 'Not configured — using app default'}", "success": True})
 
     try:
-        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+        token_url = f"https://login.microsoftonline.com/{config.tenant_id}/oauth2/v2.0/token"
         token_data = {
-            "client_id": client_id,
-            "client_secret": client_secret,
+            "client_id": config.client_id,
+            "client_secret": config.client_secret,
             "scope": "https://graph.microsoft.com/.default",
             "grant_type": "client_credentials",
         }
