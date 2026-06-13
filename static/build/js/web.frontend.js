@@ -3245,7 +3245,7 @@ var Generic = /*#__PURE__*/function () {
       });
       jquery__WEBPACK_IMPORTED_MODULE_0___default()(".oh-permission-table--toggle").on("click", this.collapsePermissionTable.bind(this));
       // Accordion
-      jquery__WEBPACK_IMPORTED_MODULE_0___default()(".oh-accordion-header").on("click", this.toggleAccordion.bind(this));
+      jquery__WEBPACK_IMPORTED_MODULE_0___default()(".oh-accordion-header").not(".oh-inner-sidebar .oh-accordion-header").on("click", this.toggleAccordion.bind(this));
       // Toggle Element
       jquery__WEBPACK_IMPORTED_MODULE_0___default()(".oh-d-toggle").on("click", this.toggleView.bind(this));
       // Hide target
