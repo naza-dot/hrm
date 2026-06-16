@@ -5412,6 +5412,8 @@ def microsoft_sso_settings(request):
     return render(request, "base/microsoft_sso_settings.html", {
         "redirect_uri": redirect_uri,
         "config": config,
+        "session_company_id": request.session.get("microsoft_company_id"),
+        "session_company_name": request.session.get("microsoft_company_name"),
     })
 
 def microsoft_sync_users(request):
@@ -5839,6 +5841,469 @@ def microsoft_sync_users(request):
             "message": f"Failed to sync users: {str(e)}",
             "details": traceback.format_exc()
         }, status=500)
+
+
+def _microsoft_get_token(config):
+    """Get Microsoft Graph API access token via client credentials flow."""
+    import requests
+    token_url = f"https://login.microsoftonline.com/{config.tenant_id}/oauth2/v2.0/token"
+    token_data = {
+        "client_id": config.client_id,
+        "client_secret": config.client_secret,
+        "scope": "https://graph.microsoft.com/.default",
+        "grant_type": "client_credentials",
+    }
+    token_resp = requests.post(token_url, data=token_data, timeout=10)
+    if token_resp.status_code != 200:
+        return None
+    return token_resp.json().get("access_token")
+
+
+def _microsoft_load_config(request):
+    """Load active MicrosoftSSOConfig for the requesting user's company."""
+    from base.models import MicrosoftSSOConfig
+    try:
+        company = request.user.employee_get.employee_work_info.company_id
+        config = MicrosoftSSOConfig.objects.filter(
+            company_id=company, is_active=True
+        ).first()
+    except Exception:
+        config = MicrosoftSSOConfig.objects.filter(is_active=True).first()
+    if not config:
+        config = MicrosoftSSOConfig.objects.filter(is_active=True).first()
+    return config
+
+
+def _fetch_all_microsoft_users(token):
+    """Fetch all users from Microsoft Graph API with pagination."""
+    import requests
+    all_users = []
+    graph_url = "https://graph.microsoft.com/v1.0/users"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    params = {
+        "$select": "id,displayName,givenName,surname,mail,userPrincipalName,jobTitle,department,companyName,officeLocation,mobilePhone,businessPhones,employeeId,employeeType,employeeHireDate",
+        "$top": 999,
+    }
+    while graph_url:
+        response = requests.get(graph_url, headers=headers, params=params, timeout=30)
+        if response.status_code != 200:
+            return None, f"Graph API error: {response.status_code}"
+        data = response.json()
+        all_users.extend(data.get("value", []))
+        graph_url = data.get("@odata.nextLink")
+        params = {}
+    return all_users, None
+
+
+@login_required
+def microsoft_fetch_org(request):
+    """
+    Step 1: Fetch organization details from Microsoft Entra ID.
+    Returns org_name, org_country, and the list of existing companies.
+    """
+    if not request.user.is_superuser:
+        return JsonResponse({"error": "permission_denied"}, status=403)
+
+    import requests
+    from django.http import JsonResponse
+
+    config = _microsoft_load_config(request)
+    if not config:
+        return JsonResponse({
+            "error": "Microsoft SSO not configured",
+            "message": "Please configure Microsoft SSO credentials first"
+        }, status=400)
+
+    token = _microsoft_get_token(config)
+    if not token:
+        return JsonResponse({
+            "error": "token_fetch_failed",
+            "message": "Failed to get access token"
+        }, status=500)
+
+    try:
+        org_url = "https://graph.microsoft.com/v1.0/organization"
+        headers = {"Authorization": f"Bearer {token}"}
+        org_params = {"$select": "displayName,verifiedDomains,countryLetterCode"}
+        org_response = requests.get(org_url, headers=headers, params=org_params, timeout=10)
+
+        org_name = ""
+        org_country = ""
+        if org_response.status_code == 200:
+            org_data = org_response.json()
+            orgs = org_data.get("value", [])
+            if orgs:
+                org = orgs[0]
+                org_name = org.get("displayName") or ""
+                org_country = org.get("countryLetterCode") or ""
+
+        from base.models import Company
+        companies = Company.objects.values("id", "company").order_by("company")
+
+        return JsonResponse({
+            "org_name": org_name,
+            "org_country": org_country,
+            "companies": list(companies),
+        })
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@login_required
+def microsoft_confirm_company(request):
+    """
+    Step 1b: User confirms to create a new company or merge with existing.
+    POST body: { action: 'create'|'merge', org_name, org_country, existing_company_id? }
+    Stores the chosen company in session for subsequent steps.
+    """
+    if not request.user.is_superuser:
+        return JsonResponse({"error": "permission_denied"}, status=403)
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    from django.http import JsonResponse
+    from base.models import Company
+
+    action = request.POST.get("action")
+    org_name = request.POST.get("org_name", "").strip()
+    org_country = request.POST.get("org_country", "")
+
+    if not org_name:
+        return JsonResponse({"error": "Organization name is required"}, status=400)
+
+    if action == "create":
+        target_company, created = Company.objects.get_or_create(
+            company=org_name,
+            defaults={
+                "address": "",
+                "country": org_country,
+                "state": "",
+                "city": "",
+                "zip": "",
+                "hq": False,
+            },
+        )
+    elif action == "merge":
+        existing_id = request.POST.get("existing_company_id")
+        if not existing_id:
+            return JsonResponse({"error": "existing_company_id required for merge"}, status=400)
+        try:
+            target_company = Company.objects.get(id=existing_id)
+        except Company.DoesNotExist:
+            return JsonResponse({"error": "Selected company not found"}, status=404)
+    else:
+        return JsonResponse({"error": "action must be 'create' or 'merge'"}, status=400)
+
+    # Store in session for subsequent steps
+    request.session["microsoft_company_id"] = target_company.id
+    request.session["microsoft_company_name"] = target_company.company
+
+    return JsonResponse({
+        "company_id": target_company.id,
+        "company_name": target_company.company,
+    })
+
+
+@login_required
+def microsoft_fetch_users(request):
+    """
+    Step 2: Fetch all users from Microsoft Entra ID, deduplicate by email against
+    existing Employee records, and return the list of new users.
+    """
+    if not request.user.is_superuser:
+        return JsonResponse({"error": "permission_denied"}, status=403)
+
+    import requests
+    from django.http import JsonResponse
+
+    company_id = request.session.get("microsoft_company_id")
+    if not company_id:
+        return JsonResponse({
+            "error": "No company selected",
+            "message": "Please complete Step 1 (Sync Company) first"
+        }, status=400)
+
+    config = _microsoft_load_config(request)
+    if not config:
+        return JsonResponse({
+            "error": "Microsoft SSO not configured",
+            "message": "Please configure Microsoft SSO credentials first"
+        }, status=400)
+
+    token = _microsoft_get_token(config)
+    if not token:
+        return JsonResponse({
+            "error": "token_fetch_failed",
+            "message": "Failed to get access token"
+        }, status=500)
+
+    all_users, err = _fetch_all_microsoft_users(token)
+    if err:
+        return JsonResponse({"error": err}, status=500)
+
+    # Deduplicate: skip users whose email already exists in Employee table
+    from employee.models import Employee
+    existing_emails = set(
+        Employee.objects.filter(email__isnull=False).values_list("email", flat=True)
+    )
+    existing_emails_lower = {e.lower() for e in existing_emails if e}
+
+    new_users = []
+    seen_emails = set()
+    for user_data in all_users:
+        email = (user_data.get("mail") or user_data.get("userPrincipalName") or "").strip()
+        if not email:
+            continue
+        email_lower = email.lower()
+        if email_lower in existing_emails_lower or email_lower in seen_emails:
+            continue
+        seen_emails.add(email_lower)
+        new_users.append({
+            "id": user_data.get("id"),
+            "displayName": user_data.get("displayName") or "",
+            "givenName": user_data.get("givenName") or "",
+            "surname": user_data.get("surname") or "",
+            "mail": user_data.get("mail") or "",
+            "userPrincipalName": user_data.get("userPrincipalName") or "",
+            "jobTitle": user_data.get("jobTitle") or "",
+            "department": user_data.get("department") or "",
+            "mobilePhone": user_data.get("mobilePhone") or "",
+            "businessPhones": user_data.get("businessPhones") or [],
+            "officeLocation": user_data.get("officeLocation") or "",
+            "employeeId": user_data.get("employeeId") or "",
+            "employeeType": user_data.get("employeeType") or "",
+            "employeeHireDate": user_data.get("employeeHireDate") or "",
+        })
+
+    # Store minimal data in session for Step 3
+    request.session["microsoft_new_users"] = new_users
+
+    return JsonResponse({
+        "total": len(all_users),
+        "new_users": len(new_users),
+        "users": new_users,
+        "company_id": company_id,
+        "company_name": request.session.get("microsoft_company_name", ""),
+    })
+
+
+@login_required
+def microsoft_sync_properties(request):
+    """
+    Step 3: Sync user properties (name, phone, reporting manager) to the database.
+    Creates User, Employee, and EmployeeWorkInformation records for the new users
+    fetched in Step 2, then maps reporting managers.
+    """
+    if not request.user.is_superuser:
+        return JsonResponse({"error": "permission_denied"}, status=403)
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    from django.http import JsonResponse
+    from django.contrib.auth.models import User
+    from employee.models import Employee, EmployeeWorkInformation
+    from base.models import Company, Department, JobPosition, EmployeeType
+
+    company_id = request.session.get("microsoft_company_id")
+    if not company_id:
+        return JsonResponse({
+            "error": "No company selected",
+            "message": "Please complete Step 1 (Sync Company) first"
+        }, status=400)
+
+    try:
+        target_company = Company.objects.get(id=company_id)
+    except Company.DoesNotExist:
+        return JsonResponse({"error": "Selected company not found"}, status=404)
+
+    all_new_users = request.session.get("microsoft_new_users", [])
+    if not all_new_users:
+        return JsonResponse({
+            "error": "No users to sync",
+            "message": "Please complete Step 2 (Fetch Users) first"
+        }, status=400)
+
+    # Filter users based on selection
+    selection = request.POST.get("selection", "all")
+    if selection == "selected":
+        selected_emails_raw = request.POST.get("emails", "")
+        selected_emails = {e.strip().lower() for e in selected_emails_raw.split(",") if e.strip()}
+        new_users = [u for u in all_new_users if (u.get("mail") or u.get("userPrincipalName") or "").lower() in selected_emails]
+        if not new_users:
+            return JsonResponse({"error": "No matching users found for the selected emails"}, status=400)
+    else:
+        new_users = all_new_users
+
+    # Get or refresh users from Entra to have full data including manager info
+    config = _microsoft_load_config(request)
+    if config:
+        token = _microsoft_get_token(config)
+    else:
+        token = None
+
+    # Build a lookup by user id for manager fetch
+    entra_users_by_id = {}
+    if token:
+        all_users, _ = _fetch_all_microsoft_users(token)
+        if all_users:
+            for u in all_users:
+                uid = u.get("id")
+                if uid:
+                    entra_users_by_id[uid] = u
+
+    import requests
+    synced_count = 0
+    errors = []
+    synced_users = []
+
+    for user_data in new_users:
+        try:
+            email = user_data.get("mail") or user_data.get("userPrincipalName")
+            if not email:
+                continue
+
+            display_name = user_data.get("displayName") or ""
+            first_name = user_data.get("givenName") or ""
+            last_name = user_data.get("surname") or ""
+            phone = user_data.get("mobilePhone") or (
+                user_data.get("businessPhones", [None])[0] if user_data.get("businessPhones") else None
+            ) or "0000000000"
+
+            # Ensure we have first and last names
+            if not first_name or not last_name:
+                if display_name:
+                    name_parts = display_name.split()
+                    if not first_name:
+                        first_name = name_parts[0] if name_parts else email.split("@")[0]
+                    if not last_name and len(name_parts) > 1:
+                        last_name = " ".join(name_parts[1:])
+                else:
+                    first_name = email.split("@")[0]
+                    last_name = ""
+
+            # Find or create Django User
+            django_user = User.objects.filter(email=email).first()
+            if django_user:
+                django_user.first_name = first_name[:30]
+                django_user.last_name = last_name[:150]
+                django_user.save()
+            else:
+                base_username = email.split("@")[0]
+                username = base_username
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+                django_user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    first_name=first_name[:30],
+                    last_name=last_name[:150],
+                )
+
+            if not django_user.has_usable_password():
+                django_user.set_unusable_password()
+                django_user.save()
+
+            # Find or create Employee record (use .entire() to bypass HorillaCompanyManager)
+            employee = Employee.objects.entire().filter(employee_user_id=django_user).first()
+            if not employee:
+                employee = Employee.objects.entire().filter(email=email).first()
+
+            if employee:
+                employee.employee_user_id = django_user
+                employee.employee_first_name = first_name[:100]
+                employee.employee_last_name = last_name[:100]
+                employee.email = email
+                employee.phone = phone
+                if not employee.is_active:
+                    employee.is_active = True
+                employee.save()
+            else:
+                employee = Employee(
+                    employee_user_id=django_user,
+                    employee_first_name=first_name[:100],
+                    employee_last_name=last_name[:100],
+                    email=email,
+                    phone=phone,
+                    is_active=True,
+                )
+                employee.save()
+
+            # Get or create EmployeeWorkInformation with the target company
+            # Use .entire() to bypass HorillaCompanyManager company filter
+            work_info = EmployeeWorkInformation.objects.entire().filter(employee_id=employee).first()
+            if work_info:
+                work_info.company_id = target_company
+            else:
+                work_info = EmployeeWorkInformation(employee_id=employee, company_id=target_company)
+            work_info.save()
+
+            synced_count += 1
+            synced_users.append({
+                "email": email,
+                "name": f"{first_name} {last_name}".strip(),
+                "phone": phone,
+                "status": "synced",
+            })
+
+        except Exception as e:
+            import traceback
+            errors.append(f"Error syncing {user_data.get('mail', 'unknown')}: {str(e)}")
+            errors.append(traceback.format_exc())
+            continue
+
+    # Second pass: map reporting managers using Graph API
+    if token and entra_users_by_id:
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        manager_errors = []
+
+        for user_data in new_users:
+            try:
+                user_id = user_data.get("id")
+                if not user_id:
+                    continue
+                email = user_data.get("mail") or user_data.get("userPrincipalName")
+                if not email:
+                    continue
+
+                manager_url = f"https://graph.microsoft.com/v1.0/users/{user_id}/manager"
+                manager_resp = requests.get(manager_url, headers=headers, timeout=10)
+
+                if manager_resp.status_code == 200:
+                    manager_data = manager_resp.json()
+                    manager_email = manager_data.get("mail") or manager_data.get("userPrincipalName")
+                    if manager_email:
+                        try:
+                            employee = Employee.objects.entire().get(email=email)
+                            manager_employee = Employee.objects.entire().get(email=manager_email)
+                            work_info = employee.employee_work_info
+                            work_info.reporting_manager_id = manager_employee
+                            work_info.save()
+                        except Employee.DoesNotExist:
+                            pass
+            except Exception as e:
+                manager_errors.append(f"Error mapping manager for {user_data.get('mail', 'unknown')}: {str(e)}")
+                continue
+
+        if manager_errors:
+            errors.extend(manager_errors[:5])
+
+    # Clean up session
+    if selection == "all":
+        del request.session["microsoft_new_users"]
+
+    return JsonResponse({
+        "success": True,
+        "synced_count": synced_count,
+        "total_users": len(new_users),
+        "company_name": target_company.company,
+        "synced_users": synced_users,
+        "errors": errors if errors else None,
+    })
 
 
 @login_required

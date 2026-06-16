@@ -164,13 +164,51 @@
         </div>
         {% endif %}
 
-        <!-- Sync Users button -->
+        <!-- Three-step sync section -->
         <div class="mt-4">
-            <button id="sync-users-btn" class="oh-btn oh-btn--secondary oh-btn--shadow">
-                <ion-icon class="me-1" name="sync-outline"></ion-icon>
-                {% trans "Sync Users from Entra ID" %}
-            </button>
-            <div id="sync-result" class="mt-3"></div>
+            <h5 class="oh-inner-sidebar-content__title mb-3" style="font-size: 16px;">
+                <ion-icon name="git-branch-outline" class="me-1"></ion-icon>
+                {% trans "Sync from Microsoft Entra ID" %}
+            </h5>
+
+            <!-- Step 1: Sync Company -->
+            <div class="oh-card p-3 mb-3" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <strong>{% trans "1. Sync Company" %}</strong>
+                        <p class="text-muted mb-0" style="font-size: 12px;">{% trans "Fetch the organization from Entra ID and choose to create or merge" %}</p>
+                    </div>
+                    <button id="step1-btn" class="oh-btn oh-btn--secondary oh-btn--small">
+                        <ion-icon class="me-1" name="business-outline"></ion-icon>
+                        {% trans "Sync Company" %}
+                    </button>
+                </div>
+                <div id="step1-result" class="mt-2"></div>
+            </div>
+
+            <!-- Step 2: Fetch Users -->
+            <div class="oh-card p-3 mb-3" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <strong>{% trans "2. Fetch Users" %}</strong>
+                        <p class="text-muted mb-0" style="font-size: 12px;">{% trans "Fetch all users from Entra ID, skip duplicates, preview in table" %}</p>
+                    </div>
+                    <button id="step2-btn" class="oh-btn oh-btn--secondary oh-btn--small" disabled>
+                        <ion-icon class="me-1" name="people-outline"></ion-icon>
+                        {% trans "Fetch Users" %}
+                    </button>
+                </div>
+                <div id="step2-result" class="mt-2"></div>
+            </div>
+
+            <!-- Step 3: Sync Properties (results area only) -->
+            <div class="oh-card p-3 mb-3" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;">
+                <div>
+                    <strong>{% trans "3. Sync Properties" %}</strong>
+                    <p class="text-muted mb-0" style="font-size: 12px;">{% trans "Results from syncing names, phone numbers, and reporting managers" %}</p>
+                </div>
+                <div id="step3-result" class="mt-2"></div>
+            </div>
         </div>
 
         <!-- Test Connection -->
@@ -213,72 +251,312 @@
 </div>
 
 <script>
-    document.getElementById('sync-users-btn').addEventListener('click', function() {
+    // ========== Step 1: Sync Company ==========
+    document.getElementById('step1-btn').addEventListener('click', function() {
         const btn = this;
-        const originalHtml = btn.innerHTML;
+        const resultDiv = document.getElementById('step1-result');
         btn.disabled = true;
-        btn.innerHTML = '<ion-icon class="me-1" name="hourglass-outline"></ion-icon> Syncing...';
+        btn.innerHTML = '<ion-icon class="me-1" name="hourglass-outline"></ion-icon> Fetching...';
 
-        fetch('{% url "microsoft-sync-users" %}', {
+        fetch('{% url "microsoft-fetch-org" %}', {
             method: 'GET',
             credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => response.json())
         .then(data => {
-            const resultDiv = document.getElementById('sync-result');
             if (data.error) {
-                resultDiv.innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated">' +
-                    '<strong>Error:</strong> ' + (data.message || data.error) +
-                    (data.details ? '<br><small>' + data.details + '</small>' : '') +
-                    '</div>';
-            } else if (data.success) {
-                let html = '<div class="oh-alert oh-alert--success oh-alert--animated"><strong>Success!</strong> Synced ' +
-                    data.synced_count + ' users out of ' + data.total_users + ' from Microsoft Entra ID.';
-                if (data.errors && data.errors.length > 0) {
-                    html += '<br><small><strong>Warnings:</strong> ' + data.errors.join('; ') + '</small>';
-                }
-                html += '</div>';
-
-                if (data.users && data.users.length > 0) {
-                    html += '<div class="mt-3"><h6 class="oh-inner-sidebar-content__title">Fetched Users (' + data.users.length + ')</h6>';
-                    html += '<div style="overflow-x: auto;"><table class="oh-sticky-table"><thead class="oh-sticky-table__thead"><tr class="oh-sticky-table__tr">';
-                    html += '<th class="oh-sticky-table__th">Display Name</th><th class="oh-sticky-table__th">Email</th>';
-                    html += '<th class="oh-sticky-table__th">Phone</th><th class="oh-sticky-table__th">Job Title</th>';
-                    html += '</tr></thead><tbody>';
-
-                    data.users.forEach(function(user) {
-                        const displayName = user.displayName || '—';
-                        const email = user.mail || user.userPrincipalName || '—';
-                        const phone = user.mobilePhone || (user.businessPhones && user.businessPhones.length > 0 ? user.businessPhones[0] : '—');
-                        const jobTitle = user.jobTitle || '—';
-
-                        html += '<tr class="oh-sticky-table__tr">';
-                        html += '<td class="oh-sticky-table__td">' + escapeHtml(displayName) + '</td>';
-                        html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(email) + '</small></td>';
-                        html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(phone) + '</small></td>';
-                        html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(jobTitle) + '</small></td>';
-                        html += '</tr>';
-                    });
-
-                    html += '</tbody></table></div></div>';
-                }
-
-                resultDiv.innerHTML = html;
-            } else {
-                resultDiv.innerHTML = '<div class="oh-alert oh-alert--info oh-alert--animated">Fetched ' + (data.users ? data.users.length : 0) + ' users.</div>';
+                resultDiv.innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated mt-2"><strong>Error:</strong> ' + escapeHtml(data.message || data.error) + '</div>';
+                return;
             }
+
+            const orgName = data.org_name || '(unknown)';
+            const orgCountry = data.org_country || '';
+            const companies = data.companies || [];
+
+            let html = '<div class="oh-alert oh-alert--info oh-alert--animated mt-2">';
+            html += '<strong>Organization found:</strong> ' + escapeHtml(orgName);
+            if (orgCountry) html += ' (' + escapeHtml(orgCountry) + ')';
+            html += '</div>';
+
+            html += '<div class="mt-2 p-3" style="background: #fff; border: 1px solid #dee2e6; border-radius: 6px;">';
+            html += '<label class="oh-label d-block mb-2">{% trans "Choose what to do with this organization:" %}</label>';
+
+            html += '<div class="form-check mb-2">';
+            html += '<input class="form-check-input" type="radio" name="company-action" id="action-create" value="create" checked>';
+            html += '<label class="form-check-label" for="action-create">{% trans "Create a new company" %} <small class="text-muted">(' + escapeHtml(orgName) + ')</small></label>';
+            html += '</div>';
+
+            html += '<div class="form-check mb-2">';
+            html += '<input class="form-check-input" type="radio" name="company-action" id="action-merge" value="merge">';
+            html += '<label class="form-check-label" for="action-merge">{% trans "Merge into an existing company" %}</label>';
+            html += '</div>';
+
+            html += '<div id="merge-company-select" class="mt-2" style="display:none;">';
+            html += '<select class="oh-select oh-select--sm w-100" id="existing-company-select">';
+            companies.forEach(function(c) {
+                html += '<option value="' + c.id + '">' + escapeHtml(c.company) + '</option>';
+            });
+            html += '</select></div>';
+
+            html += '<button id="confirm-company-btn" class="oh-btn oh-btn--secondary oh-btn--small mt-3">';
+            html += '<ion-icon class="me-1" name="checkmark-outline"></ion-icon> {% trans "Confirm Company" %}';
+            html += '</button>';
+            html += '</div>';
+
+            resultDiv.innerHTML = html;
+
+            // Toggle merge dropdown visibility
+            document.querySelectorAll('input[name="company-action"]').forEach(function(el) {
+                el.addEventListener('change', function() {
+                    document.getElementById('merge-company-select').style.display =
+                        this.value === 'merge' ? 'block' : 'none';
+                });
+            });
+
+            // Confirm company handler
+            document.getElementById('confirm-company-btn').addEventListener('click', function() {
+                const action = document.querySelector('input[name="company-action"]:checked').value;
+                const formData = new FormData();
+                formData.append('action', action);
+                formData.append('org_name', orgName);
+                formData.append('org_country', orgCountry);
+                if (action === 'merge') {
+                    formData.append('existing_company_id', document.getElementById('existing-company-select').value);
+                }
+
+                this.disabled = true;
+                this.innerHTML = '<ion-icon class="me-1" name="hourglass-outline"></ion-icon> Saving...';
+
+                fetch('{% url "microsoft-confirm-company" %}', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: formData
+                })
+                .then(r => r.json())
+                .then(result => {
+                    if (result.error) {
+                        resultDiv.innerHTML += '<div class="oh-alert oh-alert--danger oh-alert--animated mt-2"><strong>Error:</strong> ' + escapeHtml(result.error) + '</div>';
+                        return;
+                    }
+                    resultDiv.innerHTML = '<div class="oh-alert oh-alert--success oh-alert--animated mt-2">' +
+                        '<strong>Company set:</strong> ' + escapeHtml(result.company_name) +
+                        ' <span class="ms-2">&#9989;</span></div>';
+                    // Enable Step 2
+                    document.getElementById('step2-btn').disabled = false;
+                })
+                .catch(err => {
+                    resultDiv.innerHTML += '<div class="oh-alert oh-alert--danger oh-alert--animated mt-2"><strong>Error:</strong> ' + escapeHtml(err.message) + '</div>';
+                });
+            });
         })
         .catch(err => {
-            document.getElementById('sync-result').innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated"><strong>Fetch Error:</strong> ' + err.message + '</div>';
+            resultDiv.innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated mt-2"><strong>Error:</strong> ' + escapeHtml(err.message) + '</div>';
         })
         .finally(() => {
             btn.disabled = false;
-            btn.innerHTML = originalHtml;
+            btn.innerHTML = '<ion-icon class="me-1" name="business-outline"></ion-icon> {% trans "Sync Company" %}';
         });
     });
+
+    // ========== Page-load: restore persisted company state ==========
+    (function() {
+        const sessionCompanyId = '{{ session_company_id|default:"" }}';
+        const sessionCompanyName = '{{ session_company_name|default:"" }}';
+        if (sessionCompanyId) {
+            const resultDiv = document.getElementById('step1-result');
+            resultDiv.innerHTML = '<div class="oh-alert oh-alert--success oh-alert--animated mt-2">' +
+                '<strong>Company set:</strong> ' + escapeHtml(sessionCompanyName) +
+                ' <span class="ms-2">&#9989;</span></div>';
+            document.getElementById('step2-btn').disabled = false;
+        }
+    })();
+
+    // ========== Step 2: Fetch Users ==========
+    document.getElementById('step2-btn').addEventListener('click', function() {
+        const btn = this;
+        const resultDiv = document.getElementById('step2-result');
+        btn.disabled = true;
+        btn.innerHTML = '<ion-icon class="me-1" name="hourglass-outline"></ion-icon> Fetching...';
+
+        fetch('{% url "microsoft-fetch-users" %}', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                resultDiv.innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated mt-2"><strong>Error:</strong> ' + escapeHtml(data.message || data.error) + '</div>';
+                return;
+            }
+
+            let html = '<div class="oh-alert oh-alert--success oh-alert--animated mt-2">';
+            html += '<strong>Company:</strong> ' + escapeHtml(data.company_name) + ' | ';
+            html += '<strong>Total in Entra:</strong> ' + data.total + ' | ';
+            html += '<strong>New users to sync:</strong> ' + data.new_users;
+            html += '</div>';
+
+            if (data.users && data.users.length > 0) {
+                html += '<div class="mt-3"><h6 class="oh-inner-sidebar-content__title">New Users (' + data.users.length + ')</h6>';
+                html += '<div style="overflow-x: auto; max-height: 400px; overflow-y: auto;"><table class="oh-sticky-table" id="user-table"><thead class="oh-sticky-table__thead"><tr class="oh-sticky-table__tr">';
+                html += '<th class="oh-sticky-table__th" style="width: 40px;"><input type="checkbox" id="select-all-users" checked></th>';
+                html += '<th class="oh-sticky-table__th">Display Name</th><th class="oh-sticky-table__th">Email</th>';
+                html += '<th class="oh-sticky-table__th">Phone</th><th class="oh-sticky-table__th">Job Title</th>';
+                html += '</tr></thead><tbody>';
+
+                data.users.forEach(function(user, index) {
+                    const displayName = user.displayName || '—';
+                    const email = user.mail || user.userPrincipalName || '—';
+                    const safeEmail = email;
+                    const phone = user.mobilePhone || (user.businessPhones && user.businessPhones.length > 0 ? user.businessPhones[0] : '—');
+                    const jobTitle = user.jobTitle || '—';
+
+                    html += '<tr class="oh-sticky-table__tr">';
+                    html += '<td class="oh-sticky-table__td"><input type="checkbox" class="user-checkbox" value="' + escapeHtml(safeEmail) + '" checked></td>';
+                    html += '<td class="oh-sticky-table__td">' + escapeHtml(displayName) + '</td>';
+                    html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(email) + '</small></td>';
+                    html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(phone) + '</small></td>';
+                    html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(jobTitle) + '</small></td>';
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table></div></div>';
+
+                // Buttons row
+                html += '<div class="mt-2 d-flex gap-2">';
+                html += '<button id="sync-all-btn" class="oh-btn oh-btn--success oh-btn--small">';
+                html += '<ion-icon class="me-1" name="cloud-upload-outline"></ion-icon> {% trans "Sync All" %}</button>';
+                html += '<button id="sync-selected-btn" class="oh-btn oh-btn--secondary oh-btn--small" disabled>';
+                html += '<ion-icon class="me-1" name="checkmark-circle-outline"></ion-icon> {% trans "Sync Selected" %}</button>';
+                html += '</div>';
+
+                resultDiv.innerHTML = html;
+
+                // Select-all toggle
+                document.getElementById('select-all-users').addEventListener('change', function() {
+                    document.querySelectorAll('.user-checkbox').forEach(function(cb) {
+                        cb.checked = this.checked;
+                    }, this);
+                    updateSyncSelectedBtn();
+                });
+
+                // Individual checkbox toggle
+                document.querySelectorAll('.user-checkbox').forEach(function(cb) {
+                    cb.addEventListener('change', function() {
+                        const allChecked = document.querySelectorAll('.user-checkbox:checked').length;
+                        document.getElementById('select-all-users').checked =
+                            allChecked === document.querySelectorAll('.user-checkbox').length;
+                        updateSyncSelectedBtn();
+                    });
+                });
+
+                function updateSyncSelectedBtn() {
+                    const checked = document.querySelectorAll('.user-checkbox:checked').length;
+                    document.getElementById('sync-selected-btn').disabled = checked === 0;
+                }
+
+                // Sync All
+                document.getElementById('sync-all-btn').addEventListener('click', function() {
+                    syncUsers('all', null);
+                });
+
+                // Sync Selected
+                document.getElementById('sync-selected-btn').addEventListener('click', function() {
+                    const checked = document.querySelectorAll('.user-checkbox:checked');
+                    const emails = Array.from(checked).map(function(cb) { return cb.value; }).join(',');
+                    syncUsers('selected', emails);
+                });
+
+            } else {
+                html += '<div class="oh-alert oh-alert--info oh-alert--animated mt-2">{% trans "All users already exist in the database. Nothing to sync." %}</div>';
+                resultDiv.innerHTML = html;
+            }
+        })
+        .catch(err => {
+            resultDiv.innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated mt-2"><strong>Error:</strong> ' + escapeHtml(err.message) + '</div>';
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<ion-icon class="me-1" name="people-outline"></ion-icon> {% trans "Fetch Users" %}';
+        });
+    });
+
+    // Shared function: triggers Step 3 sync
+    function syncUsers(selection, emails) {
+        const resultDiv = document.getElementById('step3-result');
+        resultDiv.innerHTML = '<div class="oh-alert oh-alert--info oh-alert--animated mt-2"><ion-icon class="me-1" name="hourglass-outline"></ion-icon> Syncing...</div>';
+
+        const formData = new FormData();
+        formData.append('selection', selection);
+        if (emails) {
+            formData.append('emails', emails);
+        }
+
+        fetch('{% url "microsoft-sync-properties" %}', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                resultDiv.innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated mt-2"><strong>Error:</strong> ' + escapeHtml(data.message || data.error) + '</div>';
+                return;
+            }
+
+            let html = '<div class="oh-alert oh-alert--success oh-alert--animated mt-2">';
+            html += '<strong>Success!</strong> Synced ' + data.synced_count + ' of ' + data.total_users + ' users';
+            if (data.company_name) html += ' to <strong>' + escapeHtml(data.company_name) + '</strong>';
+            html += '.</div>';
+
+            // Show synced users table
+            if (data.synced_users && data.synced_users.length > 0) {
+                html += '<div class="mt-2"><h6 class="oh-inner-sidebar-content__title">{% trans "Synced Users" %}</h6>';
+                html += '<div style="overflow-x: auto; max-height: 300px; overflow-y: auto;"><table class="oh-sticky-table"><thead class="oh-sticky-table__thead"><tr class="oh-sticky-table__tr">';
+                html += '<th class="oh-sticky-table__th">{% trans "Name" %}</th>';
+                html += '<th class="oh-sticky-table__th">{% trans "Email" %}</th>';
+                html += '<th class="oh-sticky-table__th">{% trans "Phone" %}</th>';
+                html += '<th class="oh-sticky-table__th">{% trans "Status" %}</th>';
+                html += '</tr></thead><tbody>';
+
+                data.synced_users.forEach(function(u) {
+                    html += '<tr class="oh-sticky-table__tr">';
+                    html += '<td class="oh-sticky-table__td">' + escapeHtml(u.name) + '</td>';
+                    html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(u.email) + '</small></td>';
+                    html += '<td class="oh-sticky-table__td"><small>' + escapeHtml(u.phone) + '</small></td>';
+                    html += '<td class="oh-sticky-table__td"><span class="text-success">&#9989; ' + escapeHtml(u.status) + '</span></td>';
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table></div></div>';
+            }
+
+            if (data.errors && data.errors.length > 0) {
+                html += '<div class="mt-2"><small><strong>{% trans "Warnings" %}:</strong></small>';
+                html += '<div style="max-height: 150px; overflow-y: auto; font-size: 11px; margin-top: 4px;">';
+                data.errors.forEach(function(e) {
+                    html += '<div class="text-warning">' + escapeHtml(String(e).substring(0, 200)) + '</div>';
+                });
+                html += '</div></div>';
+            }
+
+            resultDiv.innerHTML = html;
+        })
+        .catch(err => {
+            resultDiv.innerHTML = '<div class="oh-alert oh-alert--danger oh-alert--animated mt-2"><strong>Error:</strong> ' + escapeHtml(err.message) + '</div>';
+        });
+    }
+
+    // ========== Step 3 button is no longer used directly — Sync All / Sync Selected replace it ==========
 
     // Test Connection
     document.getElementById('test-connection-btn').addEventListener('click', function() {
