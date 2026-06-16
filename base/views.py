@@ -5569,10 +5569,10 @@ def microsoft_sync_users(request):
             # If organization fetch fails, continue with default name
             pass
 
-        # Create or get HQ company based on tenant with fetched organization data
-        hq_company = Company.objects.filter(hq=True).first()
-        if not hq_company:
-            hq_company, _ = Company.objects.get_or_create(
+        # Determine target company based on who is syncing
+        if request.user.is_saas_admin:
+            # SaaS admin: create a new company from Entra org data
+            target_company, _ = Company.objects.get_or_create(
                 company=org_name,
                 defaults={
                     "address": "",
@@ -5580,9 +5580,17 @@ def microsoft_sync_users(request):
                     "state": "",
                     "city": "",
                     "zip": "",
-                    "hq": True
-                }
+                    "hq": False,
+                },
             )
+        else:
+            # Company admin: use their own company
+            try:
+                target_company = (
+                    request.user.employee_get.employee_work_info.company_id
+                )
+            except Exception:
+                target_company = Company.objects.first()
 
         # Build map of user emails to enhance manager lookups later
         email_to_user_id = {}
@@ -5603,7 +5611,6 @@ def microsoft_sync_users(request):
                 job_title = user_data.get('jobTitle', '')
                 department_name = user_data.get('department', '')
                 office_location = user_data.get('officeLocation', '')
-                company_name = user_data.get('companyName', '')
                 employee_id_entra = user_data.get('employeeId', '')
                 employee_type_entra = user_data.get('employeeType', '')
                 employee_hire_date_entra = user_data.get('employeeHireDate', '')
@@ -5683,7 +5690,7 @@ def microsoft_sync_users(request):
                 work_info, work_created = EmployeeWorkInformation.objects.get_or_create(
                     employee_id=employee,
                     defaults={
-                        'company_id': hq_company,
+                        'company_id': target_company,
                     }
                 )
 
@@ -5692,7 +5699,7 @@ def microsoft_sync_users(request):
                 if job_title:
                     job_position, _ = JobPosition.objects.get_or_create(
                         job_position=job_title,
-                        defaults={'company_id': hq_company}
+                        defaults={'company_id': target_company}
                     )
                 
                 work_info.job_position_id = job_position
@@ -5702,7 +5709,7 @@ def microsoft_sync_users(request):
                 if department_name:
                     department, _ = Department.objects.get_or_create(
                         department=department_name,
-                        defaults={'company_id': hq_company}
+                        defaults={'company_id': target_company}
                     )
                 
                 work_info.department_id = department
@@ -5719,21 +5726,8 @@ def microsoft_sync_users(request):
                 # Map Work Email
                 work_info.email = email
 
-                # Map Company Name to Company
-                company_for_user = hq_company
-                if company_name:
-                    company_for_user, _ = Company.objects.get_or_create(
-                        company=company_name,
-                        defaults={
-                            'address': '',
-                            'country': '',
-                            'state': '',
-                            'city': '',
-                            'zip': '',
-                            'hq': False
-                        }
-                    )
-                work_info.company_id = company_for_user
+                # All synced users go under the target company
+                work_info.company_id = target_company
 
                 # Map Employee ID (Entra ID's employeeId) to badge_id
                 if employee_id_entra:
@@ -5747,8 +5741,8 @@ def microsoft_sync_users(request):
                         employee_type=employee_type_entra
                     )
                     # Add company to the employee type if not already there
-                    if company_for_user not in employee_type.company_id.all():
-                        employee_type.company_id.add(company_for_user)
+                    if target_company not in employee_type.company_id.all():
+                        employee_type.company_id.add(target_company)
                 
                 work_info.employee_type_id = employee_type
 
@@ -5834,7 +5828,7 @@ def microsoft_sync_users(request):
             "synced_count": synced_count,
             "total_users": len(all_users),
             "message": f"Successfully synced {synced_count} users from Microsoft Entra ID",
-            "hq_company": hq_company.company,
+            "target_company": target_company.company,
             "errors": errors if errors else None
         })
 

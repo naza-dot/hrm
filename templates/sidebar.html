@@ -109,6 +109,19 @@
                     <span>{% trans "Dashboard" %}</span>
                 </a>
             </li>
+            {% if request.user.is_saas_admin %}
+            <li class="oh-sidebar__menu-item" x-data="{ isOpen: getOpenState('saasAdminNav') }">
+                <a href="{% url 'saas-admin-dashboard' %}" onclick="window.location.href=this.href; return false;"
+                    class="oh-sidebar__menu-link" data-id="saasAdminNav"
+                    x-on:click.prevent="isOpen = !isOpen; saveOpenState('saasAdminNav', isOpen)"
+                    x-bind:class="isOpen ? 'oh-sidebar__menu-link--active' : ''">
+                    <div class="oh-sidebar__menu-icon">
+                        <svg fill="#ffffff" height="20" width="24" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><g><g><path d="M437.333,64H74.667C33.536,64,0,97.536,0,138.667v234.667C0,414.464,33.536,448,74.667,448h362.667 C478.464,448,512,414.464,512,373.333V138.667C512,97.536,478.464,64,437.333,64z M448,224H298.667v-85.333H448V224z M298.667,266.667H448v85.333H298.667V266.667z M64,138.667c0-5.888,4.779-10.667,10.667-10.667h181.333v320H74.667 c-5.888,0-10.667-4.779-10.667-10.667V138.667z M437.333,405.333H298.667v-85.333H448v74.667 C448,400.554,443.221,405.333,437.333,405.333z"></path></g></g></svg>
+                    </div>
+                    <span>{% trans "SaaS Admin" %}</span>
+                </a>
+            </li>
+            {% endif %}
             {% for menues in sidebar %}
                 {% with app_name=menues.app|lower %}
                 {% if request.user.is_saas_admin or app_name not in featured_apps or app_name in enabled_features %}
