@@ -1,17 +1,16 @@
-// -----------------------------------------------------------------------------
-// This file contains all styles related to the button component.
-// -----------------------------------------------------------------------------
 .oh-btn {
-  display: block;
-  border: none;
-  border-radius: 0rem;
-  padding: 0.8rem 1.25rem;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.1rem;
   cursor: pointer;
   color: $button-text-grey;
+  background-color: $brand-color;
+  font-size: 0.85rem;
+  font-weight: 500;
+  @include oh-transition;
 
   @media (max-width: 575.98px) {
     font-size: 0.8rem !important;
@@ -23,9 +22,8 @@
 
   &:focus,
   &:focus-visible {
-    outline: $brand-color solid 2px;
-    border-radius: 0;
-    border: none;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba($secondary-color, 0.4);
   }
 
   &:disabled {
@@ -35,12 +33,13 @@
 }
 
 .oh-btn--shadow {
-  filter: drop-shadow(0px 1px 4px rgba(0, 0, 0, 0.1));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .oh-btn--sq-sm {
   width: 28px;
   height: 28px;
+  padding: 0;
 }
 
 .oh-btn--inline {
@@ -49,27 +48,27 @@
 
 .oh-btn--transparent {
   background-color: transparent;
-  color: rgba($text-color, 0.8);
+  color: $light-text-color;
 
   &:hover,
   &:focus,
   &:focus-visible {
     background-color: transparent;
     border: none;
-    color: rgba($text-color, 1);
+    color: $text-color;
   }
 }
 
 .oh-btn--secondary {
   background-color: $secondary-color;
-  color: $white;
+  color: $black;
   text-decoration: none;
 
   &:hover,
   &:focus,
   &:focus-visible {
     background-color: $secondary-color-dark;
-    color: white;
+    color: $text-color;
     text-decoration: none;
   }
 
@@ -85,7 +84,7 @@
 
   &:hover {
     background-color: $secondary-color;
-    color: $white;
+    color: $black;
   }
 
   &:focus,
@@ -98,7 +97,7 @@
 
 .oh-btn--success {
   background-color: $success-color;
-  color: $white;
+  color: $black;
 
   &:hover,
   &:focus,
@@ -122,38 +121,41 @@
 
 .oh-btn--danger-outline {
   color: $danger-color;
+  background-color: transparent;
+  border: 1px solid $danger-color;
 
   &:hover,
   &:focus,
   &:focus-visible {
-    color: $danger-color-dark;
+    background-color: $danger-color;
+    color: $white;
     text-decoration: none;
   }
 }
 
 .oh-btn--primary {
-  background-color: $brand-color;
-  color: $white;
+  background-color: $secondary-color;
+  color: $black;
 
   &:hover,
   &:focus,
   &:focus-visible {
-    background-color: $brand-color-dark;
-    color: $white;
+    background-color: $secondary-color-dark;
+    color: $text-color;
     text-decoration: none;
   }
 }
 
 .oh-btn--primary-outline {
   background-color: transparent;
-  border: 1px solid $brand-color;
-  color: $brand-color;
+  border: 1px solid $secondary-color;
+  color: $secondary-color;
 
   &:hover,
   &:focus,
   &:focus-visible {
-    background-color: $brand-color;
-    color: $white;
+    background-color: $secondary-color;
+    color: $black;
   }
 }
 
@@ -166,7 +168,7 @@
   &:focus,
   &:focus-visible {
     background-color: $secondary-color;
-    color: $white;
+    color: $black;
   }
 }
 
@@ -179,11 +181,9 @@
   &:focus,
   &:focus-visible {
     background-color: $white;
-    color: hsl(8,77%,56%);
+    color: $secondary-color;
   }
 }
-
-
 
 .oh-btn--warning-outline {
   background-color: transparent;
@@ -194,7 +194,7 @@
   &:focus,
   &:focus-visible {
     background-color: $yellow;
-    color: $text-color;
+    color: $black;
   }
 }
 
@@ -207,7 +207,7 @@
   &:focus,
   &:focus-visible {
     background-color: $success-color;
-    color: $white;
+    color: $black;
   }
 }
 
@@ -239,13 +239,13 @@
 
 .oh-btn--warning {
   background-color: $yellow;
-  color: $text-color;
+  color: $black;
 
   &:hover,
   &:focus,
   &:focus-visible {
     background-color: $yellow-dark;
-    color: $text-color;
+    color: $black;
     text-decoration: none;
   }
 }
@@ -268,13 +268,13 @@
 }
 
 .oh-btn--small {
-  font-size: 0.9rem;
-  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.85rem;
 }
 
 .oh-btn--x-small {
-  font-size: 0.8rem;
-  padding: 0.5rem 0.8rem;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
 }
 
 .oh-btn--f-md {
@@ -289,6 +289,8 @@
 
 .oh-btn--secondary-link {
   color: $secondary-color;
+  background: transparent;
+  padding: 0;
 
   &:hover,
   &:focus,
@@ -300,6 +302,8 @@
 
 .oh-btn--danger-link {
   color: $danger-color;
+  background: transparent;
+  padding: 0;
 
   &:hover,
   &:focus,
@@ -310,34 +314,36 @@
 }
 
 .oh-btn--light {
-  background-color: $background-color;
+  background-color: $brand-color-dark;
   display: inline-flex;
   justify-content: center;
   align-items: center;
   color: $secondary-color;
-
-  &:hover,
-  &:focus,
-  &:focus-visible {
-    text-decoration: none;
-    color: $secondary-color-dark;
-    background-color: $border-light-color;
-  }
-}
-
-.oh-btn--light-dark-text {
-  background-color: $background-color;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  color: $text-color;
+  border: 1px solid $border-color;
 
   &:hover,
   &:focus,
   &:focus-visible {
     text-decoration: none;
     color: $text-color;
-    background-color: $border-light-color;
+    background-color: $brand-color-light;
+  }
+}
+
+.oh-btn--light-dark-text {
+  background-color: $brand-color-dark;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  color: $text-color;
+  border: 1px solid $border-color;
+
+  &:hover,
+  &:focus,
+  &:focus-visible {
+    text-decoration: none;
+    color: $text-color;
+    background-color: $brand-color-light;
   }
 }
 
@@ -354,14 +360,16 @@
 }
 
 .oh-btn--view {
-  background-color: $white-color;
+  background-color: transparent;
   border: none;
+  color: $light-text-color;
 
   &:hover,
   &:focus,
   &:focus-visible {
-    background-color: $background-color;
+    background-color: $brand-color-light;
     outline: none;
+    color: $text-color;
   }
 }
 
@@ -373,11 +381,13 @@
 .oh-btn-group {
   display: flex;
   align-items: center;
-  border: 1px solid $border-light-color;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .oh-btn-group > * {
-  border-right: 1px solid $border-light-color;
+  border-right: 1px solid $border-color;
 
   &:last-child {
     border-right: none;
@@ -385,10 +395,10 @@
 }
 
 .oh-btn--light-bkg {
-  background-color: $background-color !important;
+  background-color: $brand-color-dark !important;
 
   &:hover {
-    background-color: $light-grey !important;
+    background-color: $brand-color-light !important;
   }
 }
 
@@ -401,9 +411,10 @@
   border: none;
   border-radius: 25px;
   padding: 1rem 1.5rem;
-  background-color: $white;
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 3px 8px;
+  background-color: $brand-color;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
   transition: all 0.3s ease-in-out;
+  color: $text-color;
 
   &:hover {
     transition: all 0.3s ease-in-out;
@@ -431,6 +442,7 @@
   &:focus,
   &:focus-visible {
     outline: none;
+    box-shadow: none;
   }
 }
 
@@ -461,12 +473,12 @@
 .oh-btn--chat-send {
   &::after {
     content: "";
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon s-ion-icon' fill='darkgrey' viewBox='0 0 512 512'%3E%3Cpath d='M16 464l480-208L16 48v160l320 48-320 48z'%3E%3C/path%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon s-ion-icon' fill='%239ca3af' viewBox='0 0 512 512'%3E%3Cpath d='M16 464l480-208L16 48v160l320 48-320 48z'%3E%3C/path%3E%3C/svg%3E");
   }
 
   &:hover {
     &::after {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon s-ion-icon' fill='grey' viewBox='0 0 512 512'%3E%3Cpath d='M16 464l480-208L16 48v160l320 48-320 48z'%3E%3C/path%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon s-ion-icon' fill='%23ffffff' viewBox='0 0 512 512'%3E%3Cpath d='M16 464l480-208L16 48v160l320 48-320 48z'%3E%3C/path%3E%3C/svg%3E");
     }
   }
 }
@@ -478,13 +490,13 @@
     content: "";
     width: 22px;
     height: 22px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath fill='none' d='M0 0h24v24H0z'%3E%3C/path%3E%3Cpath d='M14.8287 7.75737L9.1718 13.4142C8.78127 13.8047 8.78127 14.4379 9.1718 14.8284C9.56232 15.219 10.1955 15.219 10.586 14.8284L16.2429 9.17158C17.4144 8.00001 17.4144 6.10052 16.2429 4.92894C15.0713 3.75737 13.1718 3.75737 12.0002 4.92894L6.34337 10.5858C4.39075 12.5384 4.39075 15.7042 6.34337 17.6569C8.29599 19.6095 11.4618 19.6095 13.4144 17.6569L19.0713 12L20.4855 13.4142L14.8287 19.0711C12.095 21.8047 7.66283 21.8047 4.92916 19.0711C2.19549 16.3374 2.19549 11.9053 4.92916 9.17158L10.586 3.51473C12.5386 1.56211 15.7045 1.56211 17.6571 3.51473C19.6097 5.46735 19.6097 8.63317 17.6571 10.5858L12.0002 16.2427C10.8287 17.4142 8.92916 17.4142 7.75759 16.2427C6.58601 15.0711 6.58601 13.1716 7.75759 12L13.4144 6.34316L14.8287 7.75737Z' fill='rgba(169,169,169,1)'%3E%3C/path%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath fill='none' d='M0 0h24v24H0z'%3E%3C/path%3E%3Cpath d='M14.8287 7.75737L9.1718 13.4142C8.78127 13.8047 8.78127 14.4379 9.1718 14.8284C9.56232 15.219 10.1955 15.219 10.586 14.8284L16.2429 9.17158C17.4144 8.00001 17.4144 6.10052 16.2429 4.92894C15.0713 3.75737 13.1718 3.75737 12.0002 4.92894L6.34337 10.5858C4.39075 12.5384 4.39075 15.7042 6.34337 17.6569C8.29599 19.6095 11.4618 19.6095 13.4144 17.6569L19.0713 12L20.4855 13.4142L14.8287 19.0711C12.095 21.8047 7.66283 21.8047 4.92916 19.0711C2.19549 16.3374 2.19549 11.9053 4.92916 9.17158L10.586 3.51473C12.5386 1.56211 15.7045 1.56211 17.6571 3.51473C19.6097 5.46735 19.6097 8.63317 17.6571 10.5858L12.0002 16.2427C10.8287 17.4142 8.92916 17.4142 7.75759 16.2427C6.58601 15.0711 6.58601 13.1716 7.75759 12L13.4144 6.34316L14.8287 7.75737Z' fill='rgba(156,163,175,1)'%3E%3C/path%3E%3C/svg%3E");
   }
 
   &:hover {
     &::after {
       content: "";
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath fill='none' d='M0 0h24v24H0z'%3E%3C/path%3E%3Cpath d='M14.8287 7.75737L9.1718 13.4142C8.78127 13.8047 8.78127 14.4379 9.1718 14.8284C9.56232 15.219 10.1955 15.219 10.586 14.8284L16.2429 9.17158C17.4144 8.00001 17.4144 6.10052 16.2429 4.92894C15.0713 3.75737 13.1718 3.75737 12.0002 4.92894L6.34337 10.5858C4.39075 12.5384 4.39075 15.7042 6.34337 17.6569C8.29599 19.6095 11.4618 19.6095 13.4144 17.6569L19.0713 12L20.4855 13.4142L14.8287 19.0711C12.095 21.8047 7.66283 21.8047 4.92916 19.0711C2.19549 16.3374 2.19549 11.9053 4.92916 9.17158L10.586 3.51473C12.5386 1.56211 15.7045 1.56211 17.6571 3.51473C19.6097 5.46735 19.6097 8.63317 17.6571 10.5858L12.0002 16.2427C10.8287 17.4142 8.92916 17.4142 7.75759 16.2427C6.58601 15.0711 6.58601 13.1716 7.75759 12L13.4144 6.34316L14.8287 7.75737Z' fill='rgba(91,91,91,1)'%3E%3C/path%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath fill='none' d='M0 0h24v24H0z'%3E%3C/path%3E%3Cpath d='M14.8287 7.75737L9.1718 13.4142C8.78127 13.8047 8.78127 14.4379 9.1718 14.8284C9.56232 15.219 10.1955 15.219 10.586 14.8284L16.2429 9.17158C17.4144 8.00001 17.4144 6.10052 16.2429 4.92894C15.0713 3.75737 13.1718 3.75737 12.0002 4.92894L6.34337 10.5858C4.39075 12.5384 4.39075 15.7042 6.34337 17.6569C8.29599 19.6095 11.4618 19.6095 13.4144 17.6569L19.0713 12L20.4855 13.4142L14.8287 19.0711C12.095 21.8047 7.66283 21.8047 4.92916 19.0711C2.19549 16.3374 2.19549 11.9053 4.92916 9.17158L10.586 3.51473C12.5386 1.56211 15.7045 1.56211 17.6571 3.51473C19.6097 5.46735 19.6097 8.63317 17.6571 10.5858L12.0002 16.2427C10.8287 17.4142 8.92916 17.4142 7.75759 16.2427C6.58601 15.0711 6.58601 13.1716 7.75759 12L13.4144 6.34316L14.8287 7.75737Z' fill='rgba(255,255,255,1)'%3E%3C/path%3E%3C/svg%3E");
     }
   }
 }
@@ -504,19 +516,24 @@
 }
 
 .oh-hover-btn {
-  border: 2px solid rgba($text-color, 1);
+  border: 1px solid $border-color;
   background-color: transparent;
-  border-radius: 3px;
+  border-radius: 6px;
   padding: 0.15rem 0.4rem;
+  color: $light-text-color;
+  @include oh-transition;
 
   &:hover {
-    background-color: $border-light-color;
+    background-color: $brand-color-light;
+    color: $text-color;
   }
 }
-.oh-hover-btn-container{
+
+.oh-hover-btn-container {
   position: relative;
   display: inline-block;
-  &::before{
+
+  &::before {
     content: "";
     display: block;
     background-color: transparent;
@@ -526,26 +543,27 @@
     bottom: 100%;
   }
 }
+
 .oh-hover-btn__small {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: $white;
-  border: 1px solid $border-light-color;
-  box-shadow: rgba(17, 17, 26, 0.05) 0px 4px 16px,
-    rgba(17, 17, 26, 0.05) 0px 8px 32px;
+  background-color: $brand-color;
+  border: 1px solid $border-color;
+  box-shadow: 0 4px 16px rgba(17, 17, 26, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s linear;
+  @include oh-transition;
+
   &:hover {
     background-color: $secondary-color;
-    border: 1px solid $secondary-color-dark;
-    color: $white-color;
-    transition: all 0.2s linear;
-    transform: scale(105%);
+    border-color: $secondary-color-dark;
+    color: $black;
+    transform: scale(1.05);
   }
 }
+
 .oh-hover-btn-drawer {
   align-items: center;
   position: absolute;
@@ -559,8 +577,8 @@
   opacity: 0;
 }
 
-.oh-hover-btn-container{
-  &:hover{
+.oh-hover-btn-container {
+  &:hover {
     .oh-hover-btn-drawer {
       display: flex;
       visibility: visible;

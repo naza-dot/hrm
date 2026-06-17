@@ -1,13 +1,13 @@
 .oh-sidebar {
-  background-color: $brand-color;
-  color: $white;
+  background-color: $sidebar-color;
+  color: $text-color;
   max-width: 230px;
   min-height: 100vh;
   height: 100%;
   overflow-y: auto;
-  // position: fixed;
   left: 0;
   z-index: 99;
+  border-right: 1px solid $border-color;
 }
 
 .oh-sidebar__company {
@@ -15,7 +15,7 @@
   grid-template-columns: 1fr 4fr auto;
   align-items: center;
   padding: 25px 20px;
-  border-bottom: 2px solid rgba($white, 0.15);
+  border-bottom: 1px solid $border-color;
   width: 230px;
 
   div {
@@ -32,8 +32,10 @@
   align-items: center;
   justify-content: center;
   background-color: $secondary-color;
+  color: $black;
   font-size: 1.25rem;
-  border-radius: 0.15rem;
+  border-radius: 8px;
+  font-weight: bold;
 }
 
 .oh-sidebar__company-details {
@@ -42,23 +44,24 @@
 }
 
 .oh-sidebar__company-title {
-  color: $white;
+  color: $text-color;
   font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .oh-sidebar__company-link {
   font-size: 0.7rem;
-  color: rgba($white, 0.7);
+  color: $light-text-color;
 
   &:hover {
-    color: rgba($white, 0.9);
+    color: $text-color;
     text-decoration: none;
   }
 
   &:active,
   &:focus,
   &:focus-visible {
-    color: $white;
+    color: $text-color;
     text-decoration: none;
   }
 }
@@ -76,33 +79,32 @@
 .oh-sidebar__menu-link {
   display: grid;
   grid-template-columns: auto 1fr;
-  color: $white;
+  color: $light-text-color;
   opacity: 1;
-  padding-left: 20px;
-  padding-right: 20px;
-  padding: 0.85rem;
-  border-radius: 5px;
-  margin-left: 20px;
-  margin-right: 20px;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin: 0 12px;
   width: auto;
+  @include oh-transition;
 
   &:hover {
-    color: $white;
+    color: $text-color;
     text-decoration: none;
-    opacity: 0.7;
+    background-color: $brand-color-light;
   }
 
   &:active,
   &:focus,
   &:focus-visible {
-    color: $white;
+    color: $text-color;
     text-decoration: none;
   }
 }
 
 .oh-sidebar__menu-link--active {
-  color: $white;
+  color: $text-color;
   background-color: $brand-color-light;
+  border-left: 3px solid $secondary-color;
 }
 
 .oh-sidebar__menu-icon {
@@ -111,7 +113,7 @@
 
 .oh-sidebar__submenu {
   padding: 17px 25px;
-  background-color: $brand-color;
+  background-color: $sidebar-color;
   width: 230px;
 }
 
@@ -136,13 +138,13 @@
 }
 
 .oh-sidebar__submenu-link {
-  color: rgba($white, 0.7);
+  color: $light-text-color;
 
   &:hover,
   &:focus,
   &:focus-visible,
   &:visited {
-    color: rgba($white, 1);
+    color: $text-color;
     text-decoration: none;
   }
 }
@@ -167,22 +169,20 @@
   transform: translateX(-100%);
 }
 
-/* ===================================
-*         Activity Sidebar
-* ================================== */
 .oh-activity-sidebar {
   position: fixed;
   top: 0;
   right: 0;
-  background-color: $white;
+  background-color: $brand-color;
   height: 100%;
   min-height: 100vh;
   width: 50%;
   max-width: 1000px;
-  box-shadow: rgba(0, 0, 0, 0.1) -4px 9px 25px -6px;
+  box-shadow: -4px 9px 25px -6px rgba(0, 0, 0, 0.5);
   padding: 2rem;
   display: none;
   z-index: 15;
+  border-left: 1px solid $border-color;
 
   @media (max-width: 767.98px) {
     width: 95%;
@@ -217,13 +217,12 @@
 }
 
 .oh-activity-sidebar__qa-item {
-  background-color: $white;
+  background-color: $brand-color-dark;
   padding: 1.25rem;
-  border-radius: 0.5rem;
-  border: 1px solid $border-light-color;
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
-    rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
-  transition: background-color 0.4s ease-in-out;
+  border-radius: 8px;
+  border: 1px solid $border-color;
+  @include oh-shadow;
+  @include oh-transition;
   margin: 1rem auto;
 
   &:last-child {
@@ -231,8 +230,7 @@
   }
 
   &:hover {
-    background-color: rgba($border-light-color, 0.4);
-    transition: background-color 0.4s ease-in-out;
+    background-color: $brand-color-light;
     cursor: pointer;
   }
 }
@@ -248,7 +246,6 @@
   margin-top: 0.35rem;
 }
 
-// List card image height fix (height: 1000px)
 span.oh-activity-sidebar__a img {
   height: unset !important;
 }
@@ -257,16 +254,13 @@ span.oh-activity-sidebar__a img {
   &:hover {
     cursor: pointer;
     opacity: 0.6;
-    transition: all 0.4s ease-in-out;
+    @include oh-transition;
   }
 }
 
-/* ===================================
-*         Inner Sidebar
-* ================================== */
 .oh-inner-sidebar {
   width: 100%;
-  border-right: 1px solid $border-light-color;
+  border-right: 1px solid $border-color;
   padding: 1.5rem 1rem;
 
   @media (max-width: 991.98px) {
@@ -277,7 +271,7 @@ span.oh-activity-sidebar__a img {
 .oh-inner-sidebar-toggle {
   display: none;
   background-color: transparent;
-  border-bottom: 1px solid $border-light-color;
+  border-bottom: 1px solid $border-color;
   margin-bottom: 1.5rem;
   padding-top: 0;
 
@@ -286,7 +280,7 @@ span.oh-activity-sidebar__a img {
   &:focus-visible {
     background-color: transparent;
     color: $secondary-color-dark;
-    border-bottom: 1px solid $border-light-color;
+    border-bottom: 1px solid $border-color;
   }
 
   @media (max-width: 991.98px) {
@@ -314,20 +308,23 @@ span.oh-activity-sidebar__a img {
   display: block;
   padding: 0.7rem;
   width: 100%;
+  color: $light-text-color;
+  @include oh-transition;
+  border-radius: 6px;
 
   &:hover,
   &:focus,
   &:focus-visible {
-    color: $secondary-color;
+    color: $text-color;
+    background-color: $brand-color-light;
     text-decoration: none;
   }
 }
 
 .oh-inner-sidebar__link--active {
-  background-color: #fff6f4;
-  color: $secondary-color;
-  border: solid 1px;
-  border-radius: 5px;
+  background-color: $brand-color-light;
+  color: $text-color;
+  border: 1px solid $border-color;
 }
 
 .oh-inner-sidebar-content {
@@ -337,7 +334,7 @@ span.oh-activity-sidebar__a img {
 
 .oh-inner-sidebar-content__header {
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid $border-light-color;
+  border-bottom: 1px solid $border-color;
   margin-bottom: 1rem;
 }
 
@@ -348,15 +345,12 @@ span.oh-activity-sidebar__a img {
 
 .oh-inner-sidebar-content__footer {
   padding-top: 1rem;
-  border-top: 1px solid $border-light-color;
+  border-top: 1px solid $border-color;
   margin-top: 1rem;
   display: flex;
   justify-content: flex-end;
 }
 
-/* =================================
-*        COLLAPSED SIDEBAR
-* ================================ */
 .oh-wrapper-main--closed #sidebar {
   @media (max-width: 767.98px) {
     display: none;

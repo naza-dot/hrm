@@ -4,12 +4,17 @@ input[type="checkbox"] {
 
 .oh-input {
   border: 1px solid $border-color;
-  border-radius: 0rem;
-  padding: 0.8rem 1.25rem;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
   color: $text-color;
+  background-color: $brand-color-dark;
+  @include oh-transition;
 
   &:read-only {
     border: none;
+    background-color: transparent;
+    padding-left: 0;
+
     &:focus,
     &:focus-visible {
       outline: none;
@@ -17,6 +22,7 @@ input[type="checkbox"] {
     }
   }
 }
+
 .oh-input,
 select {
   &::placeholder {
@@ -28,100 +34,127 @@ select {
 
   &:focus,
   &:focus-visible {
-    outline: $brand-color solid 1px;
-    border: 1px solid $brand-color !important;
+    outline: none;
+    border-color: $secondary-color !important;
+    box-shadow: 0 0 0 2px rgba($secondary-color, 0.2);
   }
 }
+
 .oh-input--textarea {
   width: 100%;
   padding: 0.8rem 1.25rem !important;
 }
+
 .oh-input:disabled {
   background-color: transparent;
   padding-left: 0px;
   padding-right: 0px;
+  opacity: 0.5;
 }
+
 .oh-input--small {
   padding: 0.25rem 0.8rem;
   font-size: 0.85rem;
 }
+
 .oh-input--filter,
-.oh-dropdown__filter-body
-  .oh-select--sm
-  + .select2-container
-  .select2-selection--single {
+.oh-dropdown__filter-body .oh-select--sm + .select2-container .select2-selection--single {
   font-size: 0.85rem !important;
   height: 28px !important;
 }
+
 .oh-input--res-height {
   height: 38px;
 }
+
 .oh-input--block {
   width: 100%;
 }
+
 .oh-input__icon {
   padding-left: 28px;
 }
+
 .oh-input-group {
   position: relative;
 }
+
 .oh-input-group__icon {
   position: relative;
   color: $icon-grey;
 }
+
 .oh-input-group__icon--left {
   top: 3px;
   left: 30px;
 }
+
 .oh-input__search-group {
   @media (max-width: 1000px) {
     display: none;
     position: absolute;
     padding: 15px;
-    background: white;
+    background: $brand-color;
     z-index: 99;
     right: 0;
     top: 150px;
-    border-radius: 0rem;
+    border-radius: 8px;
+    border: 1px solid $border-color;
   }
 }
+
 .oh-input__search-group--show {
   @media (max-width: 1000px) {
     display: block !important;
   }
 }
+
 .oh-select {
   border: 1px solid $border-color;
   padding: 0.3rem 0.8rem 0.3rem 0.3rem;
-  border-radius: 0rem;
-  background-color: #fff;
+  border-radius: 6px;
+  background-color: $brand-color-dark;
+  color: $text-color;
+  @include oh-transition;
+
+  &:focus {
+    border-color: $secondary-color;
+    outline: none;
+  }
 }
+
 .oh-select--sm,
 .oh-select--xs-forced {
   font-size: 0.8rem;
   padding-top: 0.25rem;
 }
-.oh-select--xs-forced
-  + .select2-container
-  .select2-selection.select2-selection--single {
+
+.oh-select--xs-forced + .select2-container .select2-selection.select2-selection--single {
   height: 29.03px !important;
   font-size: 0.8rem !important;
 }
+
 .oh-select--xs + .select2-container .select2-selection--single {
   height: 29.03px !important;
   font-size: 0.8rem !important;
 }
+
 .oh-select--xs + .select2.select2-container .select2-selection__choice {
   font-size: 0.8rem !important;
 }
+
 .oh-select--dropdown {
   width: 100%;
   padding: 0.35rem 0.25rem;
   margin-top: 0.5rem;
   margin-bottom: 0.15rem;
   font-size: 0.9rem;
-  border-radius: 0rem;
+  border-radius: 6px;
   height: 32px;
+  background-color: $brand-color-dark;
+  border: 1px solid $border-color;
+  color: $text-color;
+
   &:first-child {
     margin-top: 0;
   }
@@ -129,25 +162,34 @@ select {
     margin-bottom: 0;
   }
 }
+
 .oh-input--dropdown {
   width: 100%;
   font-size: 0.9rem;
   padding: 0.35rem 0.25rem;
-  border-radius: 0rem;
+  border-radius: 6px;
   margin-top: 0.6rem;
   height: 32px;
+  background-color: $brand-color-dark;
+  border: 1px solid $border-color;
+  color: $text-color;
 }
+
 .oh-input__label {
   display: block;
   font-size: 0.85rem;
   margin-bottom: 0.5rem;
   margin-top: 1rem;
+  color: $light-text-color;
 }
+
 .oh-label {
   font-size: 0.85rem;
   margin-bottom: 0.5rem;
   margin-top: 1rem;
+  color: $light-text-color;
 }
+
 .oh-info {
   display: flex;
   align-items: center;
@@ -162,10 +204,12 @@ select {
   background-size: contain;
   cursor: pointer;
 }
+
 .oh-label__info {
   display: flex;
   align-items: center;
 }
+
 .oh-label--question {
   display: block;
   font-weight: bold;
@@ -176,39 +220,46 @@ select {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   background-color: transparent;
+  color: $text-color;
+  border: none;
 }
+
 select.oh-select--lg {
   padding: 0.8rem 1.25rem 0.8rem 0.25rem;
 }
 
-// Picker Input
 .oh-input-picker-group {
   display: flex;
   align-items: center;
 }
+
 .oh-input-picker-group--resp {
   @media (max-width: 767.98px) {
     flex-direction: column;
   }
 }
+
 .oh-input-picker {
   display: inline-block;
   padding: 10px;
-  border: 1px solid $border-light-color;
+  border: 1px solid $border-color;
   cursor: pointer;
+  background-color: $brand-color-dark;
+  color: $light-text-color;
+  @include oh-transition;
+
   input {
     display: none;
   }
 
   &:first-child {
-    border-radius: 0rem 0rem 0rem 0rem;
-    border-right: none;
+    border-radius: 6px 0 0 6px;
   }
   &:last-child {
-    border-radius: 0rem 0rem 0rem 0;
-    border-left: none;
+    border-radius: 0 6px 6px 0;
   }
 }
+
 .oh-input-picker--sm {
   width: 46px;
   height: 46px;
@@ -216,6 +267,7 @@ select.oh-select--lg {
   align-items: center;
   justify-content: center;
 }
+
 .oh-input-picker--likert {
   font-size: 0.85rem;
   padding-left: 1.25rem;
@@ -226,104 +278,120 @@ select.oh-select--lg {
     text-align: center;
   }
 }
+
 .oh-input-picker--1.oh-input-picker--selected {
   background-color: $danger-color;
+  color: $white;
 }
 .oh-input-picker--2.oh-input-picker--selected {
   background-color: $orange;
+  color: $white;
 }
 .oh-input-picker--3.oh-input-picker--selected {
   background-color: $yellow;
+  color: $black;
 }
 .oh-input-picker--4.oh-input-picker--selected {
   background-color: $green;
+  color: $white;
 }
 .oh-input-picker--5.oh-input-picker--selected {
   background-color: $success-color-dark;
-}
-.oh-input-picker--selected {
-  background-color: $secondary-color;
   color: $white;
 }
-.oh-input-picker-selected {
-  border: 1px solid $border-light-color;
+
+.oh-input-picker--selected {
+  background-color: $secondary-color;
+  color: $black;
 }
+
+.oh-input-picker-selected {
+  border: 1px solid $border-color;
+}
+
 .oh-input--file {
   padding: 1rem;
 }
+
 .oh-input--file-sm {
   max-width: 250px;
 }
-// Image Select2
+
 .oh-select-image ~ .select2-container .select2-container--default,
 .oh-select-image ~ .select2-container .select2-selection--single {
   border: none;
 }
+
 .oh-select-image__img {
   width: 32px;
   height: 32px;
   object-fit: cover;
   border-radius: 50%;
 }
-// Select2 Override
+
 .select2-dropdown {
-  border-radius: 0rem;
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  background-color: $brand-color;
+  border: 1px solid $border-color;
 }
+
 .select2-container--open .select2-dropdown--above {
   top: -10px;
 }
+
 .select2-container--open .select2-dropdown--below {
   top: 10px;
 }
+
 .select2-container--open .select2-dropdown--below,
 .select2-container--open .select2-dropdown--above {
-  border: 1px solid $border-light-color;
-  border-top-left-radius: 0.25rem !important;
-  border-top-right-radius: 0.25rem !important;
-  border-bottom-left-radius: 0.25rem !important;
-  border-bottom-right-radius: 0.25rem !important;
+  border: 1px solid $border-color;
 }
+
 .select2-results__option--selected {
-  background-color: $border-light-color !important;
+  background-color: $brand-color-light !important;
 }
+
 .select2-results__option--highlighted {
-  background-color: rgba($border-light-color, 0.5) !important;
+  background-color: rgba($border-color, 0.3) !important;
   color: $text-color !important;
 }
+
 .oh-select-no-search + .select2-container,
 .oh-select-2 + .select2-container {
   width: 100% !important;
 }
+
 .oh-select-no-search + .select2-container .select2-selection--single,
 .oh-select-2 + .select2-container .select2-selection.select2-selection--single {
-  border: 1px solid $border-light-color;
-  // padding: 0.8rem 1.25rem;
+  border: 1px solid $border-color;
   height: 48.54px !important;
   display: flex;
   align-items: center;
+  background-color: $brand-color-dark;
+  color: $text-color;
 
   &:focus,
   &:focus-visible,
   &:active {
-    border: 2px solid $brand-color !important;
+    border-color: $secondary-color !important;
   }
 }
-.select2-search__field {
-  border-radius: 0px !important;
 
-  // &:focus, &:focus-visible{
-  //   outline: $brand-color solid 2px !important;
-  // }
+.select2-search__field {
+  border-radius: 6px !important;
+  background-color: $brand-color-dark !important;
+  color: $text-color !important;
+  border: 1px solid $border-color !important;
 }
+
 .select2-container--open .select2-selection {
-  border-radius: 0rem !important;
+  border-radius: 6px !important;
 }
 
 .oh-select-no-search + .select2-container .select2-selection__arrow,
-.select2-container--default
-  .select2-selection--single
-  .select2-selection__arrow {
+.select2-container--default .select2-selection--single .select2-selection__arrow {
   display: block;
   height: 100% !important;
 }
@@ -332,6 +400,7 @@ select.oh-select--lg {
   height: 100%;
   display: flex !important;
   align-items: center !important;
+  color: $text-color !important;
 }
 
 .oh-select-image + .select2-container .select2-selection__rendered {
@@ -340,11 +409,13 @@ select.oh-select--lg {
 
 .select2-results__option {
   padding: 0.4rem;
+  color: $light-text-color;
 }
 
 .select2-selection__arrow {
   height: 100%;
 }
+
 .oh-select:disabled + .select2-container,
 .oh-select:disabled + .select2-container .select2-selection__rendered {
   padding-left: 0px !important;
@@ -355,52 +426,54 @@ select.oh-select--lg {
   background-color: transparent !important;
   border: none !important;
 }
-.oh-select:disabled
-  + .select2-container
-  .select2-selection
-  .select2-selection__arrow {
+
+.oh-select:disabled + .select2-container .select2-selection .select2-selection__arrow {
   display: none !important;
 }
+
 .oh-select-no-search + .select2-container .select2-selection--single {
   height: unset;
   padding-top: 0.25rem !important;
   padding-bottom: 0.25rem !important;
 }
+
 .select2-container--default .select2-selection--single {
-  border-radius: 0px !important;
+  border-radius: 6px !important;
   border-color: $border-color !important;
+  background-color: $brand-color-dark !important;
 }
+
 .oh-select-no-search + .select2-container .select2-selection--single {
   height: 48.84px;
 }
+
 .oh-select--sm + .select2-container .select2-selection--single {
   height: 38px !important;
 }
 
 .oh-select-no-search + .select2-container,
 .select2-container--default .select2-selection--multiple {
-  border-radius: 0px !important;
+  border-radius: 6px !important;
   border-color: $border-color !important;
-}
-.select2-container--default
-  .select2-selection--multiple
-  .select2-selection__choice {
-  background-color: $white !important;
-  background: $white !important;
-  border-color: $border-color !important;
-  border-radius: 0px !important;
+  background-color: $brand-color-dark !important;
 }
 
-/* =================================
-*     CHECKBOXES AND SWITCHES
-* ================================ */
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+  background-color: $brand-color !important;
+  background: $brand-color !important;
+  border-color: $border-color !important;
+  border-radius: 6px !important;
+  color: $text-color !important;
+}
+
 .oh-switch {
   display: flex;
   align-items: center;
 }
+
 .oh-switch .oh-switch__checkbox {
   appearance: none;
-  background-color: #dfe1e4;
+  background-color: #4a4a4a;
   border-radius: 72px;
   border-style: none;
   flex-shrink: 0;
@@ -425,11 +498,13 @@ select.oh-select--lg {
 .oh-switch .oh-switch__checkbox::after {
   transition: all 100ms ease-out;
 }
+
 .oh-select-2--large + .select2-container .select2-selection--multiple {
   height: 48.84px;
 }
+
 .oh-switch .oh-switch__checkbox::after {
-  background-color: #fff;
+  background-color: $white;
   border-radius: 50%;
   content: "";
   height: 14px;
@@ -444,7 +519,7 @@ select.oh-select--lg {
 }
 
 .oh-switch .oh-switch__checkbox:hover {
-  background-color: #c9cbcd;
+  background-color: #5a5a5a;
   transition-duration: 0s;
 }
 
@@ -453,7 +528,7 @@ select.oh-select--lg {
 }
 
 .oh-switch .oh-switch__checkbox:checked::after {
-  background-color: #fff;
+  background-color: $white;
   left: 13px;
 }
 
@@ -465,10 +540,10 @@ select.oh-select--lg {
   background-color: $secondary-color;
 }
 
-// Password Input
 .oh-password-input-container {
   position: relative;
 }
+
 .oh-password-input--toggle {
   position: absolute;
   top: 1px;
@@ -477,9 +552,6 @@ select.oh-select--lg {
   font-size: 1.25rem;
 }
 
-/* ===============================
-*     RADIO, ANSWERS & oh-rate
-* ==============================*/
 .oh-questions {
   padding-left: 0;
   list-style-type: none;
@@ -512,13 +584,13 @@ select.oh-select--lg {
   left: 0;
   height: 16px;
   width: 16px;
-  background-color: #eee;
+  background-color: #4a4a4a;
   border-radius: 50%;
   z-index: initial;
 }
 
 .oh-radio:hover input ~ .oh-radio__checkmark {
-  background-color: $border-light-color;
+  background-color: #5a5a5a;
 }
 
 .oh-radio input:checked ~ .oh-radio__checkmark {
@@ -541,7 +613,7 @@ select.oh-select--lg {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: white;
+  background: $black;
 }
 
 .oh-radio .oh-label {
@@ -550,16 +622,17 @@ select.oh-select--lg {
   cursor: pointer;
 }
 
-// Rating
 .oh-rate {
   display: inline-block;
   height: 36px;
   padding: 0;
 }
+
 .oh-rate:not(:checked) > input {
   position: absolute;
   top: -9999px;
 }
+
 .oh-rate:not(:checked) > label {
   float: right;
   width: 1.15em;
@@ -567,18 +640,22 @@ select.oh-select--lg {
   white-space: nowrap;
   cursor: pointer;
   font-size: 1.25rem;
-  color: #ccc;
+  color: #4a4a4a;
 }
+
 .oh-rate:not(:checked) > label:before {
   content: "★ ";
 }
+
 .oh-rate > input:checked ~ label {
   color: #ffc700;
 }
+
 .oh-rate:not(:checked) > label:hover,
 .oh-rate:not(:checked) > label:hover ~ label {
   color: #deb217;
 }
+
 .oh-rate > input:checked + label:hover,
 .oh-rate > input:checked + label:hover ~ label,
 .oh-rate > input:checked ~ label:hover,
@@ -586,10 +663,6 @@ select.oh-select--lg {
 .oh-rate > label:hover ~ input:checked ~ label {
   color: #c59b08;
 }
-
-/* ===============================
-*     REGISTRATION - PHOTO
-* ==============================*/
 
 .oh-profile-photo {
   font-size: 2rem;
@@ -599,14 +672,15 @@ select.oh-select--lg {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  border: 1px dashed $text-color;
+  border: 1px dashed $border-color;
   border-radius: 50%;
   margin-bottom: 0.75rem;
-  background: rgba($border-light-color, 0.2);
+  background: rgba($border-color, 0.2);
   cursor: pointer;
+  color: $light-text-color;
 
   &:hover {
-    background: rgba($border-light-color, 0.4);
+    background: rgba($border-color, 0.4);
   }
 }
 

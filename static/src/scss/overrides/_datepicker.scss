@@ -1,102 +1,130 @@
 .qs-datepicker-container {
-  border: 1px solid $border-light-color !important;
+  border: 1px solid $border-color !important;
   font-family: "Inter", sans-serif !important;
-  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+  background-color: $brand-color !important;
 }
+
 .qs-controls {
   background: transparent !important;
 }
+
 .qs-square.qs-day {
   font-family: "Inter", sans-serif !important;
   font-size: 0.8rem !important;
   font-weight: 400 !important;
+  color: $light-text-color !important;
 }
+
 .qs-square {
   height: 35px !important;
   font-size: 0.85rem !important;
+  color: $text-color !important;
 }
+
 .qs-square:not(.qs-empty):not(.qs-disabled):not(.qs-day):not(.qs-active):hover {
-  background-color: rgba($border-light-color, 0.6) !important;
+  background-color: $brand-color-light !important;
 }
+
 .qs-square.qs-num.qs-current {
   text-decoration: none !important;
   color: $secondary-color !important;
 }
+
 .qs-square.qs-num.qs-active {
   background-color: rgba($secondary-color, 0.2) !important;
+  color: $text-color !important;
 }
-.qs-month-year{
-   border-bottom: none !important;
+
+.qs-month-year {
+  border-bottom: none !important;
+  color: $text-color !important;
 }
+
 .qs-month-year:not(.qs-disabled-year-overlay) {
   &:hover {
     border-bottom: none !important;
   }
 }
-.qs-arrow.qs-right{
+
+.qs-arrow.qs-right {
   position: absolute !important;
   right: 8px !important;
 }
+
 .qs-arrow.qs-left {
   position: absolute !important;
   right: 25px !important;
 }
-.qs-controls{
+
+.qs-controls {
   padding: 25px 0px 10px 15px;
 }
-.qs-arrow{
-  &:hover{
+
+.qs-arrow {
+  &:hover {
     background: transparent !important;
   }
 }
-.qs-month, .qs-year{
+
+.qs-month,
+.qs-year {
   font-weight: 400;
   font-size: 1.15rem;
 }
-.qs-range-start{
-  background-color: rgba($border-light-color, 1) !important;
+
+.qs-range-start {
+  background-color: $brand-color-light !important;
 }
-.qs-range-middle{
-  background-color: rgba($border-light-color, 0.6) !important;
+
+.qs-range-middle {
+  background-color: rgba($brand-color-light, 0.6) !important;
 }
-.qs-overlay{
-  background: $white !important;
-  background-color: $white !important;
+
+.qs-overlay {
+  background: $brand-color-dark !important;
+  background-color: $brand-color-dark !important;
   color: $text-color !important;
 }
-.qs-overlay-month{
+
+.qs-overlay-month {
   color: $text-color !important;
   opacity: 1 !important;
 
-  &:hover{
+  &:hover {
     background-color: rgba($secondary-color, 0.1) !important;
     color: $secondary-color !important;
   }
 }
-.qs-overlay-year{
-  color: $text-color !important;
-  border-radius: 0px !important;
 
-  &:focus, &:focus-visible{
-    outline: $brand-color solid 2px !important;
+.qs-overlay-year {
+  color: $text-color !important;
+  border-radius: 6px !important;
+
+  &:focus,
+  &:focus-visible {
+    outline: $secondary-color solid 2px !important;
   }
 }
-.qs-overlay .qs-submit{
+
+.qs-overlay .qs-submit {
   width: 100% !important;
   border: none !important;
   background-color: $secondary-color !important;
-  color: $white !important;
+  color: $black !important;
   text-align: center !important;
-  border-radius: 0 !important;
+  border-radius: 6px !important;
 
-  &:hover{
+  &:hover {
     background-color: $secondary-color-dark;
   }
 }
+
 .qs-overlay .qs-submit.qs-disabled {
-  color: rgba($text-color, 0.8) !important;
-  background-color: rgba($border-light-color, 0.5) !important;
+  color: $light-text-color !important;
+  background-color: $brand-color-light !important;
 }
-.qs-overlay-month-container{
+
+.qs-overlay-month-container {
   margin-bottom: 0.25rem;
 }

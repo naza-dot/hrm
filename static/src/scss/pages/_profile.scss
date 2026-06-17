@@ -1,7 +1,8 @@
 .oh-profile-section {
-  background-color: $white;
+  background-color: $brand-color;
   border: 1px solid $border-color;
   padding: 1.25rem;
+  border-radius: 8px;
 }
 
 .oh-profile-section__sidebar {
@@ -16,6 +17,7 @@
 
 .oh-profile-section__sidebar-item {
   padding: 0.75rem 0;
+  color: $text-color;
 }
 
 .oh-profile-section__sidebar-item--active {
@@ -27,6 +29,7 @@
   &:focus,
   &:focus-visible {
     text-decoration: none;
+    color: $secondary-color;
   }
 }
 
@@ -118,15 +121,18 @@
   height: 1px;
   left: 0;
   right: 0;
-  background-color: $border-light-color;
+  background-color: $border-color;
   top: 10px;
 }
 
 .oh-history_date-content {
   z-index: 1;
   padding: 6px 24px;
-  background-color: $white;
+  background-color: $brand-color-dark;
   position: relative;
+  color: $light-text-color;
+  border: 1px solid $border-color;
+  border-radius: 6px;
 }
 
 .oh-history_user-img {
@@ -149,16 +155,18 @@
 
 .oh-history__username {
   font-size: 1rem;
+  color: $text-color;
 }
 
 .oh-history_msg-container {
-  background-color: $background-color;
-  border: 1px solid $border-light-color;
+  background-color: $brand-color-dark;
+  border: 1px solid $border-color;
   border-radius: 0 0.6rem 0.6rem 0.6rem;
   padding: 0.8rem 1rem;
   width: fit-content;
   margin: 0.4rem 0;
   font-size: 0.9rem;
+  color: $text-color;
 }
 
 .oh-history_msging-email {
@@ -183,6 +191,7 @@
 .oh-history_task-tracker {
   padding: 0.2rem 0;
   font-size: 0.85rem;
+  color: $light-text-color;
 }
 
 .oh-history_task-list {
@@ -213,7 +222,7 @@
 
 .oh-user_inactive {
   background-color: $mid-grey;
-  border: 2px solid $white;
+  border: 2px solid $brand-color;
 }
 
 .oh-history_abt {
@@ -234,8 +243,17 @@
 
 .oh-history_tabs-items {
   border-radius: 1rem;
-  border: 1px solid;
+  border: 1px solid $border-color;
   font-size: 0.7rem;
+  padding: 0.25rem 0.75rem;
+  color: $light-text-color;
+  @include oh-transition;
+
+  &:hover {
+    color: $white;
+    text-decoration: none;
+    background-color: $secondary-color;
+  }
 }
 
 .oh-history_log-container {
@@ -262,6 +280,12 @@
   font-size: 0.8rem;
   padding: 0.4rem 0;
   resize: none;
+  background-color: transparent;
+  color: $text-color;
+
+  &::placeholder {
+    color: $placeholder-color;
+  }
 }
 
 .oh-history_cust_btn {
@@ -278,13 +302,7 @@
   padding: 0 0.2rem;
 }
 
-.oh-history_tabs-items:hover {
-  color: $white;
-  text-decoration: none;
-  background-color: $secondary-color;
-}
-
-//sidebar updated...................
+//sidebar updated.......................
 
 .oh-wrapper-main--1 {
   grid-template-columns: auto;
@@ -293,8 +311,8 @@
 //.......................
 
 .members-container {
-  background-color: #f9f9f9;
-  border: 1px solid #e7e7e7;
+  background-color: $brand-color-dark;
+  border: 1px solid $border-color;
   padding: 8px;
   max-width: fit-content;
   border-radius: 45px;
@@ -307,13 +325,12 @@
 .members-container ul li {
   list-style: none;
   float: left;
-
-  border: 2px solid #f9f9f9;
+  border: 2px solid $brand-color-dark;
 }
 
 .members-container ul .li-last {
   margin-right: 0px;
-  background-color: #f2f3f5;
+  background-color: $brand-color-light;
   width: 32px;
   height: 32px;
   border-radius: 100%;
@@ -321,6 +338,7 @@
   justify-content: center;
   align-items: center;
   font-size: 16px;
+  color: $light-text-color;
 }
 
 .members-container ul .li-last a {
@@ -335,20 +353,21 @@
 }
 
 .members-container ul .active {
-  border: 2px solid #e54f38;
+  border: 2px solid $secondary-color;
   border-radius: 50%;
 }
 
 .dropdown-content {
   display: none;
   position: absolute;
-  background-color: #fff;
+  background-color: $brand-color;
   min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.4);
   z-index: 1;
   top: 168px;
   padding: 10px;
   border-radius: 10px;
+  border: 1px solid $border-color;
 
   .oh-input {
     padding: 0.4rem 1rem;
@@ -357,11 +376,15 @@
 }
 
 .dropdown-content a {
-  color: black;
+  color: $text-color;
   padding: 6px 10px;
   text-decoration: none;
   display: block;
   border-radius: 10px;
+
+  &:hover {
+    background-color: $brand-color-light;
+  }
 }
 
 .dropdown-content a span {
@@ -370,11 +393,6 @@
 
 .dropdown-content a img {
   width: 28px;
-}
-
-.dropdown-content a:hover {
-  background-color: #e7e7e9;
-  border-radius: 12px;
 }
 
 .show {
@@ -388,6 +406,7 @@ a {
     }
   }
 }
+
 .oh-sorting-field {
   .oh-card-dashboard--moveable {
     &:hover {
@@ -395,17 +414,18 @@ a {
     }
   }
 }
+
 .oh-card-dashboard--moveable {
   position: relative;
 }
+
 .oh-state-highlight {
-  background-color: #f0f0f0;
-  border: 1px dashed #ccc;
+  background-color: $brand-color-dark;
+  border: 1px dashed $border-color;
   line-height: 1.2em;
   min-height: 2rem;
   height: auto;
   width: 100%;
-
   margin-top: 1rem;
   box-sizing: border-box;
 

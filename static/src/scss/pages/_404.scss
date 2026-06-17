@@ -12,20 +12,24 @@
     width: 80%;
   }
 }
+
 .oh-404__image {
   width: 80px;
   height: 80px;
 }
+
 .oh-404__title {
   font-size: 1.75rem;
   font-weight: bold;
   margin-top: 1rem;
   text-align: center;
+  color: $text-color;
 
   @media screen and (max-width: 576px) {
     font-size: 1.25rem;
   }
 }
+
 .oh-404__subtitle {
   color: $light-text-color;
   text-align: center;

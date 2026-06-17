@@ -1,3 +1,8 @@
-// -----------------------------------------------------------------------------
-// This file contains all styles related to the footer of the site/application.
-// -----------------------------------------------------------------------------
+.oh-footer {
+  background-color: $brand-color-dark;
+  border-top: 1px solid $border-color;
+  padding: 1rem 1.5rem;
+  color: $light-text-color;
+  font-size: 0.85rem;
+  text-align: center;
+}

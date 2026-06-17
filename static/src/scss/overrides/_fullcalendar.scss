@@ -1,33 +1,79 @@
-.fc .fc-button{
-    border-radius: 0 !important;
-}
-.fc .fc-button-primary{
-    background-color: $brand-color !important;
-    border-color: $brand-color-dark !important;
-}
-.fc .fc-button-primary.fc-button-active{
-    background-color: rgba($brand-color, 0.7) !important;
-    border-color: rgba($brand-color, 0.7) !important;
-
-    &:focus, &:focus-visible{
-        outline: none;
-        border: none;
-        box-shadow: none;
-    }
-}
-.fc-event{
-    border-radius: 0 !important;
+.fc .fc-button {
+  border-radius: 6px !important;
 }
 
-@media (max-width: 679px){
-    .fc .fc-toolbar.fc-header-toolbar{
-        display: grid;
-        grid-template-columns: auto 1fr;
-        justify-content: space-between;
-        gap: 5px;
-    }
-    .fc .fc-toolbar-title{
-        font-size: 1.25rem;
-        text-align: right;
-    }
+.fc .fc-button-primary {
+  background-color: $brand-color-light !important;
+  border-color: $border-color !important;
+  color: $text-color !important;
+}
+
+.fc .fc-button-primary.fc-button-active {
+  background-color: $secondary-color !important;
+  border-color: $secondary-color !important;
+  color: $black !important;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active:focus,
+.fc .fc-button-primary:not(:disabled):active:focus {
+  box-shadow: none;
+}
+
+.fc-event {
+  border-radius: 6px !important;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-color: $border-color !important;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border-color: $border-color !important;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: rgba($secondary-color, 0.1) !important;
+}
+
+.fc .fc-col-header-cell-cushion {
+  color: $light-text-color !important;
+}
+
+.fc .fc-daygrid-day-number {
+  color: $text-color !important;
+}
+
+.fc .fc-daygrid-more-link {
+  color: $secondary-color !important;
+}
+
+.fc .fc-popover {
+  background-color: $brand-color !important;
+  border-color: $border-color !important;
+}
+
+.fc .fc-popover-title {
+  color: $text-color !important;
+}
+
+@media (max-width: 679px) {
+  .fc .fc-toolbar.fc-header-toolbar {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    justify-content: space-between;
+    gap: 5px;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 1.25rem;
+    text-align: right;
+  }
 }

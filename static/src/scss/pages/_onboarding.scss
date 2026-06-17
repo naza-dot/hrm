@@ -5,25 +5,30 @@
   min-height: calc(100vh - 4rem);
   margin-top: 2rem;
   margin-bottom: 2rem;
+
   @media (max-width: 767.98px) {
     align-items: flex-start;
     height: 100%;
     margin-top: 2rem;
   }
 }
+
 .oh-onboarding-card {
-  background-color: $white;
+  background-color: $brand-color;
   width: 90%;
   max-width: 600px;
   padding: 2.5rem;
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
-    rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid $border-color;
+  border-radius: 12px;
 
   @media (min-width: 1400px) {
     max-width: 800px;
   }
 }
-.oh-onboarding-card--top-bar, .oh-onboarding-preview--top-bar {
+
+.oh-onboarding-card--top-bar,
+.oh-onboarding-preview--top-bar {
   position: relative;
 
   &::before {
@@ -34,41 +39,53 @@
     width: 100%;
     background-color: $secondary-color;
     position: absolute;
+    border-radius: 12px 12px 0 0;
   }
 }
+
 .oh-onboarding-card__container {
   width: 98%;
   max-width: 350px;
   margin: 0 auto;
 }
+
 .oh-onboarding-card__container--wide {
   max-width: 650px;
 }
+
 .oh-onboarding-card__title {
   font-weight: bold;
+  color: $text-color;
 }
+
 .oh-onboarding-card__title--h1 {
   font-size: 1.75rem;
 }
+
 .oh-onboarding-card__title--h2 {
   font-size: 1.45rem;
 }
+
 .oh-onboarding-card__title--h3 {
   font-size: 1.2rem;
 }
+
 .oh-onboarding-card__lead {
   font-size: 1.05rem;
   color: $light-text-color;
 }
+
 .oh-onboarding-card__button {
   margin: 0 auto;
 }
+
 .oh-onboarding-card__lead-image {
   width: 300px;
   display: block;
   height: auto;
   margin: 0 auto;
 }
+
 .oh-onboarding-card__steps {
   list-style-type: none;
   padding-left: 0;
@@ -76,28 +93,34 @@
   align-items: center;
   margin-bottom: 0;
 }
+
 .oh-onboarding-card__step {
   display: flex;
   align-items: center;
   margin-right: 1.25rem;
   flex-shrink: 0;
+
   &:last-child {
     margin-right: 0;
   }
+
   @media (max-width: 575.98px) {
     display: none;
     margin-right: 0;
   }
 }
+
 .oh-onboarding-card__step--active {
   .oh-onboarding-card__text {
     color: $text-color;
     font-weight: bold;
   }
+
   @media (max-width: 575.98px) {
     display: flex;
   }
 }
+
 .oh-onboarding-card__count {
   background-color: rgba($secondary-color, 0.1);
   color: $secondary-color;
@@ -110,12 +133,14 @@
   margin-right: 0.5rem;
   font-size: 0.75rem;
 }
+
 .oh-onboarding-card__text {
   color: $light-text-color;
   font-size: 0.8rem;
 }
+
 .oh-onboarding-card__header {
-  border-bottom: 1px solid $border-light-color;
+  border-bottom: 1px solid $border-color;
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   display: flex;
@@ -128,10 +153,12 @@
   max-width: 400px;
   margin: 0 auto;
 }
+
 .oh-onboarding-card__greeting {
   color: $light-text-color;
   font-size: 1.2rem;
 }
+
 .oh-onboarding-card__highlight-code {
   display: block;
   max-width: 220px;
@@ -140,27 +167,37 @@
   justify-content: center;
   margin: 0 auto;
   padding: 1rem 1.25rem;
-  background-color: $border-light-color;
+  background-color: $brand-color-dark;
   border: 1px dashed $border-color;
+  border-radius: 6px;
+  color: $text-color;
 }
+
 .oh-onboarding-card__highlight-label {
   font-weight: bold;
 }
+
 .oh-onboarding-card__subtitle {
   font-size: 0.9rem;
   color: $light-text-color;
   display: block;
 }
+
 .oh-onboarding-card__company-name {
   font-size: 0.85rem;
   font-weight: bold;
+  color: $text-color;
 }
+
 .oh-onboarding-card__section-title {
   font-size: 1.15rem;
   font-weight: bold;
+  color: $text-color;
 }
+
 .oh-onboarding-card__address-group {
   margin-top: 2rem;
+
   &:first-child {
     margin-top: 0;
   }
@@ -177,14 +214,14 @@
   position: relative;
 
   &:hover {
-    background-color: rgba($border-light-color, 0.3);
+    background-color: $brand-color-light;
     transition: all 0.3s ease-in-out;
   }
 
   &::after {
     content: "";
     position: absolute;
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFjMWMxYyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjEuNSIgdmlld0JveD0iMCAwIDI0IDI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxwYXRoIGQ9Im01LjI1IDguNjI1IDYuNzUgNi43NSA2Ljc1LTYuNzUiPjwvcGF0aD4KPC9zdmc+");
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2EwYTBhMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjEuNSIgdmlld0JveD0iMCAwIDI0IDI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxwYXRoIGQ9Im01LjI1IDguNjI1IDYuNzUgNi43NSA2Ljc1LTYuNzUiPjwvcGF0aD4KPC9zdmc+");
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
@@ -195,24 +232,31 @@
     transition: all 0.3s ease-in-out;
   }
 }
+
 .oh-onboarding-card__collapse--show .oh-onboarding-card__collapse-header {
   margin-bottom: 0;
+
   &::after {
     content: "";
     transform: rotate(-180deg);
     transition: all 0.3s ease-in-out;
   }
 }
+
 .oh-onboarding-card__collapse-title {
   font-weight: bold;
+  color: $text-color;
 }
+
 .oh-onboarding-card__collappse-body {
   padding: 1.5rem 0;
   display: none;
 }
+
 .oh-onboarding-card__collapse--show .oh-onboarding-card__collappse-body {
   display: block;
 }
+
 .oh-onboarding--preview {
   display: flex;
   align-items: flex-start;
@@ -222,6 +266,7 @@
     align-items: center;
   }
 }
+
 .oh-onboarding__info-container {
   display: flex;
   align-items: flex-start;
@@ -230,6 +275,7 @@
     flex-direction: column;
   }
 }
+
 .oh-onboarding__title-container {
   margin-left: 10px;
 
@@ -238,23 +284,25 @@
     margin-left: 0;
   }
 }
+
 .oh-onboarding__title {
   font-size: 2rem;
   line-height: 1.25;
   font-weight: bold;
+  color: $text-color;
 }
+
 .oh-onboarding-preview {
   width: calc(((100vw - 200px) / 2) - 40px);
   max-width: 500px;
   margin-left: 15px;
-  background-color: $white;
-  -webkit-box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
-    rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
-    rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
+  background-color: $brand-color;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   padding: 2rem 1rem;
+  border: 1px solid $border-color;
+  border-radius: 12px;
 
-  img{
+  img {
     width: 100%;
     height: auto;
     object-fit: contain;

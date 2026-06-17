@@ -15,12 +15,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: $secondary-color;
+  background-color: $brand-color-light;
   margin-right: 1.5rem;
 }
 
 .oh-timeoff-card__icon {
-  color: $white;
+  color: $secondary-color;
   font-size: 2rem;
 }
 
@@ -29,6 +29,7 @@
   font-weight: bold;
   font-size: 1.15rem;
   width: 100%;
+  color: $text-color;
 }
 
 .oh-timeoff-card__stat-container,
@@ -58,22 +59,27 @@
 .oh-timeoff-card__stat-count {
   font-size: 1.05rem;
   font-weight: bold;
+  color: $text-color;
 }
 
 .oh-timeoff-modal__download-link {
   width: 100%;
-  background: $border-light-color;
+  background: $brand-color-dark;
   padding: 1rem;
   margin-top: 1.25rem;
   display: flex;
   align-items: center;
-  color: $dark-grey;
+  color: $light-text-color;
+  border-radius: 6px;
+  border: 1px solid $border-color;
+  @include oh-transition;
 
   &:hover,
   &:focus,
   &:focus-visible {
     text-decoration: none;
-    background-color: $border-color;
+    background-color: $brand-color-light;
+    color: $text-color;
   }
 }
 
@@ -86,12 +92,6 @@
   }
 }
 
-// .oh-timeoff__date-container .qs-datepicker-container{
-//     box-shadow: none !important;
-//     border: none !important;
-//     position: relative;
-//     width: 100%;
-// }
 .oh-timeoff__date-container {
   display: flex;
   align-items: center;
@@ -119,11 +119,13 @@
 
 .oh-timeoff-modal__stat-count {
   font-size: 0.9rem;
+  color: $text-color;
 }
 
 .oh-timeoff-modal__stat-description {
   overflow-y: auto;
   max-height: 100px;
+  color: $light-text-color;
 }
 
 .oh-timeoff-modal__footer {
@@ -131,9 +133,10 @@
   grid-template-columns: 1fr 1fr;
   padding-top: 1rem;
   padding-bottom: 1.25rem;
+  gap: 0.5rem;
 }
 
-.oh-timeoff-modal__footer>* {
+.oh-timeoff-modal__footer > * {
   margin-right: 5px;
 
   &:last-child {
@@ -144,6 +147,7 @@
 .oh-timeoff-modal__user {
   font-size: 1.2rem;
   margin-top: 0.75rem;
+  color: $text-color;
 }
 
 .oh-timeoff-modal__body {
@@ -153,22 +157,28 @@
 }
 
 .oh-timeoff-modal__position {
-  color: rgba($light-text-color, 0.8);
+  color: $light-text-color;
 }
 
-.oh-modal__dialog-relative{
+.oh-modal__dialog-relative {
   position: relative;
 }
 
 .oh-modal__diaglog-nav {
   width: 2rem;
   height: 2rem;
-  background: $white;
+  background: $brand-color-dark;
   border-radius: 50px;
-  border: none;
+  border: 1px solid $border-color;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: $text-color;
+  @include oh-transition;
+
+  &:hover {
+    background: $brand-color-light;
+  }
 }
 
 .oh-modal__nav-prev {

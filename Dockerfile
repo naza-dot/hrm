@@ -1,3 +1,15 @@
+FROM node:18-bullseye AS assets
+
+WORKDIR /app/
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY webpack.mix.js ./
+COPY static/src/ static/src/
+
+RUN npx mix
+
 FROM python:3.10-slim-bullseye AS builder
 
 ENV PYTHONUNBUFFERED=1
@@ -18,6 +30,7 @@ WORKDIR /app/
 COPY --from=builder /install /usr/local
 
 COPY . .
+COPY --from=assets /app/static/build /app/static/build
 
 RUN chmod +x /app/entrypoint.sh
 

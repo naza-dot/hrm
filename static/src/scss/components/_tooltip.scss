@@ -1,9 +1,10 @@
 // jQuery UI overrides.
-div.ui-tooltip{
-  background-color: $text-color;
-  color: $white-color;
-  box-shadow: none;
-  border: none;
+div.ui-tooltip {
+  background-color: $brand-color-light;
+  color: $text-color;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  border: 1px solid $border-color;
   font-size: 0.8rem;
-  border: none !important;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
 }

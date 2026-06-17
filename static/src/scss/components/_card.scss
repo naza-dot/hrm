@@ -1,31 +1,40 @@
 .oh-card {
   padding: 1.15rem;
-  // box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
-  border-radius: 0rem;
+  border-radius: 8px;
   border: 1px solid $border-color;
-  background-color: $white;
+  background-color: $brand-color;
+  @include oh-shadow;
 }
+
 .oh-card--margin {
   margin-top: 2rem;
 }
+
 .oh-card.p-4 {
   @media (max-width: 767.98px) {
     padding: 0 !important;
   }
 }
+
 .oh-card--no-shadow {
   box-shadow: none !important;
   border: 1px solid $border-light-color !important;
 }
+
 .oh-card__header {
   margin-bottom: 0.85rem;
 }
+
 .oh-card__title--lg {
   font-size: 1.25rem;
+  color: $text-color;
 }
+
 .oh-card__title--sm {
   font-size: 0.9rem;
+  color: $light-text-color;
 }
+
 .oh-card--w-resp-75 {
   width: 75%;
   @media (max-width: 991.98px) {
@@ -33,35 +42,39 @@
   }
 }
 
-/* ============================
-        LIST CARDS
-============================= */
 .oh-list-cards {
   list-style-type: none;
   padding-left: 0px;
   margin-bottom: 0px;
 }
+
 .oh-list-cards__item {
   padding: 1.25rem;
-  border: 1px solid $border-light-color;
+  border: 1px solid $border-color;
   margin-top: 0.75rem;
   margin-bottom: 0.75rem;
-  border-radius: 0rem;
+  border-radius: 8px;
+  background-color: $brand-color-dark;
 
   &:last-child {
     margin-bottom: 0;
   }
 }
+
 .oh-list-card__title {
   font-weight: bold;
+  color: $text-color;
 }
+
 .oh-list-card__description {
   color: $light-text-color;
 }
+
 .oh-list-card__footer {
-  border-top: 1px solid $border-light-color;
+  border-top: 1px solid $border-color;
   padding-top: 0.8rem;
 }
+
 .oh-list__actions {
   padding-top: 1rem;
   float: right;
@@ -71,29 +84,32 @@
     }
   }
 }
+
 .oh-card__footer--border-top {
-  border-top: 1px solid $border-light-color;
+  border-top: 1px solid $border-color;
 }
-/* ============================
-      ACTIVITY LIST CARDS
-============================= */
+
 .oh-activity-list__photo {
   border-radius: 50%;
   overflow: hidden;
 }
+
 .oh-activity-list {
   list-style-type: none;
   padding-left: 0;
 }
+
 .oh-activity-list__photo--small {
   width: 30px;
   height: 30px;
 }
+
 .oh-activity-list__image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .oh-activity-list__item {
   display: flex;
   align-items: center;
@@ -109,54 +125,59 @@
     flex-shrink: 0;
   }
 }
+
 .oh-activity-list__description {
   color: $light-text-color;
   max-width: calc(100% - 32px);
 }
+
 .oh-activity-list__description strong {
-  color: $dark-grey;
+  color: $text-color;
 }
+
 .oh-card--border {
   border: 1px solid $border-light-color;
 }
+
 .oh-activity-list__comment-title {
   display: flex;
   align-items: flex-start;
 }
+
 .oh-activity-list__comment-timestamp {
   font-size: 0.75rem;
   display: block;
+  color: $placeholder-color;
 }
+
 .oh-activity-list__comment {
   display: block;
 }
+
 .oh-activity-list__comment-container {
   padding-left: 2.3rem;
   margin-top: 0.45rem;
   margin-bottom: 1.35rem;
 }
-/* ============================
-*         ITEM CARD
-============================= */
+
 .oh-item {
   display: block;
 }
+
 .oh-item--border-bottom {
   padding: 1.25rem;
-  border-bottom: 1px solid $border-light-color;
+  border-bottom: 1px solid $border-color;
 
   &:last-child {
     border-bottom: none;
   }
 }
 
-/* ============================
-*      CONTAINER CARD
-============================= */
 .oh-container {
   width: 100%;
   padding: 0.75rem;
 }
+
 .oh-container--outline {
   border: 1px solid $border-light-color;
 }
@@ -164,45 +185,48 @@
 .oh-kanban-card {
   position: relative;
   border: 1px solid $border-color;
-  background-color: $white;
+  background-color: $brand-color;
   display: flex;
   align-items: center;
   padding: 1rem;
   width: 100%;
   cursor: pointer;
+  border-radius: 8px;
+  @include oh-transition;
 
   &:hover {
-    box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
-      rgba(0, 0, 0, 0.02) 0px 1px 2px 0px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   }
 
-  &--red{
-    border-left: 5px solid $danger-color-dark;
+  &--red {
+    border-left: 4px solid $danger-color-dark;
   }
-  &--blue{
-    border-left: 5px solid $blue;
+  &--blue {
+    border-left: 4px solid $blue;
   }
-  &--yellow{
-    border-left: 5px solid $yellow-dark;
+  &--yellow {
+    border-left: 4px solid $yellow-dark;
   }
-  &--green{
-    border-left: 5px solid $success-color-dark;
+  &--green {
+    border-left: 4px solid $success-color-dark;
   }
-  &--orange{
-    border-left: 5px solid $orange;
+  &--orange {
+    border-left: 4px solid $orange;
   }
 }
+
 .oh-kanban-card--biometric {
   padding-left: 1.5rem;
   flex-direction: column;
   align-items: flex-start;
 }
+
 .oh-kanban-card__biometric-actions {
   padding-top: 0.75rem;
   margin-top: 0.75rem;
   display: block;
   width: 100%;
-  border-top: 1px solid $border-light-color;
+  border-top: 1px solid $border-color;
 }
 
 .oh-kanban-card__profile-container {
@@ -211,18 +235,22 @@
   border-radius: 50%;
   overflow: hidden;
 }
+
 .oh-kanban-card__profile-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .oh-kanban-card__title {
   display: block;
   font-weight: bold;
+  color: $text-color;
   @media (max-width: 575.98px) {
     font-size: 0.8rem;
   }
 }
+
 .oh-kanban-card__subtitle {
   font-size: 0.85rem;
   color: $light-text-color;
@@ -230,13 +258,16 @@
     font-size: 0.7rem;
   }
 }
+
 .oh-kanban-card__avatar {
   margin-right: 1rem;
 }
+
 .oh-kanban-card__actions {
   display: flex;
   align-items: center;
 }
+
 .oh-kanban-card__actions > * {
   margin-right: 0.5rem;
   flex-shrink: 0;
@@ -244,6 +275,7 @@
     margin-right: 0;
   }
 }
+
 .oh-kanban-card__dots {
   position: absolute;
   right: 0px;

@@ -2,8 +2,10 @@
   width: 100%;
   font-size: 0.85rem;
   border-collapse: collapse;
-  border: 1px solid $light-button-color;
-  background-color: $white;
+  border: 1px solid $border-color;
+  background-color: $brand-color;
+  border-radius: 8px;
+  overflow: hidden;
 
   @media (max-width: 991.98px) {
     display: block;
@@ -13,21 +15,25 @@
 }
 
 .oh-table thead tr th {
-  padding: 1.25rem 0.65rem;
+  padding: 1rem 0.65rem;
   text-align: left;
-  border-bottom: 3px solid $light-button-color;
-  color: $table-text-color;
-  font-weight: 400;
+  border-bottom: 1px solid $border-color;
+  color: $light-text-color;
+  font-weight: 500;
+  background-color: $brand-color-dark;
 }
 
 .oh-table tbody tr td {
-  padding: 1.25rem 0.65rem;
-  border-bottom: 1px solid $light-button-color;
+  padding: 1rem 0.65rem;
+  border-bottom: 1px solid $border-color;
+  color: $text-color;
 }
 
 .oh-table tbody tr {
+  @include oh-transition;
+
   &:hover {
-    background-color: $light-grey;
+    background-color: $brand-color-light;
     cursor: pointer;
   }
 }
@@ -37,16 +43,14 @@
   overflow-y: auto;
 }
 
-/* ====================================
-*        Sticky Table
-* ================================== */
 .oh-sticky-table {
   max-height: 75vh;
   overflow: auto;
   margin: auto;
   max-width: 100%;
-  border: 1px solid $border-light-color;
+  border: 1px solid $border-color;
   position: relative;
+  border-radius: 8px;
 }
 
 .oh-sticky-table--no-highlight .oh-sticky-table__tr {
@@ -69,15 +73,16 @@
 
 .oh-sticky-table__tr {
   display: table-row;
+  @include oh-transition;
 
   &:hover {
-    background-color: $light-grey;
+    background-color: $brand-color-light;
     cursor: pointer;
   }
 }
 
 .oh-sticky-table__sd {
-  background-color: $white;
+  background-color: $brand-color;
   z-index: 10 !important;
   width: 240px;
 }
@@ -88,7 +93,7 @@
 
 .oh-sticky-table__th {
   z-index: 10;
-  background-color: $white;
+  background-color: $brand-color-dark;
   padding: 0.5rem 1rem !important;
 }
 
@@ -106,8 +111,8 @@
 .oh-sticky-table__tbody--highlight {
   height: 60px;
   width: 100vw;
-  background-color: hsl(185, 68%, 98%);
-  border: 1px dashed hsl(185, 68%, 42%);
+  background-color: rgba($secondary-color, 0.05);
+  border: 1px dashed $secondary-color;
   border-left: none;
   border-right: 0;
 }
@@ -115,18 +120,18 @@
 .oh-sticky-table__th,
 .oh-sticky-table__sd {
   position: sticky;
-  background: $white;
+  background: $brand-color-dark;
   color: $text-color;
 }
 
 .oh-sticky-table__th {
   top: 0;
-  border-bottom: 2px solid $border-light-color;
+  border-bottom: 1px solid $border-color;
 }
 
 .oh-sticky-table__sd {
   left: 0;
-  border-right: 1px solid $border-light-color;
+  border-right: 1px solid $border-color;
 
   @media (max-width: 575.98px) {
     position: relative;
@@ -150,7 +155,7 @@
 .oh-sticky-table__tfoot div.oh-sticky-table__th:first-child {
   left: 0;
   z-index: 1;
-  border-right: 1px solid $border-light-color;
+  border-right: 1px solid $border-color;
 
   @media (max-width: 575.98px) {
     position: relative;
@@ -160,23 +165,23 @@
 .oh-sticky-table__sr {
   position: sticky;
   right: 0;
-  background-color: $white;
+  background-color: $brand-color;
   z-index: 9 !important;
   padding: 1rem;
-  border-bottom: 1px solid $border-light-color;
-  border-left: 1px solid $border-light-color;
+  border-bottom: 1px solid $border-color;
+  border-left: 1px solid $border-color;
   display: table-cell;
 }
 
 .oh-sticky-table__th--sticky {
   right: 0;
   position: sticky;
-  border-left: 1px solid $border-light-color;
+  border-left: 1px solid $border-color;
 }
 
 .oh-sticky-table__th--right {
   right: 0;
-  border-left: 1px solid $border-light-color;
+  border-left: 1px solid $border-color;
 }
 
 .oh-sticky-table__button-container {
@@ -188,9 +193,6 @@
   flex-shrink: 0;
 }
 
-/* ========================================
-*            EDITABLE INPUT
-* ====================================== */
 .oh-table__editable-input:read-only {
   color: $text-color;
   background-color: transparent;
@@ -210,14 +212,15 @@
 }
 
 .oh-table__editable-input {
-  border-radius: 0px;
-  border: 1px solid $brand-color;
+  border-radius: 6px;
+  border: 1px solid $border-color;
+  background-color: $brand-color-dark;
+  color: $text-color;
 
   &:focus,
   &:focus-visible {
-    outline: $brand-color solid 2px;
-    border-radius: 0px;
-    border: none;
+    outline: none;
+    border-color: $secondary-color;
   }
 }
 
@@ -248,11 +251,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: $border-light-color;
+  background-color: $brand-color-light;
   position: absolute;
   right: 3px;
   top: 3px;
   display: none;
+  color: $light-text-color;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $danger-color;
+    color: $white;
+  }
 }
 
 .oh-table-config__tr {
@@ -275,17 +285,12 @@
   }
 }
 
-:is(.oh-table-config__th:nth-last-child(2)):is(
-    .oh-table-config__th:nth-child(2)
-  ) {
+:is(.oh-table-config__th:nth-last-child(2)):is(.oh-table-config__th:nth-child(2)) {
   .oh-table-config__close-th {
     display: none !important;
   }
 }
 
-/* ========================================
-*          COLLAPSABLE TABLE
-* ====================================== */
 .oh-table__toggle-button {
   padding: 0 !important;
   display: flex;
@@ -294,7 +299,7 @@
 
   &:after {
     content: "";
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxZjFmMWYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMTkgMTNoLTZ2NmgtMnYtNkg1di0yaDZWNWgydjZoNnYyWiI+PC9wYXRoPgo8L3N2Zz4=");
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiNmZmZmZmYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMTkgMTNoLTZ2NmgtMnYtNkg1di0yaDZWNWgydjZoNnYyWiI+PC9wYXRoPgo8L3N2Zz4=");
     width: 20px;
     height: 20px;
     display: flex;
@@ -310,7 +315,7 @@
     content: "";
     width: 20px;
     height: 20px;
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxZjFmMWYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNNiAxMWgxMnYySDZ2LTJaIj48L3BhdGg+Cjwvc3ZnPg==");
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiNmZmZmZmYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNNiAxMWgxMnYySDZ2LTJaIj48L3BhdGg+Cjwvc3ZnPg==");
     display: flex;
     align-items: center;
     justify-content: center;
@@ -327,9 +332,6 @@
   display: table-row;
 }
 
-/* ========================================
-*          TABLE CONTROLS
-* ====================================== */
 .oh-table-controls {
   display: flex;
   justify-content: flex-end;
@@ -338,10 +340,9 @@
   margin-bottom: 1rem;
 }
 
-/*..............Table sticky dropdown...................*/
 .oh-sticky-dropdown_btn {
   font-weight: bold;
-  background: $white;
+  background: $brand-color;
   color: $text-color;
   border: transparent;
   width: 100%;
@@ -386,7 +387,7 @@
   align-items: center;
   justify-content: center;
   top: 0px;
-  border-top: 1px solid $border-light-color;
+  border-top: 1px solid $border-color;
 }
 
 .oh-table_sticky--wrapper {
@@ -396,11 +397,10 @@
 .oh-main__more-option-toggle {
   display: none;
   align-items: center;
-
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 0.3rem;
+  border-radius: 6px;
   border: 1px solid $border-color;
 
   @media (max-width: 1000px) {
@@ -420,15 +420,15 @@
   @media (max-width: 1000px) {
     position: absolute;
     min-width: 300px;
-
     right: 10px;
     padding: 15px;
-    background: white;
+    background: $brand-color;
     z-index: 99;
     right: 16px;
     top: 160px;
-    border-radius: 0rem;
+    border-radius: 8px;
     flex-direction: column;
+    border: 1px solid $border-color;
 
     button {
       width: 100%;
@@ -465,106 +465,19 @@
 .oh-sticky-table__sd {
   display: table-cell;
   padding: 8px 10px;
-  // white-space:nowrap;
-  border-bottom: 0.2px solid $border-light-color;
-  border-right: 0.2px solid #fff;
+  border-bottom: 1px solid $border-color;
+  border-right: 1px solid transparent;
   vertical-align: middle;
   width: 160px;
   word-break: break-word;
-}
-
-// table style updation
-
-.oh-hover-btn {
-  border: 2px solid #1c1c1c;
-  background-color: transparent;
-  border-radius: 3px;
-  padding: 0.15rem 0.4rem;
-}
-
-.oh-hover-btn:hover {
-  background-color: hsl(213, 22%, 93%);
-}
-
-.oh-hover-btn-container {
-  position: relative;
-  display: inline-block;
-}
-
-.oh-hover-btn-container:before {
-  content: "";
-  display: block;
-  background-color: transparent;
-  position: absolute;
-  width: 100%;
-  height: 20px;
-  bottom: 100%;
-}
-
-.oh-hover-btn__small {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: hsl(0, 0%, 100%);
-  border: 1px solid hsl(213, 22%, 93%);
-  -webkit-box-shadow: rgba(17, 17, 26, 0.05) 0px 4px 16px,
-    rgba(17, 17, 26, 0.05) 0px 8px 32px;
-  box-shadow: rgba(17, 17, 26, 0.05) 0px 4px 16px,
-    rgba(17, 17, 26, 0.05) 0px 8px 32px;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  -webkit-transition: all 0.3s linear;
-  transition: all 0.3s linear;
-}
-
-.oh-hover-btn__small:hover {
-  background-color: hsl(8, 77%, 56%);
-  border: 1px solid hsl(8, 61%, 50%);
-  color: hsl(0, 0%, 100%);
-  -webkit-transition: all 0.2s linear;
-  transition: all 0.2s linear;
-  -webkit-transform: scale(105%);
-  transform: scale(105%);
-}
-
-.oh-hover-btn-drawer {
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  position: absolute;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  gap: 5px;
-  z-index: 99;
-  right: -20px;
-  bottom: 130%;
-  visibility: hidden;
-  pointer-events: none;
-  opacity: 0;
-}
-
-.oh-hover-btn-container:hover .oh-hover-btn-drawer {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  visibility: visible;
-  pointer-events: all;
-  opacity: 1;
 }
 
 .table-wrapper {
   position: relative;
   overflow: scroll;
   max-height: 250px;
-  border: 1px solid hsl(213, 22%, 93%);
+  border: 1px solid $border-color;
+  border-radius: 8px;
 }
 
 .fixed-table {
@@ -581,51 +494,48 @@
   line-height: 10px;
   text-align: left;
   vertical-align: middle;
-  border-bottom: 0.2px solid hsl(213, 22%, 93%);
-  border-right: 0.2px solid #fff;
-  vertical-align: middle;
+  border-bottom: 1px solid $border-color;
+  border-right: 1px solid transparent;
   width: 160px;
-  /* word-break: break-word; */
 }
 
 .fixed-table td {
   font-size: 0.8rem;
   height: 45px;
-  color: hsl(0, 0%, 11%);
+  color: $text-color;
   display: table-cell;
-  /* padding: 8px 10px; */
-  border-bottom: 0.2px solid hsl(213, 22%, 93%);
-  border-right: 0.2px solid #fff;
+  border-bottom: 1px solid $border-color;
+  border-right: 1px solid transparent;
   vertical-align: middle;
   width: 160px;
-  /* word-break: break-word; */
 }
 
 .lastTd {
-  background-color: white !important;
+  background-color: $brand-color !important;
 }
 
 .fixed-table th:nth-child(2),
 .fixed-table td:nth-child(2) {
   position: sticky;
   left: 30px;
-  background-color: #f1f1f1;
+  background-color: $brand-color;
   z-index: 2;
   width: 100px !important;
-  background-color: #ffffff !important;
-  border-right: 1px solid hsl(213, 22%, 93%) !important;
+  border-right: 1px solid $border-color !important;
+
+  @media (max-width: 768px) {
+    position: unset;
+  }
 }
 
 .fixed-table th:first-child,
 .fixed-table td:first-child {
   position: sticky;
   left: 0;
-  background-color: #f1f1f1;
   z-index: 2;
   width: 30px !important;
-  background-color: #ffffff !important;
-  border-right: 1px solid hsl(213, 22%, 93%) !important;
-  /* To be on top of scrollable area */
+  background-color: $brand-color !important;
+  border-right: 1px solid $border-color !important;
 }
 
 .fixed-table thead tr {
@@ -637,99 +547,19 @@
 
 .fixed-table thead th {
   border: transparent !important;
-  border-bottom: 2px solid hsl(213, 22%, 93%) !important;
-  background-color: #fff;
+  border-bottom: 1px solid $border-color !important;
+  background-color: $brand-color-dark;
   height: 30px !important;
   font-size: 12px;
-  color: hsl(0, 0%, 11%);
+  color: $text-color;
 }
 
 .table-wrapper {
   position: relative;
   overflow: scroll;
   max-height: 500px;
-  border: 1px solid hsl(213, 22%, 93%);
-}
-
-.fixed-table {
-  border-collapse: collapse;
-  width: 100%;
-  table-layout: fixed;
-}
-
-.fixed-table th,
-.fixed-table td {
-  padding: 8px 10px;
-  display: table-cell;
-  height: 10px;
-  line-height: 10px;
-  text-align: left;
-  vertical-align: middle;
-  border-bottom: 0.2px solid hsl(213, 22%, 93%);
-  border-right: 0.2px solid #fff;
-  vertical-align: middle;
-  width: 160px;
-  word-break: break-word;
-}
-
-.fixed-table td {
-  font-size: 0.8rem;
-  height: 45px;
-  color: hsl(0, 0%, 11%);
-  display: table-cell;
-  /* padding: 8px 10px; */
-  border-bottom: 0.2px solid hsl(213, 22%, 93%);
-  border-right: 0.2px solid #fff;
-  vertical-align: middle;
-  width: 160px;
-  /* word-break: break-word; */
-}
-
-.lastTd {
-  background-color: white !important;
-}
-
-.fixed-table th:nth-child(2),
-.fixed-table td:nth-child(2) {
-  position: sticky;
-  left: 30px;
-  background-color: #f1f1f1;
-  z-index: 2;
-  width: 100px !important;
-  background-color: #ffffff !important;
-  border-right: 1px solid hsl(213, 22%, 93%) !important;
-
-  @media (max-width: 768px) {
-    position: unset;
-  }
-}
-
-.fixed-table th:first-child,
-.fixed-table td:first-child {
-  position: sticky;
-  left: 0;
-  background-color: #f1f1f1;
-  z-index: 2;
-  width: 30px !important;
-  background-color: #ffffff !important;
-  border-right: 1px solid hsl(213, 22%, 93%) !important;
-  /* To be on top of scrollable area */
-}
-
-.fixed-table thead tr {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  overflow: scroll;
-  box-shadow: 1px 1px hsl(213, 22%, 93%);
-}
-
-.fixed-table thead th {
-  /* border-bottom: 2px solid hsl(213, 22%, 93%) !important; */
-  background-color: #fff;
-  height: 30px !important;
-  font-size: 12px;
-  color: hsl(0, 0%, 11%);
+  border: 1px solid $border-color;
+  border-radius: 8px;
 }
 
 .add_c ul {
@@ -741,14 +571,12 @@
 
   li {
     padding: 5px 5px;
-
     flex-grow: 1;
 
     a {
-      border: 1px solid hsl(213, 22%, 93%);
+      border: 1px solid $border-color;
       padding: 3px 3px;
       display: block;
-
       word-break: auto-phrase;
     }
   }
@@ -756,56 +584,24 @@
 
 .table-wrapper {
   scrollbar-width: thin;
-  scrollbar-color: lightgrey #f1f1f1;
+  scrollbar-color: #2a2a2a #1a1a1a;
 }
 
 .table-wrapper::-webkit-scrollbar {
   width: 0;
   opacity: 0;
   transition: opacity 0.3s ease;
-  scrollbar-width: thin;
-
   display: none !important;
 }
 
 .table-wrapper:hover {
-  scrollbar-color: lightgrey;
+  scrollbar-color: #3a3a3a;
   transition: opacity 0.3s ease;
 }
 
-// table-skeleton
-
-// .oh-kanban-card.is-loading {
-//   position: relative;
-//   width: auto;
-//   margin-top: 5px;
-//   &::before {
-//     content: "";
-//     position: absolute;
-//     top: 50%;
-//     transform: translateY(-50%);
-//     left: 0;
-//     width: -webkit-fill-available;
-//     height: 36%;
-//     z-index: 10;
-//     border-radius: 6px;
-//     background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
-//     background-size: 200%;
-//     animation: shimmer 1.2s infinite;
-//     z-index: 999;
-//     margin-left: 5px;
-//     margin-right: 5px;
-//   }
-// }
-
 @keyframes shimmer {
-  0% {
-    background-position: -100% 0;
-  }
-
-  100% {
-    background-position: 100% 0;
-  }
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
 }
 
 .oh-table.is-loading {
@@ -822,7 +618,7 @@
       width: -webkit-fill-available;
       height: 36%;
       border-radius: 6px;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
+      background: linear-gradient(110deg, #2a2a2a 8%, #3a3a3a 18%, #2a2a2a 33%);
       background-size: 200%;
       animation: shimmer 1.2s infinite;
       z-index: 999;
@@ -846,7 +642,7 @@
       width: -webkit-fill-available;
       height: 36%;
       border-radius: 6px;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
+      background: linear-gradient(110deg, #2a2a2a 8%, #3a3a3a 18%, #2a2a2a 33%);
       background-size: 200%;
       animation: shimmer 1.2s infinite;
       z-index: 999;
@@ -856,55 +652,9 @@
   }
 }
 
-.oh-kanban-card.is-loading {
-  .oh-kanban-card__profile-container {
-    position: relative;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 0;
-      width: 100%;
-      height: 36%;
-      z-index: 10;
-      height: 100%;
-      border-radius: 50%;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
-      background-size: 200%;
-      animation: shimmer 1.2s infinite;
-      z-index: 999;
-    }
-  }
-
-  .oh-kanban-card__title,
-  .oh-kanban-card__subtitle {
-    position: relative;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 0;
-      width: -webkit-fill-available;
-      height: 90%;
-      z-index: 10;
-      border-radius: 4px;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
-      background-size: 200%;
-      animation: shimmer 1.2s infinite;
-      z-index: 999;
-    }
-  }
-}
-
-// popup-card
 .oh-modal.is-loading {
   .oh-profile__avatar {
     position: relative;
-
     &::before {
       content: "";
       position: absolute;
@@ -915,7 +665,7 @@
       z-index: 10;
       height: 64px;
       border-radius: 50%;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
+      background: linear-gradient(110deg, #2a2a2a 8%, #3a3a3a 18%, #2a2a2a 33%);
       background-size: 200%;
       animation: shimmer 1.2s infinite;
       z-index: 999;
@@ -924,7 +674,6 @@
 
   .oh-timeoff-modal__user {
     position: relative;
-
     &::before {
       content: "";
       position: absolute;
@@ -935,184 +684,10 @@
       height: 90%;
       z-index: 10;
       border-radius: 4px;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
+      background: linear-gradient(110deg, #2a2a2a 8%, #3a3a3a 18%, #2a2a2a 33%);
       background-size: 200%;
       animation: shimmer 1.2s infinite;
       z-index: 999;
-    }
-  }
-
-  .oh-timeoff-modal__stat-title {
-    position: relative;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 0;
-      width: -webkit-fill-available;
-      height: 90%;
-      z-index: 10;
-      border-radius: 4px;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
-      background-size: 200%;
-      animation: shimmer 1.2s infinite;
-      z-index: 999;
-    }
-  }
-
-  .oh-timeoff-modal__stat-count {
-    position: relative;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 0;
-      width: -webkit-fill-available;
-      height: 90%;
-      z-index: 10;
-      border-radius: 4px;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
-      background-size: 200%;
-      animation: shimmer 1.2s infinite;
-      z-index: 999;
-    }
-  }
-
-  .oh-modal__dialog-footer {
-    .oh-btn {
-      position: relative;
-
-      &::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        left: 0;
-        width: -webkit-fill-available;
-        height: 100%;
-        z-index: 10;
-        background: linear-gradient(
-          110deg,
-          #e0e0e0 8%,
-          #f0f0f0 18%,
-          #e0e0e0 33%
-        );
-        background-size: 200%;
-        animation: shimmer 1.2s infinite;
-        z-index: 999;
-      }
-    }
-  }
-}
-
-.oh-card.is-loading {
-  .oh-profile__avatar {
-    position: relative;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 0;
-      width: 64px;
-      z-index: 10;
-      height: 64px;
-      border-radius: 50%;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
-      background-size: 200%;
-      animation: shimmer 1.2s infinite;
-      z-index: 999;
-    }
-  }
-
-  .oh-timeoff-modal__user {
-    position: relative;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 0;
-      width: -webkit-fill-available;
-      height: 90%;
-      z-index: 10;
-      border-radius: 4px;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
-      background-size: 200%;
-      animation: shimmer 1.2s infinite;
-      z-index: 999;
-    }
-  }
-
-  .oh-timeoff-modal__stat-title {
-    position: relative;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 0;
-      width: -webkit-fill-available;
-      height: 90%;
-      z-index: 10;
-      border-radius: 4px;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
-      background-size: 200%;
-      animation: shimmer 1.2s infinite;
-      z-index: 999;
-    }
-  }
-
-  .oh-timeoff-modal__stat-count {
-    position: relative;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 0;
-      width: -webkit-fill-available;
-      height: 90%;
-      z-index: 10;
-      border-radius: 4px;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
-      background-size: 200%;
-      animation: shimmer 1.2s infinite;
-      z-index: 999;
-    }
-  }
-
-  .oh-modal__dialog-footer {
-    .oh-btn {
-      position: relative;
-
-      &::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        left: 0;
-        width: -webkit-fill-available;
-        height: 100%;
-        z-index: 10;
-        background: linear-gradient(
-          110deg,
-          #e0e0e0 8%,
-          #f0f0f0 18%,
-          #e0e0e0 33%
-        );
-        background-size: 200%;
-        animation: shimmer 1.2s infinite;
-        z-index: 999;
-      }
     }
   }
 }
@@ -1120,7 +695,6 @@
 .oh-modal__dialog-footer .is-loading {
   .oh-btn {
     position: relative;
-
     &::before {
       content: "";
       position: absolute;
@@ -1130,7 +704,7 @@
       width: -webkit-fill-available;
       height: 100%;
       z-index: 10;
-      background: linear-gradient(110deg, #e0e0e0 8%, #f0f0f0 18%, #e0e0e0 33%);
+      background: linear-gradient(110deg, #2a2a2a 8%, #3a3a3a 18%, #2a2a2a 33%);
       background-size: 200%;
       animation: shimmer 1.2s infinite;
       z-index: 999;
@@ -1139,24 +713,24 @@
 }
 
 .oh-timesheet-table {
-  border: 1px solid hsl(213, 22%, 93%);
+  border: 1px solid $border-color;
 
-  thead {
-    tr {
-      th {
-        font-weight: bold;
-      }
-    }
+  thead tr th {
+    font-weight: bold;
+    background-color: $brand-color-dark;
+    color: $light-text-color;
   }
 
   th,
   td {
     padding: 10px;
     text-align: left;
+    color: $text-color;
   }
 
   tr:hover {
     cursor: pointer;
+    background-color: $brand-color-light;
   }
 
   .hidden-row {
@@ -1171,10 +745,6 @@
   .rotate {
     transform: rotate(90deg);
   }
-
-  .caret {
-    transition: transform 0.3s ease;
-  }
 }
 
 .oh-timesheet {
@@ -1185,7 +755,7 @@
         padding: 0.6rem;
       }
       th {
-        color: #1c1c1c;
+        color: $light-text-color;
       }
     }
   }
@@ -1194,14 +764,15 @@
     align-items: center;
     display: flex;
     justify-content: space-between;
-    border: 1px solid hsl(213, 22%, 93%);
-    background-color: hsl(0, 0%, 100%);
+    border: 1px solid $border-color;
+    background-color: $brand-color;
     padding: 0.5rem 0.5rem 0.5rem 2.5rem;
     cursor: pointer;
 
     span {
       padding: 0.4rem 0;
       font-weight: bold;
+      color: $text-color;
     }
   }
 
@@ -1219,7 +790,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: hsl(8, 61%, 50%);
+      color: $secondary-color;
       object-fit: contain;
       position: absolute;
       left: 8px;
@@ -1237,13 +808,13 @@
 
   .table th,
   .table td {
-    border: 1px solid #ddd;
+    border: 1px solid $border-color;
     padding: 0.6rem;
     text-align: left;
   }
 
   .accordion-header:hover {
-    background-color: rgba(233, 237, 241, 0.4);
+    background-color: $brand-color-light;
   }
 
   .accordion-body {
@@ -1251,26 +822,22 @@
   }
 
   .accordion-body {
-    border: 1px solid hsl(213, 22%, 93%);
+    border: 1px solid $border-color;
     border-top: none;
     padding: 0.5rem;
-    background-color: hsl(0, 0%, 100%);
+    background-color: $brand-color-dark;
   }
 }
-
-// hover-btn
 
 .oh-hover-btn-table-drawer {
   position: absolute;
   top: 30px !important;
 }
 
-// pivot-table
-
 #pivot-container {
-  border: 1px solid #ddd;
+  border: 1px solid $border-color;
   .pvtUiCell {
-    background-color: #fff;
+    background-color: $brand-color;
     .pvtRenderer,
     .pvtAggregator {
       border: transparent;
@@ -1280,14 +847,6 @@
 
 .pvtRenderer {
   background-color: transparent !important;
-  :focus {
-    border: none !important;
-    outline: none !important;
-  }
-  :focus {
-    border: none !important;
-    outline: none !important;
-  }
 }
 
 #pivot-container .pvtColLabel,
@@ -1297,8 +856,9 @@
 
 #pivot-container .pvtTable tbody tr th,
 #pivot-container .pvtTable thead tr th {
-  background-color: #fff !important;
-  border: 1px solid #e9edf1 !important;
+  background-color: $brand-color-dark !important;
+  border: 1px solid $border-color !important;
+  color: $text-color !important;
 }
 
 .pvtAxisContainer li {
@@ -1306,10 +866,11 @@
 }
 
 .pvtAxisContainer li span.pvtAttr {
-  border-radius: 0 !important;
+  border-radius: 6px !important;
   flex: 1 1 auto;
-  background-color: #f9f9f9 !important;
+  background-color: $brand-color-dark !important;
   position: relative;
+  color: $text-color;
   .pvtTriangle {
     position: absolute;
     right: 8px;
@@ -1320,15 +881,13 @@
   .ui-sortable-handle {
     .pvtAttr {
       padding: 2px 26px 2px 8px !important;
-      .pvtTriangle {
-      }
     }
   }
 }
 
 .pvtAxisContainer,
 .pvtVals {
-  border: 1px solid #e9edf1 !important;
+  border: 1px solid $border-color !important;
 }
 
 .pvtRendererArea {
@@ -1342,14 +901,14 @@
   .pvtTable {
     min-width: 1200px;
     width: 100%;
-    min-width: unset;
     max-width: 100%;
     border-collapse: collapse;
     font-size: 16px;
-    background-color: #ffffff;
+    background-color: $brand-color;
     table-layout: auto;
   }
 }
+
 .pvtUi {
   width: 100% !important;
 }
@@ -1360,27 +919,32 @@
 }
 
 .pvtAttrDropdown {
-  border: 1px solid #eaeaea !important;
+  border: 1px solid $border-color !important;
 }
 
 .pvtSearch {
-  border: 1px solid hsl(213, 22%, 84%) !important;
-  border-radius: 0rem !important;
-  padding: 0.8rem 1.25rem !important;
-  color: hsl(0, 0%, 11%) !important;
+  border: 1px solid $border-color !important;
+  border-radius: 6px !important;
+  padding: 0.6rem 1rem !important;
+  color: $text-color !important;
+  background-color: $brand-color-dark !important;
   margin-bottom: 4px !important;
 }
 
 .pvtFilterBox {
   padding: 16px;
   width: auto !important;
-  border: 1px solid #e9edf1 !important;
+  border: 1px solid $border-color !important;
+  background-color: $brand-color !important;
+  border-radius: 8px !important;
+
   h4 {
     font-weight: bold;
     font-size: 0.9rem;
     text-align: left;
     margin-left: 0 !important;
     margin-top: 0 !important;
+    color: $text-color;
   }
   p {
     margin-bottom: 0 !important;
@@ -1388,9 +952,9 @@
     gap: 8px;
     :nth-child(1) {
       width: 100%;
-      border-radius: 0 !important;
-      background-color: hsl(8, 77%, 56%);
-      color: hsl(0, 0%, 100%);
+      border-radius: 6px !important;
+      background-color: $secondary-color;
+      color: $black;
       text-decoration: none;
       font-size: 0.9rem;
       padding: 0.65rem 1rem;
@@ -1398,9 +962,9 @@
     }
     :nth-child(2) {
       width: 100%;
-      border-radius: 0 !important;
-      background-color: #f0f0f0;
-      color: hsl(0, 0%, 16%);
+      border-radius: 6px !important;
+      background-color: $brand-color-light;
+      color: $text-color;
       text-decoration: none;
       font-size: 0.9rem;
       padding: 0.65rem 1rem;
@@ -1430,60 +994,66 @@
 }
 
 #pivot-container .pvtTable td {
-  border: 1px solid #e9edf1 !important;
+  border: 1px solid $border-color !important;
+  color: $text-color !important;
 }
 
 #pivot-container .pvtTable tr:nth-child(2n) td {
-  background-color: #fff !important;
-  border: 1px solid #e9edf1 !important;
+  background-color: $brand-color-dark !important;
+  border: 1px solid $border-color !important;
 }
 
 #pivot-container .pvtTable th {
-  background-color: #007bff;
+  background-color: $brand-color-dark;
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1px solid $border-color;
   font-size: 18px;
+  color: $light-text-color;
 }
 
 #pivot-container .pvtTable td {
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1px solid $border-color;
   font-size: 16px;
-  background-color: #fdfdfd;
-  color: #333;
+  background-color: $brand-color;
+  color: $text-color;
 }
 
 #pivot-container .pvtTable tr:nth-child(even) td {
-  background-color: #f2f2f2;
+  background-color: $brand-color-dark;
 }
 
 #pivot-container .pvtRowLabel,
 #pivot-container .pvtColLabel {
-  background-color: #e9ecef;
+  background-color: $brand-color-dark;
   font-weight: bold;
   font-size: 16px;
+  color: $light-text-color;
 }
+
 #pivot-container .pvtTotalLabel {
-  background-color: #6c757d;
+  background-color: $brand-color-light;
   font-weight: bold;
   font-size: 16px;
+  color: $text-color;
 }
 
 #pivot-container .pvtGrandTotal {
-  background-color: #343a40;
+  background-color: $brand-color;
   font-weight: bold;
   font-size: 16px;
-  color: #fff;
+  color: $text-color;
+  border-color: $border-color;
 }
 
 #pivot-container .pvtTable tbody tr th,
 #pivot-container .pvtTable thead tr th {
-  background-color: #e6eeee;
-  border: 2px solid #cdcdcd;
+  background-color: $brand-color-dark;
+  border: 1px solid $border-color;
   font-size: 10pt;
   padding: 8px;
 }
 
-.js-plotly-plot .plotlyjsicon {
+.js-plotly-icon {
   display: none !important;
 }

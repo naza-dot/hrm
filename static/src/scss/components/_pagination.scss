@@ -11,15 +11,17 @@
 }
 
 .oh-pagination__page {
-  color: $text-color;
+  color: $light-text-color;
   font-size: 0.9rem;
 }
+
 .oh-pagination__items {
   display: flex;
   align-items: center;
   list-style-type: none;
   padding-left: 0;
 }
+
 .oh-pagination__item {
   display: flex;
   align-items: center;
@@ -27,36 +29,46 @@
   width: 40px;
   height: 40px;
   padding: 10px;
-  background-color: $white;
+  background-color: $brand-color;
   border: 1px solid $border-color;
   border-right: 0px;
   font-size: 0.9rem;
   cursor: pointer;
+  color: $text-color;
+  @include oh-transition;
+
   &:first-child {
-    border-radius: 0;
+    border-radius: 6px 0 0 6px;
   }
+
   &:last-child {
     border-right: 1px solid $border-color;
-    border-radius: 0;
+    border-radius: 0 6px 6px 0;
   }
+
   &:hover {
-    background-color: $light-button-color;
+    background-color: $brand-color-light;
   }
 }
+
 .oh-pagination__item--wide {
   width: fit-content;
 }
+
 .oh-pagination__link {
   &:hover {
     text-decoration: none;
   }
 }
+
 .oh-pagination__link--active {
   color: $secondary-color;
 }
+
 .oh-pagination__nav {
   display: flex;
 }
+
 .oh-pagination__input-container {
   margin-right: 1rem;
   margin-left: 0.5rem;
@@ -66,29 +78,35 @@
     margin-left: 0;
   }
 }
+
 .oh-pagination__input-container .oh-pagination__label:first-child {
   @media (max-width: 575.98px) {
     display: none;
   }
 }
+
 .oh-pagination__input {
   width: 40px;
   height: 40px;
   border: 1px solid $border-color;
   text-align: center;
-  border-radius: 0px;
+  border-radius: 6px;
+  background-color: $brand-color-dark;
+  color: $text-color;
 
   &:hover,
   &:focus,
   &:focus-visible {
-    border: 2px solid $brand-color;
-    border-radius: 0;
+    border: 1px solid $border-color;
+    outline: none;
   }
 }
+
 .oh-pagination__label {
-  color: $text-color;
+  color: $light-text-color;
   font-size: 0.85rem;
 }
-.oh-pagination__page{
+
+.oh-pagination__page {
   margin-bottom: 0.75rem;
 }

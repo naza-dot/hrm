@@ -1,6 +1,6 @@
 .oh-modal {
   position: fixed;
-  background-color: rgba($text-color, 0.2);
+  background-color: rgba(0, 0, 0, 0.6);
   z-index: 1021;
   left: 0;
   top: 0;
@@ -8,39 +8,44 @@
   height: 100%;
   overflow-y: auto;
   display: none;
-  transition: all 0.4 ease-in-out;
   @include fade-in(0.2s, 0s);
+  backdrop-filter: blur(4px);
 
   @media (max-width: 575.98px) {
     padding-left: 0.7rem;
     padding-right: 0.7rem;
   }
 }
-.oh-modal--show{
+
+.oh-modal--show {
   display: block;
-  transition: all 0.4 ease-in-out;
 }
+
 .oh-modal__dialog {
-  background-color: $white;
-  // min-height: 300px;
+  background-color: $brand-color;
   max-width: 650px;
-  border-radius: 0rem;
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 12px 28px 0px,
-    rgba(0, 0, 0, 0.1) 0px 2px 4px 0px,
-    rgba(255, 255, 255, 0.05) 0px 0px 0px 1px inset;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.5), 0 2px 4px 0 rgba(0, 0, 0, 0.3);
   margin: 1.75rem auto;
+  border: 1px solid $border-color;
 }
+
 .oh-modal__dialog-header {
   position: relative;
   padding: 1.75rem 1.75rem 0.5rem;
   width: 100%;
 }
-.oh-modal__dialog-body{
+
+.oh-modal__dialog-body {
   padding: 0 1.75rem 1.75rem 1.75rem;
 }
+
 .oh-modal__dialog-title {
   font-size: 1.05rem;
+  font-weight: 600;
+  color: $text-color;
 }
+
 .oh-modal__close {
   border: none;
   background: none;
@@ -50,30 +55,33 @@
   top: 25px;
   right: 15px;
   cursor: pointer;
-  transition: all 0.3s ease-in-out;
+  color: $light-text-color;
+  @include oh-transition;
 
   &:hover {
     opacity: 1;
-    transition: all 0.3s ease-in-out;
+    color: $text-color;
   }
 }
-.oh-modal__section-head{
-  border-bottom: 1px solid $light-button-color;
+
+.oh-modal__section-head {
+  border-bottom: 1px solid $border-color;
   padding-bottom: 0.75rem;
   color: $table-text-color;
   margin-bottom: 0.75rem;
 }
-.oh-modal__dialog-footer{
+
+.oh-modal__dialog-footer {
   padding: 0.25rem 1.75rem 1.75rem;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 0.5rem;
 }
-.oh-modal__dialog--timeoff{
+
+.oh-modal__dialog--timeoff {
   max-width: 350px;
 }
-
-
 
 .oh-modal__label {
   display: block;
@@ -81,23 +89,28 @@
   color: $light-text-color;
   margin-bottom: 0.25rem;
 }
+
 .oh-modal__value {
   font-size: 1.05rem;
   font-weight: bold;
-}
-.oh-modal__description{
-  max-height: 150px;
-  overflow-y: auto;
+  color: $text-color;
 }
 
-// Confirmation Modal
-.oh-modal__dialog--confirm{
+.oh-modal__description {
+  max-height: 150px;
+  overflow-y: auto;
+  color: $light-text-color;
+}
+
+.oh-modal__dialog--confirm {
   max-width: 350px;
 }
-.oh-modal__dialog--confirm .oh-modal__dialog-title{
+
+.oh-modal__dialog--confirm .oh-modal__dialog-title {
   font-weight: bold;
 }
-.oh-modal__dialog--confirm .oh-modal__dialog-footer{
+
+.oh-modal__dialog--confirm .oh-modal__dialog-footer {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;

@@ -1,7 +1,6 @@
-/**
- * Basic typography style for copy text
- */
 body {
   color: $text-color;
-  font: normal 80% / 1.4 $text-font-stack;
+  font: normal 87.5% / 1.6 $text-font-stack;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

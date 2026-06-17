@@ -1,6 +1,9 @@
 .oh-tabs {
   border: 1px solid $border-color;
+  border-radius: 8px;
+  overflow: hidden;
 }
+
 .oh-tabs__tablist {
   list-style-type: none;
   padding-left: 0px;
@@ -9,6 +12,7 @@
   flex-wrap: wrap;
   width: 100%;
   margin-bottom: 0px;
+  background-color: $brand-color-dark;
 }
 
 .oh-tabs__tab,
@@ -17,27 +21,33 @@
   height: 50px;
   max-height: 50px;
   border-bottom: 1px solid $border-color;
+  border-right: 1px solid $border-color;
   flex-grow: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
+  color: $light-text-color;
+  @include oh-transition;
+
   &:hover {
-    background-color: $border-light-color;
-    border-bottom: 1px solid $border-color;
+    background-color: $brand-color-light;
+    color: $text-color;
   }
 }
+
 .oh-tabs__tab--active {
-  background-color: $white;
-  border-left: 1px solid $border-color;
-  border-right: 1px solid $border-color;
-  border-bottom: 1px solid $white;
+  background-color: $brand-color;
+  color: $text-color;
+  border-bottom: 1px solid transparent;
+  font-weight: 600;
+
   &:hover {
-    color: rgba($text-color, 0.7);
-    background-color: $white;
-    border-bottom: 1px solid $white;
+    color: $text-color;
+    background-color: $brand-color;
   }
 }
+
 .oh-tabs__tab.oh-tabs__new-tab,
 .oh-tabs__new-tab-config {
   max-width: 60px;
@@ -46,17 +56,7 @@
   align-items: center;
   border-left: 1px solid $border-color;
 }
-.oh-tabs__tab--active {
-  background-color: $white;
-  border-left: 1px solid $border-color;
-  border-right: 1px solid $border-color;
-  border-bottom: 1px solid $white;
-  &:hover {
-    color: rgba($text-color, 0.7);
-    background-color: $white;
-    border-bottom: 1px solid $white;
-  }
-}
+
 .oh-tabs__tab--active {
   .oh-tabs__close-btn {
     display: flex;
@@ -64,39 +64,40 @@
     justify-content: center;
   }
 }
+
 .oh-tabs__tablist .oh-tabs__tab--active {
   &:first-child {
     border-left: none;
   }
-  &:nth-last-child(2) {
-    border-right: none;
-  }
 }
+
 .oh-tabs__content {
   width: 100%;
-  background-color: $white;
+  background-color: $brand-color;
   padding: 1.25rem;
 }
+
 .oh-tabs__content {
-  display: none;
-}
-.oh-tabs__content--active {
-  display: block;
-}
-.oh-tabs__tab.oh-tabs__new-tab {
-  max-width: 60px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.oh-tabs__close-btn {
-  padding: 0 !important;
   display: none;
 }
 
-/* ==================================
-*          GENERAL TABS
-* ================================= */
+.oh-tabs__content--active {
+  display: block;
+}
+
+.oh-tabs__close-btn {
+  padding: 0 !important;
+  display: none;
+  background: none;
+  border: none;
+  color: $light-text-color;
+  cursor: pointer;
+
+  &:hover {
+    color: $danger-color;
+  }
+}
+
 .oh-general__tabs {
   display: flex;
   flex-wrap: wrap;
@@ -105,6 +106,7 @@
   margin-bottom: 0;
   align-content: center;
 }
+
 .oh-general__tab {
   margin-right: 1rem;
   flex-grow: 1;
@@ -115,18 +117,15 @@
     margin-bottom: 1rem;
   }
 }
+
 .oh-general__tab-link {
-  color: $text-color;
-  border-bottom: 3px solid transparent;
+  color: $light-text-color;
+  border-bottom: 2px solid transparent;
   padding-bottom: 0.75rem;
+  @include oh-transition;
 
   &:hover {
-    opacity: 0.7;
-  }
-
-  &:hover,
-  &:focus,
-  &:focus-visible {
+    color: $text-color;
     text-decoration: none;
   }
 
@@ -135,35 +134,36 @@
     border-bottom: none;
   }
 }
+
 .oh-general__tab-link--active {
-  border-bottom: 3px solid $secondary-color;
+  color: $text-color;
+  border-bottom: 2px solid $secondary-color;
+  font-weight: 600;
 
   @media (max-width: 575.98px) {
     border-bottom: none;
     background-color: rgba($secondary-color, 0.1);
     color: $secondary-color;
-    border-radius: 0.25rem;
-
-    &:focus,
-    &:focus-visible {
-      color: $secondary-color;
-    }
+    border-radius: 6px;
   }
 }
+
 .oh-profile-section__tab {
   width: 100%;
   justify-content: space-between;
 }
+
 .oh-general__tabs--no-grow {
   justify-content: flex-start;
 }
+
 .oh-general__tabs--no-grow > * {
   flex-grow: 0;
 }
+
 .oh-general__tabs--profile {
   li {
     margin-right: 2rem;
-
     &:last-child {
       margin-right: 0;
     }
@@ -171,7 +171,6 @@
   @media (max-width: 575.98px) {
     li {
       margin-right: 0.5rem;
-
       &:last-child {
         margin-right: 0;
       }
@@ -179,15 +178,13 @@
   }
 }
 
-/* =====================================
-*         Tabs Mobable
-* =================================== */
 .oh-tabs__movable {
   border: 1px solid $border-color;
-  background-color: $white;
+  background-color: $brand-color;
   margin-top: 1rem;
   margin-bottom: 1rem;
-  box-shadow: rgba(0, 0, 0, 0.04) 0px 3px 5px;
+  border-radius: 8px;
+  overflow: hidden;
 
   &:first-child {
     margin-top: 0;
@@ -198,7 +195,7 @@
 
   &:hover {
     .oh-tabs__movable-header {
-      background-color: $background-color;
+      background-color: $brand-color-light;
     }
   }
 }
@@ -210,7 +207,9 @@
   align-items: center;
   justify-content: space-between;
   cursor: move;
+  @include oh-transition;
 }
+
 .oh-tabs__movable-header--w-80 {
   width: 80%;
   position: relative;
@@ -223,26 +222,38 @@
     width: 25%;
   }
 }
+
 .oh-tabs__movable-title {
   font-weight: bold;
-  // padding: 0.85rem 1.25rem;
   font-size: 1.25rem;
+  color: $text-color;
   @media (max-width: 575.98px) {
     font-size: 1rem;
     max-width: 200px;
   }
 }
+
 .oh-tabs__movable-body {
   padding: 1.25rem;
 }
+
 .oh-tabs__action-bar {
-  border-bottom: 1px solid $border-light-color;
+  border-bottom: 1px solid $border-color;
   padding-bottom: 0.8rem;
   margin-bottom: 1.25rem;
 }
+
 .oh-tabs__movable-close {
   background-color: transparent;
+  border: none;
+  color: $light-text-color;
+  cursor: pointer;
+
+  &:hover {
+    color: $danger-color;
+  }
 }
+
 .oh-tabs__movable {
   &:only-child {
     .oh-tabs__movable-close {
@@ -250,36 +261,38 @@
     }
   }
 }
+
 .oh-tabs__movable:nth-child(1):nth-last-child(2) {
   .oh-tabs__movable-close {
     display: none;
   }
 }
+
 .oh-tabs__table-group-header {
   margin-bottom: 1rem;
 }
+
 .oh-tabs__table-group {
   margin-top: 1.5rem;
-
   &:first-child {
     margin-top: 0;
   }
 }
+
 .oh-tabs__table-group-title {
   font-size: 1.25rem;
   font-weight: bold;
+  color: $text-color;
 }
+
 .oh-sticky-table--no-overflow {
   overflow-x: auto;
   overflow-y: unset !important;
 }
+
 .oh-sticky-table__dropdown {
   z-index: 9;
 }
-
-/* =====================================
-*         Tabs view / preview
-* =================================== */
 
 .oh-tabs__view-buttons {
   display: flex;
@@ -287,29 +300,37 @@
   & .tab-btn {
     flex: 1;
     padding: 8px;
-    background-color: transparent;
+    background-color: $brand-color-dark;
     cursor: pointer;
-    border: 1px solid #ccc;
+    border: 1px solid $border-color;
     border-bottom: none;
     outline: none;
     text-align: center;
+    color: $light-text-color;
+    @include oh-transition;
+
     &:first-child {
       border-right: none !important;
     }
     span {
       opacity: 0.5;
     }
+
+    &:hover {
+      background-color: $brand-color-light;
+    }
   }
   & .tab-btn.active {
-    background: rgba($secondary-color, 0.05);
-    border: 1px solid #ccc;
+    background: rgba($secondary-color, 0.1);
+    border: 1px solid $border-color;
     border-bottom: none;
-    opacity: 1;
+    color: $text-color;
     span {
       opacity: 1;
     }
   }
 }
+
 .oh-tabs__view {
   display: none;
   &.active {

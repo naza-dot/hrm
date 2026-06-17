@@ -1,6 +1,3 @@
-// -----------------------------------------------------------------------------
-// This file contains styles that are specific to the home page.
-// -----------------------------------------------------------------------------
 .oh-main__titlebar-title {
   font-size: 1.5rem;
 }
@@ -44,7 +41,7 @@
   }
 }
 
-.oh-main__titlebar--right>* {
+.oh-main__titlebar--right > * {
   @media (max-width: 767.98px) {
     flex-basis: 0;
     flex-grow: 1;
@@ -66,7 +63,7 @@
   }
 }
 
-.oh-main__titlebar-button-container>* {
+.oh-main__titlebar-button-container > * {
   &:first-child {
     margin-left: 15px;
 
@@ -85,8 +82,14 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 0.3rem;
+  border-radius: 6px;
   border: 1px solid $border-color;
+  background: $brand-color-dark;
+  color: $light-text-color;
+
+  &:hover {
+    background: $brand-color-light;
+  }
 }
 
 .oh-main__titlebar-serach-icon {
@@ -117,7 +120,7 @@
 }
 
 @media (max-width: 767.98px) {
-  .oh-main__section--reverse-sm>div {
+  .oh-main__section--reverse-sm > div {
     &:first-child {
       order: 2;
     }
@@ -131,6 +134,7 @@
 /* =================================
 *          QUESTIONNAIRE
 * ================================ */
+
 .oh-section-edit--delete {
   position: absolute;
   left: 0.09rem;
@@ -139,6 +143,7 @@
 /* =================================
 *          VIEW TYPES
 * ================================ */
+
 .oh-view-types {
   list-style-type: none;
   padding-left: 0px;
@@ -152,7 +157,7 @@
 }
 
 .oh-view-type {
-  background-color: $text-color;
+  background-color: $brand-color-dark;
   border: 1px solid $border-color;
   height: 48.84px;
 
@@ -182,8 +187,8 @@
 
 .oh-permission-panel,
 .oh-user-panel {
-  background-color: $background-color;
-  border: 2px solid $border-light-color;
+  background-color: $brand-color;
+  border: 2px solid $border-color;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
@@ -191,9 +196,10 @@
   padding: 0 0 0 1rem;
   margin-top: 0.75rem;
   margin-bottom: 0.75rem;
+  border-radius: 8px;
 
   &:hover {
-    background-color: $light-grey;
+    background-color: $brand-color-light;
   }
 }
 
@@ -205,7 +211,7 @@
 .oh-user-panel__remove {
   background-color: transparent;
   border: none;
-  border-left: 2px solid $border-light-color;
+  border-left: 2px solid $border-color;
   width: 35px;
   height: 35px;
   font-size: 1rem;
@@ -213,6 +219,7 @@
   align-items: center;
   justify-content: center;
   margin-left: 0.5rem;
+  color: $light-text-color;
 
   &:hover {
     color: $danger-color;
@@ -230,6 +237,8 @@
   padding: 0.5rem;
   font-size: 1.25rem;
   visibility: hidden;
+  background: transparent;
+  color: $light-text-color;
 }
 
 .oh-sticky-table__tr {
@@ -251,8 +260,7 @@
   display: flex;
   padding: 0.5rem 0rem;
   font-style: italic;
-  color: $table-text-color;
-  width: 100%;
+  color: $light-text-color;
 }
 
 .oh-permission-table--collapsed .oh-permission-panel,
@@ -285,6 +293,7 @@
 /* =================================
 *          QUESTIONNAIRE
 * ================================ */
+
 .oh-empty {
   width: 100%;
   height: calc(100vh - 400px);
@@ -304,25 +313,18 @@
 /* =================================
 *         DASHBOARD PAGE
 * ================================ */
+
 .oh-dashboard {
   padding-top: 2.5rem;
-  // display: grid;
-  // grid-template-columns: 3fr 1fr;
   max-width: 100%;
-  // gap: 1rem;
 
   @media (max-width: 767.98px) {
     margin: 0 !important;
   }
 }
 
-// .oh-dashboard__left, .oh-dashboard__right {
-//   height: 100%;
-//   width: 100%;
-// }
-
-.oh-dashboard__cards>div,
-.oh-dashboard__movable-cards>div {
+.oh-dashboard__cards > div,
+.oh-dashboard__movable-cards > div {
   @media (max-width: 991.98px) {
     margin-bottom: 1rem;
   }
@@ -338,34 +340,34 @@
   }
 }
 
-// .oh-dashboard__movable-cards{
-//   display: grid;
-//   gap: 1rem;
-// }
 .oh-dashboard__movable-cards--2 {
   grid-template-columns: 1fr 1fr;
 }
 
 .oh-card-dashboard__title {
   font-weight: bold;
+  color: $text-color;
 }
 
 .oh-card-dashboard__count {
   font-size: 3rem;
+  color: $text-color;
 }
 
 .oh-card-dashboard {
   width: 100%;
-  background-color: $white;
+  background-color: $brand-color;
   padding: 1rem;
-  box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   border-top: 5px solid;
   transition: all 0.4s ease-in-out;
   cursor: pointer;
+  border-radius: 8px;
 
   &:hover {
     transition: all 0.4s ease-in-out;
     transform: scale(102%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -374,7 +376,7 @@
 }
 
 .oh-card-dashboard__header--divider {
-  border-bottom: 1px solid $border-light-color;
+  border-bottom: 1px solid $border-color;
   padding-bottom: 1rem;
   margin-bottom: 1.25rem;
 }
@@ -469,20 +471,21 @@
 .oh-dashboard__event {
   width: 100%;
   color: $white;
-  box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   padding: 1.25rem 1.25rem 2.5rem;
   display: flex;
   align-items: flex-start;
   flex-shrink: 0;
   flex-grow: 1;
+  border-radius: 8px;
 }
 
 .oh-dashboard__event--purple {
-  background-color: rebeccapurple;
+  background-color: #6b21a8;
 }
 
 .oh-dashboard__event--crimson {
-  background-color: crimson;
+  background-color: #dc2626;
 }
 
 .oh-dasboard__event-photo {
@@ -571,9 +574,8 @@
 
 .oh-card-dashboard__user-item {
   margin-bottom: 0.5rem;
-  // padding-top: 0.75rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px dashed $border-light-color;
+  border-bottom: 1px dashed $border-color;
 
   &:last-child {
     margin-bottom: 0;
@@ -582,21 +584,16 @@
 }
 
 .oh-dashboard-card {
-  background-color: $white;
+  background-color: $brand-color;
   border: 1px solid $border-color;
   padding: 1.25rem;
+  border-radius: 8px;
 }
 
 /* ==============================
 *           OrgChart
 * ============================ */
+
 .oh-main__org-chart-data {
   display: none;
 }
-
-// .oh-main__org-chart-container{
-//   width: 100%;
-// }
-// .oh-main__org-chart-container .orgchart{
-//   width: 100%;
-// }

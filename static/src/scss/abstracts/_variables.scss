@@ -1,238 +1,82 @@
 @use "sass:map";
-// -----------------------------------------------------------------------------
-// This file contains all application-wide Sass variables.
-// -----------------------------------------------------------------------------
 
+$text-font-stack: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !default;
+$code-font-stack: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace !default;
 
-/// Regular font family
-/// @type List
-$text-font-stack: 'Poppins', 'Open Sans', 'Helvetica Neue Light', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif !default;
+$text-color: #ffffff !default;
+$background-color: #0a0a0a !default;
 
-/// Code (monospace) font family
-/// @type List
-$code-font-stack: 'Courier New', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Monaco', monospace !default;
+$brand-color-light: #2a2a2a !default;
+$brand-color: #1a1a1a !default;
+$brand-color-dark: #141414 !default;
 
+$sidebar-color: #141414 !default;
 
+$secondary-color: #9ca3af !default;
+$secondary-color-dark: #7a7266 !default;
 
+$white-color: #ffffff !default;
+$white: #ffffff !default;
+$black: #000000 !default;
 
+$danger-color: #ef4444 !default;
+$danger-color-dark: #dc2626 !default;
 
-/// Copy text color
-/// @type Color
-$text-color: hsl(0, 0%, 11%) !default;
+$warning-color: #f59e0b !default;
+$warning-color-dark: #d97706 !default;
 
-/// Copy text color
-/// @type Color
-$background-color: hsl(0, 0%, 97.5%) !default;
+$success-color: #10b981 !default;
+$success-color-dark: #059669 !default;
 
-/// Main brand light color
-/// @type Color
-$brand-color-light: hsl(0, 0%, 20%) !default;
+$border-color: #2d2d2d !default;
+$border-light-color: #2d2d2d !default;
 
-/// Main brand color
-/// @type Color
-$brand-color: hsl(0, 0%, 13%) !default;
+$button-light-color: #2a2a2a !default;
+$placeholder-color: #6b7280 !default;
 
-/// Main brand color dark
-/// @type Color
-$brand-color-dark: hsl(0, 0%, 12%) !default;
+$table-text-color: #a0a0a0 !default;
+$light-text-color: #a0a0a0 !default;
 
-/// Sidebar color
-/// @type Color
-$sidebar-color: hsl(192, 15%, 94%) !default;
+$light-button-color: #2d2d2d !default;
+$dark-button-color: #2a2a2a !default;
+$light-grey-table: #1a1a1a !default;
+$light-grey: #1a1a1a !default;
+$mid-grey: #6b7280 !default;
+$icon-grey: #9ca3af !default;
+$dark-grey: #a0a0a0 !default;
+$button-text-grey: #ffffff !default;
 
-/// Brand color dark
-/// @type Color
-$brand-color-dark:  hsl(245, 100%, 8%)!default;
+$blue: #3b82f6 !default;
+$blue-dark: #2563eb !default;
+$orange: #f97316 !default;
+$yellow: #f59e0b !default;
+$yellow-dark: #d97706 !default;
+$green: #10b981 !default;
 
-/// Secondary color
-/// @type Color
-$secondary-color: hsl(8, 77%, 56%) !default;
+$alert-color-bg-danger: rgba(239, 68, 68, 0.1) !default;
+$alert-color-border-danger: rgba(239, 68, 68, 0.3) !default;
+$alert-color-hlt-danger: #ef4444 !default;
 
-/// Secondary color dark
-/// @type Color
-$secondary-color-dark: hsl(8, 61%, 50%) !default;
+$alert-color-bg-warning: rgba(245, 158, 11, 0.1) !default;
+$alert-color-border-warning: rgba(245, 158, 11, 0.3) !default;
+$alert-color-hlt-warning: #f59e0b !default;
 
-/// White  color
-/// @type Color
-$white-color: hsl(0, 0%, 100%) !default;
+$alert-color-bg-info: rgba(59, 130, 246, 0.1) !default;
+$alert-color-border-info: rgba(59, 130, 246, 0.3) !default;
+$alert-color-hlt-info: #3b82f6 !default;
 
+$alert-color-bg-success: rgba(16, 185, 129, 0.1) !default;
+$alert-color-border-success: rgba(16, 185, 129, 0.3) !default;
+$alert-color-hlt-success: #10b981 !default;
 
-/// Danger color
-/// @type Color
-$danger-color: hsl(1, 100%, 61%);
-
-/// Danger dark color
-/// @type Color
-$danger-color-dark: hsl(1, 64%, 49%);
-
-/// Warning color
-/// @type Color
-$warning-color: hsl(37, 90%, 51%);
-
-/// Warning dark color
-/// @type Color
-$warning-color-dark: hsl(37, 90%, 47%);
-
-
-
-/// Border color
-/// @type Color
-$border-color: hsl(213, 22%, 84%) !default;
-
-/// Border light color
-/// @type Color
-$border-light-color: hsl(213, 22%, 93%) !default;
-
-/// Button light color
-/// @type Color
-$button-light-color: hsl(0, 0%, 93%) !default;
-
-/// Input placeholder
-/// @type Color
-$placeholder-color: hsl(216, 18%, 64%) !default;
-
-/// Table color
-/// @type Color
-$table-text-color: hsl(0, 0%, 37%) !default;
-
-/// Light Text color
-/// @type Color
-$light-text-color: hsl(0, 0%, 45%)!default;
-
-/// Light button color
-/// @type Color
-$light-button-color: hsl(0, 0%, 95%) !default;
-
-/// Dark button color
-/// @type Color
-$dark-button-color: hsl(0, 0%, 90%) !default;
-
-/// Light grey table
-/// @type Color
-$light-grey-table: hsl(0, 0%, 98%) !default;
-
-/// Light grey
-/// @type Color
-$light-grey: hsl(0, 0%, 96%) !default;
-
-/// Medium grey
-/// @type Color
-$mid-grey: rgb(153, 153, 153) !default;
-/// icon grey
-/// @type Color
-$icon-grey: hsl(216, 3%, 39%);
-
-/// Dark grey
-/// @type Color
-$dark-grey: hsl(0, 0%, 27%) !default;
-
-/// Button text grey
-/// @type Color
-$button-text-grey: hsl(219, 9%, 29%) !default;
-
-/// White
-/// @type Color
-$white: hsl(0, 0%, 100%) !default;
-
-/// White
-/// @type Color
-$black: hsl(0, 0%, 0%) !default;
-
-/// Blue
-/// @type Color
-$blue: hsl(204, 70%, 53%) !default;
-
-/// Blue Dark
-/// @type Color
-$blue-dark: hsl(204, 62%, 48%) !default;
-
-/// Orange
-/// @type Orange
-$orange: hsl(19, 85%, 63%) !default;
-
-/// Yellow
-/// @type Color
-$yellow: hsl(40, 91%, 60%) !default;
-
-/// Yellow Dark
-/// @type Color
-$yellow-dark: #dda735 !default;
-
-/// Success
-/// @type Color
-$green: hsl(121, 47%, 61%) !default;
-
-/// Success
-/// @type Color
-$success-color: hsl(148, 71%, 44%) !default;
-
-/// Success
-/// @type Color
-$success-color-dark: hsl(148, 70%, 40%) !default;
-
-
-/// Alert Colors
-
-/// Danger Bg
-/// @type Color
-$alert-color-bg-danger: hsl(0, 75%, 97%) !default;
-/// Danger border
-/// @type Color
-$alert-color-border-danger: hsl(357, 72%, 89%) !default;
-/// Danger Hlt
-/// @type Color
-$alert-color-hlt-danger: hsl(0, 71%, 54%) !default;
-
-/// Warning Bg
-/// @type Color
-$alert-color-bg-warning: hsl(48, 100%, 94%) !default;
-/// Warning border
-/// @type Color
-$alert-color-border-warning: hsl(46, 97%, 88%) !default;
-/// Warning Hlt
-/// @type Color
-$alert-color-hlt-warning: hsl(44, 89%, 62%) !default;
-
-/// Info Bg
-/// @type Color
-$alert-color-bg-info: hsl(212, 89%, 96%) !default;
-/// Info border
-/// @type Color
-$alert-color-border-info: hsl(218, 75%, 87%) !default;
-/// Info Hlt
-/// @type Color
-$alert-color-hlt-info: hsl(225, 72%, 48%) !default;
-
-/// Success Bg
-/// @type Color
-$alert-color-bg-success: hsl(137, 78%, 93%) !default;
-/// Success border
-/// @type Color
-$alert-color-border-success: hsl(136, 51%, 84%) !default;
-/// Success Hlt
-/// @type Color
-$alert-color-hlt-success: hwb(119 28% 36%) !default;
-
-/// Container's maximum width
-/// @type Length
 $max-width: 1180px !default;
 
-/// OrgChart Colors
-/// @type Color
+$org-chart-primary: #9ca3af;
+$org-chart-secondary: #6b7280;
+$org-chart-tertiary: #a0a0a0;
+$org-chart-quaternary: #3b82f6;
+$org-chart-quinary: #2563eb;
 
-$org-chart-primary: hsl(8, 77%, 56%);
-$org-chart-secondary:hsl(12, 17%, 29%);
-$org-chart-tertiary: hsl(12, 19%, 69%);
-$org-chart-quaternary: hsl(193, 100%, 39%);
-$org-chart-quinary: hsl(198, 100%, 29%);
-
-
-
-
-
-/// Breakpoints map
-/// @prop {String} keys - Keys are identifiers mapped to a given length
-/// @prop {Map} values - Values are actual breakpoints expressed in pixels
 $breakpoints: (
   'x-small': 0px,
   'small': 576px,
@@ -242,13 +86,4 @@ $breakpoints: (
   'xx-large': 1400px
 ) !default;
 
-
-
-
-
-
-/// Relative or absolute URL where all assets are served from
-/// @type String
-/// @example scss - When using a CDN
-///   $base-url: 'https://cdn.example.com/assets/';
 $base-url: '/assets/' !default;
